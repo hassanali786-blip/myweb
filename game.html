@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Battle Royale (PUBG Style)</title>
+    <title>Humans Vs Robots: 3D Cyber Survival</title>
     <style>
         body {
             margin: 0;
-            background-color: #222;
+            background-color: #080911;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -18,151 +18,240 @@
             overflow: hidden;
         }
         #gameCanvas {
-            background-color: #1e5e2f; /* Green Battleground */
-            border: 4px solid #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            background-color: #0f111a;
+            background-image: radial-gradient(circle, #1a1c2e 1px, transparent 1px);
+            background-size: 25px 25px;
+            border: 4px solid #00ffcc;
+            border-radius: 16px;
+            box-shadow: 0 0 35px rgba(0, 255, 204, 0.3);
             cursor: crosshair;
+        }
+        .scoreboard {
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.4);
+        }
+        .health-bar-container {
+            width: 220px;
+            background-color: #222;
+            border-radius: 6px;
+            display: inline-block;
+            overflow: hidden;
+            height: 18px;
+            vertical-align: middle;
+            border: 2px solid #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 170, 0.3);
+        }
+        .health-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ffaa, #00b374);
+            transition: width 0.1s;
         }
         .controls {
             margin-top: 15px;
             text-align: center;
             font-size: 14px;
-            color: #bbb;
+            color: #8a8dbe;
         }
     </style>
 </head>
 <body>
 
-    <h2 style="margin: 5px; color: #ffcc00;">⚔️ MINI BATTLE ROYALE ⚔️</h2>
-    <div style="font-size: 18px; margin-bottom: 10px;">Kills: <span id="score">0</span> | Health: <span id="health">100</span>%</div>
+    <h2 style="margin: 5px; color: #00ffcc; text-shadow: 0 0 20px #00ffcc; letter-spacing: 2px;">🤖 HUMANS VS ROBOTS: 3D ARENA 🧑</h2>
+    
+    <div class="scoreboard">
+        Robots Smashed: <span id="score" style="color: #ff0055; font-size: 26px;">0</span> | 
+        Human Armor: <div class="health-bar-container"><div id="health" class="health-bar"></div></div>
+    </div>
 
-    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <canvas id="gameCanvas" width="900" height="550"></canvas>
 
     <div class="controls">
-        <strong>🎮 CONTROLS:</strong> Move: <b>W, A, S, D</b> | Aim & Shoot: <b>Mouse Click</b>
+        <strong>⚡ CONTROLS:</strong> Move Human: <b>W, A, S, D</b> | Fire 3D Plasma Beam: <b>Mouse Click</b>
     </div>
 
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Player Details
-    let player = { x: 400, y: 250, size: 15, speed: 4, health: 100, kills: 0 };
-    
-    // Arrays for Game Objects
+    let player = { x: 450, y: 275, size: 18, speed: 4.5, health: 100, kills: 0, angle: 0 };
     let bullets = [];
     let enemies = [];
     let keys = {};
 
-    // Keyboard Input Listeners
     window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
     window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
 
-    // Mouse Click to Shoot
-    window.addEventListener("click", e => {
+    // Mouse movement se human ka face ghoomega (3D Aiming)
+    let mouseX = 0, mouseY = 0;
+    canvas.addEventListener("mousemove", e => {
         let rect = canvas.getBoundingClientRect();
-        let mouseX = e.clientX - rect.left;
-        let mouseY = e.clientY - rect.top;
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+        player.angle = Math.atan2(mouseY - player.y, mouseX - player.x);
+    });
 
-        // Angle calculation between player and mouse
-        let angle = Math.atan2(mouseY - player.y, mouseX - player.x);
-        
+    // Fire 3D Beams
+    canvas.addEventListener("mousedown", () => {
         bullets.push({
-            x: player.x,
-            y: player.y,
-            vX: Math.cos(angle) * 7,
-            vY: Math.sin(angle) * 7
+            x: player.x + Math.cos(player.angle) * 20,
+            y: player.y + Math.sin(player.angle) * 20,
+            vX: Math.cos(player.angle) * 10,
+            vY: Math.sin(player.angle) * 10,
+            angle: player.angle
         });
     });
 
-    // Spawn Enemy Function
-    function spawnEnemy() {
-        if (enemies.length < 5) {
+    function spawnRobot() {
+        if (enemies.length < 8) {
             let side = Math.floor(Math.random() * 4);
             let x, y;
-            if (side === 0) { x = 0; y = Math.random() * canvas.height; }
-            else if (side === 1) { x = canvas.width; y = Math.random() * canvas.height; }
-            else if (side === 2) { x = Math.random() * canvas.width; y = 0; }
-            else { x = Math.random() * canvas.width; y = canvas.height; }
+            if (side === 0) { x = -30; y = Math.random() * canvas.height; }
+            else if (side === 1) { x = canvas.width + 30; y = Math.random() * canvas.height; }
+            else if (side === 2) { x = Math.random() * canvas.width; y = -30; }
+            else { x = Math.random() * canvas.width; y = canvas.height + 30; }
 
-            enemies.push({ x: x, y: y, size: 12, speed: 1.5 + Math.random() * 1.5 });
+            enemies.push({ x: x, y: y, size: 22, speed: 1.5 + Math.random() * 1.5 });
         }
     }
-    setInterval(spawnEnemy, 1500);
+    setInterval(spawnRobot, 1000);
 
-    // Game Loop
     function update() {
         if (player.health <= 0) {
-            ctx.fillStyle = "rgba(0,0,0,0.8)";
+            ctx.fillStyle = "rgba(8, 9, 17, 0.95)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "red";
-            ctx.font = "40px Arial";
-            ctx.fillText("💀 GAME OVER 💀", canvas.width/2 - 150, canvas.height/2);
+            ctx.fillStyle = "#ff0055";
+            ctx.font = "bold 50px Arial";
+            ctx.shadowColor = "#ff0055";
+            ctx.shadowBlur = 25;
+            ctx.fillText("❌ MISSION FAILED: HUMAN EXTINCT ❌", canvas.width/2 - 380, canvas.height/2);
+            
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = "#00ffcc";
+            ctx.font = "24px Arial";
+            ctx.fillText(`You smashed ${player.kills} 3D Battle-Robots!`, canvas.width/2 - 180, canvas.height/2 + 60);
             ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.fillText(`Total Kills: ${player.kills} - Refresh to Restart`, canvas.width/2 - 130, canvas.height/2 + 40);
+            ctx.fillText("Press F5 to Respawn", canvas.width/2 - 100, canvas.height/2 + 110);
             return;
         }
 
-        // 1. Move Player
         if (keys['w'] && player.y > player.size) player.y -= player.speed;
         if (keys['s'] && player.y < canvas.height - player.size) player.y += player.speed;
         if (keys['a'] && player.x > player.size) player.x -= player.speed;
         if (keys['d'] && player.x < canvas.width - player.size) player.x += player.speed;
 
-        // Clear Canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 2. Draw Player (Blue Circle)
-        ctx.beginPath();
-        ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-        ctx.fillStyle = "#00a8ff";
-        ctx.fill();
-        ctx.closePath();
+        // 🧑 DRAW 3D HUMAN SOLDIER
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.angle);
 
-        // 3. Update & Draw Bullets
+        // 3D Shadow underneath
+        ctx.fillStyle = "rgba(0,0,0,0.4)";
+        ctx.beginPath();
+        ctx.ellipse(-5, 5, player.size, player.size/2, 0, 0, Math.PI*2);
+        ctx.fill();
+
+        // Shoulder / Body (3D Layered Look)
+        ctx.fillStyle = "#1b4d3e"; // Dark base
+        ctx.fillRect(-12, -18, 24, 36);
+        ctx.fillStyle = "#2e8b57"; // Light upper armor
+        ctx.fillRect(-10, -15, 20, 30);
+
+        // Head (Helmet)
+        ctx.beginPath();
+        ctx.arc(0, 0, 9, 0, Math.PI * 2);
+        ctx.fillStyle = "#00ffaa";
+        ctx.fill();
+        
+        // Helmet Goggle Glow
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(4, -4, 4, 8);
+
+        // Futuristic Heavy Gun (Extending Forward)
+        ctx.fillStyle = "#444";
+        ctx.fillRect(8, 6, 18, 6);
+        ctx.fillStyle = "#00ffcc"; // Gun laser nozzle
+        ctx.fillRect(22, 7, 5, 4);
+
+        ctx.restore();
+
+        // ⚡ DRAW 3D PLASMA BEAMS
         bullets.forEach((bullet, bIndex) => {
             bullet.x += bullet.vX;
             bullet.y += bullet.vY;
 
-            // Draw Bullet
-            ctx.beginPath();
-            ctx.arc(bullet.x, bullet.y, 4, 0, Math.PI * 2);
-            ctx.fillStyle = "#ffcc00";
-            ctx.fill();
-            ctx.closePath();
+            ctx.save();
+            ctx.translate(bullet.x, bullet.y);
+            ctx.rotate(bullet.angle);
+            
+            // Neon Glow Beam
+            ctx.shadowColor = "#00ffcc";
+            ctx.shadowBlur = 12;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(-8, -2, 16, 4); // Long laser bolt shape
+            ctx.fillStyle = "#00ffcc";
+            ctx.fillRect(-6, -3, 12, 6);
 
-            // Remove out of bounds bullets
+            ctx.restore();
+            ctx.shadowBlur = 0;
+
             if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
                 bullets.splice(bIndex, 1);
             }
         });
 
-        // 4. Update & Draw Enemies (Red Circles)
-        enemies.forEach((enemy, eIndex) => {
-            // Move enemy towards player
-            let angle = Math.atan2(player.y - enemy.y, player.x - enemy.x);
-            enemy.x += Math.cos(angle) * enemy.speed;
-            enemy.y += Math.sin(angle) * enemy.speed;
+        // 🤖 DRAW 3D MECH ROBOTS
+        enemies.forEach((robot, eIndex) => {
+            let rAngle = Math.atan2(player.y - robot.y, player.x - robot.x);
+            robot.x += Math.cos(rAngle) * robot.speed;
+            robot.y += Math.sin(rAngle) * robot.speed;
 
+            ctx.save();
+            ctx.translate(robot.x, robot.y);
+            ctx.rotate(rAngle);
+
+            // Robot 3D Shadow
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
             ctx.beginPath();
-            ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
-            ctx.fillStyle = "#ff4d4d";
+            ctx.ellipse(-6, 6, robot.size, robot.size/2, 0, 0, Math.PI*2);
             ctx.fill();
-            ctx.closePath();
 
-            // Check if enemy touches player
-            let distToPlayer = Math.hypot(player.x - enemy.x, player.y - enemy.y);
-            if (distToPlayer < player.size + enemy.size) {
-                player.health -= 0.5; // Damage player
-                document.getElementById("health").innerText = Math.max(0, Math.floor(player.health));
+            // Robot Metal Armour (3D Block look)
+            ctx.fillStyle = "#222533"; // Base shadow layer
+            ctx.fillRect(-18, -18, 36, 36);
+            ctx.fillStyle = "#3a3f58"; // Top metallic layer
+            ctx.fillRect(-15, -15, 30, 30);
+
+            // Left & Right Shoulder Pods (Thick 3D armor)
+            ctx.fillStyle = "#ff0055";
+            ctx.fillRect(-8, -19, 10, 4);
+            ctx.fillRect(-8, 15, 10, 4);
+
+            // Glowing Cyber-Eye Panel
+            ctx.fillStyle = "#ff0055";
+            ctx.shadowColor = "#ff0055";
+            ctx.shadowBlur = 15;
+            ctx.fillRect(8, -8, 5, 16);
+            
+            ctx.restore();
+            ctx.shadowBlur = 0;
+
+            // Collision: Robot hits Human armor
+            let distToPlayer = Math.hypot(player.x - robot.x, player.y - robot.y);
+            if (distToPlayer < player.size + robot.size - 5) {
+                player.health -= 0.7;
+                document.getElementById("health").style.width = Math.max(0, player.health) + "%";
             }
 
-            // Check bullet collision with enemy
+            // Collision: Laser hits Robot 3D Box
             bullets.forEach((bullet, bIndex) => {
-                let distToBullet = Math.hypot(enemy.x - bullet.x, enemy.y - bullet.y);
-                if (distToBullet < enemy.size + 4) {
+                let distToBullet = Math.hypot(robot.x - bullet.x, robot.y - bullet.y);
+                if (distToBullet < robot.size + 4) {
                     enemies.splice(eIndex, 1);
                     bullets.splice(bIndex, 1);
                     player.kills++;
@@ -174,7 +263,6 @@
         requestAnimationFrame(update);
     }
 
-    // Start Game Loop
     update();
 </script>
 
