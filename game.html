@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Humans Vs Robots: Cyber Evolution</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Arena: Evolution Pro</title>
     <style>
         body {
             margin: 0;
@@ -19,36 +19,38 @@
             overflow: hidden;
             transition: background-color 1s ease;
             user-select: none;
+            touch-action: none;
         }
 
         h1 {
             margin: 5px 0;
-            font-size: 24px;
+            font-size: 22px;
             text-shadow: 0 0 10px var(--neon-color, #00ffcc);
-            transition: text-shadow 1s ease;
         }
 
         #ui-container {
             display: flex;
-            gap: 20px;
-            font-size: 18px;
-            margin-bottom: 10px;
+            gap: 10px;
+            font-size: 14px;
+            margin-bottom: 5px;
             font-weight: bold;
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         .ui-box {
             background: rgba(255, 255, 255, 0.1);
-            padding: 5px 15px;
+            padding: 4px 10px;
             border-radius: 5px;
             border: 1px solid var(--neon-color, #00ffcc);
             box-shadow: 0 0 5px var(--neon-color, #00ffcc);
-            transition: border 1s ease, box-shadow 1s ease;
         }
 
         #canvas-container {
             position: relative;
             overflow: hidden;
             border-radius: 10px;
+            max-width: 100%;
         }
 
         canvas {
@@ -57,18 +59,12 @@
             border-radius: 10px;
             box-shadow: 0 0 25px #00ffcc;
             display: block;
-            transition: border-color 1s ease, box-shadow 1s ease;
+            max-width: 100vw;
+            max-height: 60vh;
         }
 
-        #controls-info {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #aaa;
-            text-align: center;
-            line-height: 1.5;
-        }
-
-        #game-over-screen {
+        /* Screen Popups */
+        .overlay-screen {
             position: absolute;
             top: 0;
             left: 0;
@@ -77,20 +73,23 @@
             align-items: center;
             justify-content: center;
             background: rgba(0, 0, 0, 0.9);
-            width: 800px;
-            height: 500px;
+            width: 100%;
+            height: 100%;
             border-radius: 10px;
             z-index: 10;
+            text-align: center;
         }
 
-        #game-over-screen h2 {
-            font-size: 45px;
+        .overlay-screen h2 {
+            font-size: 38px;
             color: #ff3333;
             margin: 0 0 20px 0;
             text-shadow: 0 0 15px #ff0000;
-            text-align: center;
-            white-space: pre-wrap;
-            font-weight: 900;
+        }
+
+        #level-up-screen h2 {
+            color: #00ffcc;
+            text-shadow: 0 0 15px #00ffcc;
         }
 
         button {
@@ -108,15 +107,62 @@
 
         button:hover {
             transform: scale(1.05);
-            background: #ff3377;
         }
 
-        /* Active Weapon Indicator */
-        #weapon-status {
-            font-size: 14px;
-            color: #00ffcc;
-            text-shadow: 0 0 5px #00ffcc;
+        #next-lvl-btn {
+            background: #00ffcc;
+            color: #000;
+            box-shadow: 0 0 15px #00ffcc;
+        }
+
+        /* Mobile Controls Layout */
+        #mobile-controls {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            justify-content: space-between;
+            padding: 10px 20px;
+            box-sizing: border-box;
+            margin-top: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .touch-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid var(--neon-color, #00ffcc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+
+        .touch-btn:active {
+            background: rgba(0, 255, 255, 0.4);
+            transform: scale(0.9);
+        }
+
+        #fire-btn {
+            background: rgba(255, 50, 50, 0.3);
+            border-color: #ff3333;
+            width: 70px;
+            height: 70px;
+        }
+
+        #controls-info {
             margin-top: 5px;
+            font-size: 12px;
+            color: #aaa;
+            text-align: center;
         }
     </style>
 </head>
@@ -129,28 +175,55 @@
         <div class="ui-box">Kills: <span id="kills-val">0</span></div>
         <div class="ui-box">HP: <span id="hp-val">100</span>%</div>
         <div class="ui-box">Lives: <span id="lives-val">3</span></div>
+        <div class="ui-box" id="mode-box" style="color: #00ffcc;">Normal Mode</div>
     </div>
 
     <div id="canvas-container">
         <canvas id="gameCanvas" width="800" height="500"></canvas>
         
-        <div id="game-over-screen">
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="overlay-screen">
             <h2 id="gov-title">GAME OVER</h2>
             <button onclick="resetGame()">Play Again</button>
+        </div>
+
+        <!-- Level Up Pop-up Screen -->
+        <div id="level-up-screen" class="overlay-screen">
+            <h2>LEVEL CLEARED! 🎉</h2>
+            <p style="font-size: 18px; margin-bottom: 25px;">Tayyar ho jao aglay dushmanon ke liye!</p>
+            <button id="next-lvl-btn" onclick="startNextLevel()">Next Level ➡️</button>
+        </div>
+    </div>
+
+    <!-- Mobile Screen Buttons -->
+    <div id="mobile-controls">
+        <div class="btn-group">
+            <div class="touch-btn" id="btn-left">◀</div>
+            <div class="touch-btn" id="btn-right">▶</div>
+            <div class="touch-btn" id="btn-up">▲</div>
+        </div>
+        <div class="btn-group">
+            <div class="touch-btn" id="btn-dash" style="font-size: 12px; background: rgba(0, 255, 200, 0.2);">DASH</div>
+            <div class="touch-btn" id="fire-btn">🔥</div>
         </div>
     </div>
 
     <div id="controls-info">
-        Move: <b>W, A, S, D</b> / <b>Arrows</b> | Jump: <b>Space</b> | Shoot: <b>Mouse Click</b><br>
-        💨 Dash: <b>Shift Key</b> + Direction | Current Weapon: <span id="weapon-status">Standard Pistol</span>
+        PC: <b>WASD/Arrows</b> to Move | <b>Space</b> Jump | <b>Shift</b> Dash | <b>Mouse Click</b> Shoot
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const govScreen = document.getElementById('game-over-screen');
+        const lvlScreen = document.getElementById('level-up-screen');
         const govTitle = document.getElementById('gov-title');
-        const weaponStatusText = document.getElementById('weapon-status');
+        const modeBox = document.getElementById('mode-box');
+
+        // Show Mobile Controls if touchscreen detected
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            document.getElementById('mobile-controls').style.display = 'flex';
+        }
 
         // Game State Variables
         let level = 1;
@@ -159,13 +232,16 @@
         let gameActive = true;
         let shakeTime = 0;
         let shakeIntensity = 0;
+        
+        // Hit-Freeze (Recovery/Rukne wala effect)
+        let freezeFrames = 0; 
 
         // Player Object
         const player = {
             x: 100,
             y: 400,
-            width: 25,
-            height: 45,
+            width: 28,
+            height: 50,
             hp: 100,
             speed: 5.5,
             vx: 0,
@@ -174,6 +250,13 @@
             color: '#66fcf1',
             facing: 1, // 1 for Right, -1 for Left
             
+            // Invincibility after hit
+            invincibleTimer: 0,
+
+            // Advanced Mode System
+            isAdvanced: false,
+            advancedTimer: 0,
+
             // Dash system
             dashCooldown: 0,
             dashTime: 0,
@@ -183,14 +266,14 @@
             dashTrails: [],
 
             // Weapon state
-            activeWeapon: 'PISTOL', // PISTOL, TRIPLE, RAPID, PLASMA
+            activeWeapon: 'PISTOL', 
             weaponTimer: 0
         };
 
         const gravity = 0.65;
         const floorY = 440; 
 
-        // Game Entities
+        // Game Lists
         let bullets = [];
         let enemyBullets = [];
         let enemies = [];
@@ -201,18 +284,19 @@
         // Keyboard Controls
         const keys = {};
 
-        // Mouse Controls
-        let mouseX = 0;
-        let mouseY = 0;
+        // Mouse/Touch Firing Coordinate Tracking
+        let mouseX = 600;
+        let mouseY = 250;
         let isMouseDown = false;
         let rapidFireCooldown = 0;
 
-        // Enemy Configs (Ab shooting rates bhi shamil hain!)
+        // Enemy Types with Custom Shapes & Drops
         const ENEMY_TYPES = {
-            EASY: { hp: 1, speed: 1.6, color: '#00ffcc', size: 20, points: 1, shootRate: 0 },
-            MEDIUM: { hp: 3, speed: 2.2, color: '#ffcc00', size: 24, points: 2, shootRate: 0.007 }, // occasional shots
-            HARD: { hp: 6, speed: 2.8, color: '#ff3300', size: 28, points: 3, shootRate: 0.015 },  // shoots often
-            BOSS: { hp: 120, speed: 1.0, color: '#ff0055', size: 60, points: 10, shootRate: 0.04 }  // bullet hell boss
+            EASY: { hp: 1, speed: 1.6, color: '#00ffcc', size: 24, points: 1, shootRate: 0, aerial: false },
+            MEDIUM: { hp: 3, speed: 2.2, color: '#ffcc00', size: 26, points: 2, shootRate: 0.007, aerial: false },
+            HARD: { hp: 6, speed: 2.8, color: '#ff3300', size: 28, points: 3, shootRate: 0.015, aerial: false },
+            AERIAL: { hp: 2, speed: 1.8, color: '#d946ef', size: 22, points: 2, shootRate: 0.01, aerial: true }, // Girnay wala dushman
+            BOSS: { hp: 120, speed: 1.0, color: '#ff0055', size: 60, points: 10, shootRate: 0.04, aerial: false }
         };
 
         const THEMES = [
@@ -254,7 +338,7 @@
             document.body.style.backgroundColor = activeTheme.background;
             canvas.style.borderColor = activeTheme.neon;
             canvas.style.boxShadow = `0 0 25px ${activeTheme.neon}`;
-            player.color = activeTheme.neon;
+            if(!player.isAdvanced) player.color = activeTheme.neon;
         }
 
         function spawnEnemies() {
@@ -272,6 +356,7 @@
                     color: ENEMY_TYPES.BOSS.color,
                     size: ENEMY_TYPES.BOSS.size,
                     isBoss: true,
+                    aerial: false,
                     points: ENEMY_TYPES.BOSS.points,
                     shootRate: ENEMY_TYPES.BOSS.shootRate,
                     shootCooldown: 0
@@ -285,24 +370,31 @@
                 let type = ENEMY_TYPES.EASY;
                 let rand = Math.random() * 100;
 
-                if (level > 40) {
-                    if (rand > 70) type = ENEMY_TYPES.HARD;
-                    else if (rand > 30) type = ENEMY_TYPES.MEDIUM;
-                } else if (level > 15) {
-                    if (rand > 65) type = ENEMY_TYPES.MEDIUM;
+                // Pick type based on level
+                if (level > 25) {
+                    if (rand > 75) type = ENEMY_TYPES.HARD;
+                    else if (rand > 50) type = ENEMY_TYPES.AERIAL;
+                    else if (rand > 25) type = ENEMY_TYPES.MEDIUM;
+                } else if (level > 8) {
+                    if (rand > 70) type = ENEMY_TYPES.AERIAL;
+                    else if (rand > 35) type = ENEMY_TYPES.MEDIUM;
                 }
 
-                let spawnX = 450 + Math.random() * 300;
+                let spawnX = 350 + Math.random() * 400;
+                let spawnY = type.aerial ? -50 - (Math.random() * 150) : floorY - type.size; // Top spawn for air units
                 
                 enemies.push({
                     x: spawnX,
-                    y: floorY - type.size,
+                    y: spawnY,
+                    targetY: floorY - type.size,
                     hp: type.hp + Math.floor(level / 12), 
                     maxHp: type.hp + Math.floor(level / 12),
                     speed: type.speed + (level * 0.02),   
                     color: type.color,
                     size: type.size,
                     isBoss: false,
+                    aerial: type.aerial,
+                    descending: type.aerial,
                     points: type.points,
                     shootRate: type.shootRate + (level * 0.0005),
                     shootCooldown: Math.random() * 60
@@ -310,14 +402,10 @@
             }
         }
 
-        // Controls
+        // --- Keyboard Listener ---
         window.addEventListener('keydown', (e) => { 
             keys[e.code] = true; 
-            
-            // Trigger Dash on Shift Press
-            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
-                triggerDash();
-            }
+            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash();
         });
         window.addEventListener('keyup', (e) => { keys[e.code] = false; });
         
@@ -330,14 +418,50 @@
         canvas.addEventListener('mousedown', () => { isMouseDown = true; fireActiveWeapon(); });
         canvas.addEventListener('mouseup', () => { isMouseDown = false; });
 
+        // --- Touch Buttons Listeners for Mobile ---
+        const setupMobileButton = (id, keyCode) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyCode] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyCode] = false; });
+        };
+
+        setupMobileButton('btn-left', 'KeyA');
+        setupMobileButton('btn-right', 'KeyD');
+        setupMobileButton('btn-up', 'Space');
+
+        document.getElementById('btn-dash')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerDash();
+        });
+
+        document.getElementById('fire-btn')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            // Fire towards enemy closest, or forward based on player facing
+            let targetX = player.x + player.facing * 200;
+            let targetY = player.y + player.height/2;
+            if (enemies.length > 0) {
+                targetX = enemies[0].x;
+                targetY = enemies[0].y;
+            }
+            mouseX = targetX;
+            mouseY = targetY;
+            isMouseDown = true;
+            fireActiveWeapon();
+        });
+        document.getElementById('fire-btn')?.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isMouseDown = false;
+        });
+
+
         function triggerDash() {
             if (player.dashCooldown > 0 || player.isDashing) return;
             
             player.isDashing = true;
-            player.dashTime = 12; // active for 12 frames
-            player.dashCooldown = 45; // cooldown
+            player.dashTime = 12; 
+            player.dashCooldown = 45; 
             
-            // Determine direction based on keyboard input
             if (keys['KeyA'] || keys['ArrowLeft']) player.dashDirection = -1;
             else if (keys['KeyD'] || keys['ArrowRight']) player.dashDirection = 1;
             else player.dashDirection = player.facing;
@@ -346,24 +470,36 @@
         }
 
         function fireActiveWeapon() {
-            if (!gameActive) return;
+            if (!gameActive || freezeFrames > 0) return;
 
             const angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
             const startX = player.x + player.width / 2;
             const startY = player.y + player.height / 2;
 
+            // Advanced Mode doubles attack and rates
+            const multiplier = player.isAdvanced ? 2 : 1;
+
             if (player.activeWeapon === 'PISTOL') {
                 createBullet(startX, startY, angle, 10, 6, '#fff', 1);
+                if(player.isAdvanced) {
+                    createBullet(startX, startY, angle + 0.1, 10, 6, '#ffd700', 1);
+                }
                 applyShake(2, 4);
             } 
             else if (player.activeWeapon === 'TRIPLE') {
                 createBullet(startX, startY, angle, 11, 6, '#22c55e', 1.2);
-                createBullet(startX, startY, angle - 0.2, 11, 6, '#22c55e', 1.2);
-                createBullet(startX, startY, angle + 0.2, 11, 6, '#22c55e', 1.2);
+                createBullet(startX, startY, angle - 0.15, 11, 6, '#22c55e', 1.2);
+                createBullet(startX, startY, angle + 0.15, 11, 6, '#22c55e', 1.2);
+                if (player.isAdvanced) {
+                    createBullet(startX, startY, angle - 0.3, 11, 5, '#ffd700', 1);
+                    createBullet(startX, startY, angle + 0.3, 11, 5, '#ffd700', 1);
+                }
                 applyShake(4, 6);
             }
             else if (player.activeWeapon === 'PLASMA') {
-                createBullet(startX, startY, angle, 7, 16, '#ef4444', 4, true); // Pierces & huge damage
+                let plasmaSize = player.isAdvanced ? 24 : 16;
+                let dmg = player.isAdvanced ? 8 : 4;
+                createBullet(startX, startY, angle, 7, plasmaSize, '#ef4444', dmg, true); 
                 applyShake(8, 12);
             }
         }
@@ -378,9 +514,8 @@
                 color: color,
                 damage: dmg,
                 pierces: pierces,
-                hitEnemies: [] // For pierce tracking
+                hitEnemies: [] 
             });
-            // Spawn little muzzle flash muzzle spark
             createExplosion(x, y, color, 3);
         }
 
@@ -408,6 +543,8 @@
             player.y = floorY - player.height;
             player.activeWeapon = 'PISTOL';
             player.weaponTimer = 0;
+            player.isAdvanced = false;
+            player.advancedTimer = 0;
             bullets = [];
             enemyBullets = [];
             particles = [];
@@ -418,10 +555,20 @@
             
             gameActive = true;
             govScreen.style.display = 'none';
+            lvlScreen.style.display = 'none';
         }
 
-        function nextLevel() {
+        function levelClearSequence() {
+            // Pause action and show the Popup Screen
+            gameActive = false;
+            lvlScreen.style.display = 'flex';
+        }
+
+        function startNextLevel() {
             level++;
+            lvlScreen.style.display = 'none';
+            gameActive = true;
+
             if (level > 100) {
                 gameActive = false;
                 govTitle.innerText = "🏆 VICTORY! 🏆\nYou Saved Earth!";
@@ -435,33 +582,144 @@
             
             updateGraphicsTheme();
             spawnEnemies();
-            spawnDamageText(400, 200, "LEVEL CLEAR! 🔥", player.color);
+            spawnDamageText(400, 200, "LET'S GO! 🔥", player.color);
+        }
+
+        function triggerHitFreeze() {
+            // Game 10 frames (approx 0.15s) k liye ruki rhegi recovery k liye
+            freezeFrames = 10;
+            player.invincibleTimer = 60; // 1 second invincibility
+        }
+
+        // Drawing Helper for Human/Enemy Body Parts
+        function drawHumanBody(ctx, x, y, width, height, color, isFacingRight, isHitFlash) {
+            ctx.save();
+            if (isHitFlash && Math.floor(Date.now() / 80) % 2 === 0) {
+                ctx.fillStyle = '#ff0000'; // Flash red color
+            } else {
+                ctx.fillStyle = color;
+            }
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+
+            // 1. Head
+            ctx.beginPath();
+            ctx.arc(x + width/2, y + 8, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Torso (Body)
+            ctx.fillRect(x + width/2 - 6, y + 16, 12, 18);
+
+            // 3. Hands (Aiming direction)
+            ctx.fillStyle = '#ffffff';
+            let handOffset = isFacingRight ? 8 : -8;
+            ctx.fillRect(x + width/2 + handOffset - 3, y + 20, 6, 12);
+
+            // 4. Legs
+            ctx.fillStyle = color;
+            ctx.fillRect(x + width/2 - 5, y + 34, 4, 16); // Left leg
+            ctx.fillRect(x + width/2 + 1, y + 34, 4, 16); // Right leg
+
+            // 5. Eye / Visor
+            ctx.fillStyle = '#000';
+            let eyeX = isFacingRight ? x + width/2 + 2 : x + width/2 - 6;
+            ctx.fillRect(eyeX, y + 5, 4, 3);
+
+            ctx.restore();
+        }
+
+        function drawEnemyBody(ctx, x, y, size, color, isBoss) {
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = color;
+
+            if (isBoss) {
+                // Large Cyber Boss Tank design
+                ctx.fillRect(x, y + 15, size, size - 15);
+                ctx.fillStyle = '#222';
+                ctx.fillRect(x + 10, y + 25, size - 20, size - 40);
+                // Glowing eyes
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(x + 15, y + 5, 10, 5);
+                ctx.fillRect(x + size - 25, y + 5, 10, 5);
+            } else {
+                // Alien/Robot Humanoid Shape
+                // Head (Spiked)
+                ctx.beginPath();
+                ctx.moveTo(x + size/2, y);
+                ctx.lineTo(x + size, y + size/3);
+                ctx.lineTo(x, y + size/3);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Torso
+                ctx.fillRect(x + 3, y + size/3, size - 6, size/2);
+                // Glowing Eye center
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(x + size/2 - 2, y + size/4, 4, 4);
+                // Tiny spike legs
+                ctx.fillStyle = color;
+                ctx.fillRect(x + 4, y + (size * 0.8), 4, size * 0.2);
+                ctx.fillRect(x + size - 8, y + (size * 0.8), 4, size * 0.2);
+            }
+            ctx.restore();
         }
 
         function update() {
             if (!gameActive) return;
 
-            // Handle Camera Shake decay
+            // If Frame Freeze Active, don't update positions (Recovery State)
+            if (freezeFrames > 0) {
+                freezeFrames--;
+                return;
+            }
+
+            // Decrement invincibility
+            if (player.invincibleTimer > 0) player.invincibleTimer--;
+
+            // Camera Shake decay
             if (shakeTime > 0) shakeTime--;
+
+            // Advanced Overdrive Mode activation
+            if (kills >= 15 && !player.isAdvanced) {
+                player.isAdvanced = true;
+                player.advancedTimer = 600; // 10 seconds of glory
+                player.color = '#ffd700'; // Gold Advanced Color
+                modeBox.innerText = "⭐ ADVANCED MODE ⭐";
+                modeBox.style.color = '#ffd700';
+                spawnDamageText(player.x, player.y - 30, "ADVANCED OVERDRIVE! 🔥", '#ffd700');
+                applyShake(15, 20);
+            }
+
+            if (player.isAdvanced) {
+                player.advancedTimer--;
+                if(player.advancedTimer <= 0) {
+                    player.isAdvanced = false;
+                    player.color = '#00ffcc';
+                    modeBox.innerText = "Normal Mode";
+                    modeBox.style.color = '#00ffcc';
+                    updateGraphicsTheme();
+                }
+            }
 
             // Weapon timers
             if (player.activeWeapon !== 'PISTOL') {
                 player.weaponTimer--;
-                weaponStatusText.innerText = `${player.activeWeapon} (${Math.round(player.weaponTimer/60)}s)`;
                 if (player.weaponTimer <= 0) {
                     player.activeWeapon = 'PISTOL';
-                    weaponStatusText.innerText = "Standard Pistol";
-                    weaponStatusText.style.color = '#00ffcc';
                 }
             }
 
-            // Rapid Fire Auto-firing logic
+            // Rapid Fire Firing
             if (player.activeWeapon === 'RAPID' && isMouseDown) {
                 rapidFireCooldown--;
                 if (rapidFireCooldown <= 0) {
                     const angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
-                    createBullet(player.x + player.width / 2, player.y + player.height / 2, angle, 14, 5, '#eab308', 0.8);
-                    rapidFireCooldown = 6; // quick fire rate
+                    let speed = player.isAdvanced ? 18 : 14;
+                    let fireRate = player.isAdvanced ? 3 : 6;
+                    createBullet(player.x + player.width / 2, player.y + player.height / 2, angle, speed, 5, '#eab308', 0.8);
+                    rapidFireCooldown = fireRate;
                     applyShake(1.5, 2);
                 }
             }
@@ -471,10 +729,9 @@
             
             if (player.isDashing) {
                 player.vx = player.dashSpeed * player.dashDirection;
-                player.vy = 0; // suspend gravity slightly
+                player.vy = 0; 
                 player.dashTime--;
                 
-                // Spawn Ghost Trail particle
                 player.dashTrails.push({
                     x: player.x,
                     y: player.y,
@@ -488,7 +745,6 @@
                     player.isDashing = false;
                 }
             } else {
-                // Regular lateral movement
                 if (keys['KeyA'] || keys['ArrowLeft']) {
                     player.vx = -player.speed;
                     player.facing = -1;
@@ -499,13 +755,11 @@
                     player.vx = 0;
                 }
 
-                // Jumping mechanics
                 if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && !player.isJumping) {
                     player.vy = -12.5;
                     player.isJumping = true;
                 }
 
-                // Apply gravity
                 player.vy += gravity;
             }
 
@@ -513,11 +767,10 @@
             player.x += player.vx;
             player.y += player.vy;
 
-            // Boundary clamping
+            // Boundaries
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 
-            // Floor Y Collision
             if (player.y + player.height >= floorY) {
                 player.y = floorY - player.height;
                 player.vy = 0;
@@ -545,16 +798,17 @@
                 eb.x += eb.vx;
                 eb.y += eb.vy;
 
-                // Collision with Player
+                // Hit detection with player
                 if (eb.x > player.x && eb.x < player.x + player.width &&
                     eb.y > player.y && eb.y < player.y + player.height) {
                     
                     enemyBullets.splice(ebIdx, 1);
-                    if (!player.isDashing) { // Invincible during Dash
-                        player.hp -= 8;
+                    if (!player.isDashing && player.invincibleTimer === 0) { 
+                        player.hp -= 10;
                         createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 10);
-                        applyShake(6, 12);
-                        spawnDamageText(player.x, player.y - 10, "-8 HP", "#ff3333");
+                        applyShake(8, 15);
+                        spawnDamageText(player.x, player.y - 10, "-10 HP", "#ff3333");
+                        triggerHitFreeze(); // Freeze frame on hit
                         checkPlayerDeath();
                     }
                 }
@@ -566,13 +820,23 @@
 
             // Update Enemies
             enemies.forEach((enemy, eIdx) => {
-                if (enemy.x > player.x) {
-                    enemy.x -= enemy.speed;
+                // Aerial Drop Handling
+                if (enemy.aerial && enemy.descending) {
+                    enemy.y += 2.5; // fall gently from above
+                    if (enemy.y >= enemy.targetY) {
+                        enemy.y = enemy.targetY;
+                        enemy.descending = false;
+                    }
                 } else {
-                    enemy.x += enemy.speed;
+                    // Regular ground AI tracking player
+                    if (enemy.x > player.x) {
+                        enemy.x -= enemy.speed;
+                    } else {
+                        enemy.x += enemy.speed;
+                    }
                 }
 
-                // Enemy Shooting AI
+                // AI Shooting
                 if (enemy.shootRate > 0) {
                     enemy.shootCooldown--;
                     if (enemy.shootCooldown <= 0 && Math.random() < enemy.shootRate) {
@@ -585,7 +849,7 @@
                             size: 6,
                             color: '#ff3300'
                         });
-                        enemy.shootCooldown = 80; // cooldown rate frames
+                        enemy.shootCooldown = 90; 
                     }
                 }
 
@@ -595,24 +859,21 @@
                     enemy.y < player.y + player.height &&
                     enemy.y + enemy.size > player.y) {
                     
-                    if (!player.isDashing) {
-                        player.hp -= enemy.isBoss ? 2.5 : 0.6; 
-                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 2);
-                        applyShake(3, 4);
-
-                        if (Math.random() < 0.15) {
-                            spawnDamageText(player.x, player.y - 10, enemy.isBoss ? "-3" : "-1", "#ff5555");
-                        }
+                    if (!player.isDashing && player.invincibleTimer === 0) {
+                        player.hp -= enemy.isBoss ? 3 : 1; 
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 5);
+                        applyShake(6, 10);
+                        spawnDamageText(player.x, player.y - 10, enemy.isBoss ? "-3 HP" : "-1 HP", "#ff5555");
+                        triggerHitFreeze(); // Freeze frame on body crash
                         checkPlayerDeath();
                     }
                 }
 
-                // Enemy bullet collisions
+                // Player shooting enemy detection
                 bullets.forEach((b, bIdx) => {
                     if (b.x > enemy.x && b.x < enemy.x + enemy.size &&
                         b.y > enemy.y && b.y < enemy.y + enemy.size) {
                         
-                        // Check for pierce hits
                         if (b.pierces && b.hitEnemies.includes(enemy)) return;
 
                         if (!b.pierces) {
@@ -633,13 +894,12 @@
                             kills += enemy.points;
                             applyShake(7, 10);
 
-                            // Randomly Drop a Powerup Crate
                             if (Math.random() < 0.35) {
                                 spawnPowerup(enemy.x + enemy.size/2, enemy.y + enemy.size/2);
                             }
 
                             if (enemies.length === 0) {
-                                nextLevel();
+                                levelClearSequence(); // Triggers Pop-up
                             }
                         }
                     }
@@ -648,10 +908,8 @@
 
             // Update Powerups
             powerups.forEach((pu, idx) => {
-                // float effect
                 pu.y += Math.sin(Date.now() * 0.01) * 0.4;
                 
-                // Pick up detection
                 if (pu.x > player.x && pu.x < player.x + player.width &&
                     pu.y > player.y && pu.y < player.y + player.height) {
                     
@@ -660,7 +918,7 @@
                 }
             });
 
-            // Update Damage Numbers
+            // Damage and Particles Update
             damageTexts.forEach((dt, idx) => {
                 dt.x += dt.vx;
                 dt.y += dt.vy;
@@ -668,7 +926,6 @@
                 if (dt.life <= 0) damageTexts.splice(idx, 1);
             });
 
-            // Update Particles
             particles.forEach((p, idx) => {
                 p.x += p.vx;
                 p.y += p.vy;
@@ -676,7 +933,6 @@
                 if (p.life <= 0) particles.splice(idx, 1);
             });
 
-            // Update standard displays
             document.getElementById('level-val').innerText = level;
             document.getElementById('kills-val').innerText = kills;
             document.getElementById('hp-val').innerText = Math.round(player.hp);
@@ -689,8 +945,9 @@
                 player.hp = 100; 
                 player.x = 100; 
                 player.activeWeapon = 'PISTOL';
-                weaponStatusText.innerText = "Standard Pistol";
-                weaponStatusText.style.color = '#00ffcc';
+                player.isAdvanced = false;
+                modeBox.innerText = "Normal Mode";
+                modeBox.style.color = '#00ffcc';
                 spawnDamageText(player.x, player.y - 20, "RESPAWNED 💀", "#ff3300");
 
                 if (lives <= 0) {
@@ -719,29 +976,24 @@
 
         function activatePowerup(type) {
             player.activeWeapon = type;
-            player.weaponTimer = 500; // lasts ~8 seconds
+            player.weaponTimer = 500; 
 
-            let neonColor = '#22c55e';
             if (type === 'TRIPLE') {
-                weaponStatusText.style.color = '#22c55e';
-                spawnDamageText(player.x, player.y - 25, "TRIPLE SHOT UNLOCKED! 🟢", '#22c55e');
+                spawnDamageText(player.x, player.y - 25, "TRIPLE SHOT! 🟢", '#22c55e');
             } else if (type === 'RAPID') {
-                weaponStatusText.style.color = '#eab308';
-                spawnDamageText(player.x, player.y - 25, "RAPID FIRE AUTOMATIC! 🟡", '#eab308');
+                spawnDamageText(player.x, player.y - 25, "RAPID FIRE! 🟡", '#eab308');
                 rapidFireCooldown = 0;
             } else if (type === 'PLASMA') {
-                weaponStatusText.style.color = '#ef4444';
-                spawnDamageText(player.x, player.y - 25, "PIERCING PLASMA BLAST! 🔴", '#ef4444');
+                spawnDamageText(player.x, player.y - 25, "PLASMA BLAST! 🔴", '#ef4444');
             }
             applyShake(10, 15);
         }
 
-        // Main Draw Render Loop
+        // Draw Render Loop
         function draw() {
             let themeIndex = Math.floor((level - 1) / 10);
             if (themeIndex > 9) themeIndex = 9;
 
-            // Apply screen shake offsets
             ctx.save();
             if (shakeTime > 0) {
                 let dx = (Math.random() - 0.5) * shakeIntensity;
@@ -752,11 +1004,10 @@
             ctx.fillStyle = THEMES[themeIndex].canvasBg;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Ground
+            // Floor
             ctx.fillStyle = '#171719';
             ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
             
-            // Draw Ground Neon Line border
             ctx.strokeStyle = THEMES[themeIndex].neon;
             ctx.lineWidth = 4;
             ctx.beginPath();
@@ -764,27 +1015,19 @@
             ctx.lineTo(canvas.width, floorY);
             ctx.stroke();
 
-            // Draw Ghost/Dash Trails
+            // Ghost Trails (Dash)
             player.dashTrails.forEach(trail => {
-                ctx.fillStyle = trail.color;
-                ctx.globalAlpha = trail.life / 10 * 0.4;
-                ctx.fillRect(trail.x, trail.y, trail.width, trail.height);
+                ctx.save();
+                ctx.globalAlpha = trail.life / 10 * 0.3;
+                drawHumanBody(ctx, trail.x, trail.y, trail.width, trail.height, trail.color, player.facing > 0, false);
+                ctx.restore();
             });
-            ctx.globalAlpha = 1.0;
 
-            // Draw Player
-            ctx.fillStyle = player.color;
-            ctx.shadowBlur = player.isDashing ? 30 : 15;
-            ctx.shadowColor = player.color;
-            ctx.fillRect(player.x, player.y, player.width, player.height);
-            
-            // Visor (Facing logic)
-            ctx.fillStyle = '#fff';
-            let eyeX = player.facing === 1 ? player.x + 12 : player.x + 3;
-            ctx.fillRect(eyeX, player.y + 10, 10, 5);
-            ctx.shadowBlur = 0; 
+            // Draw Player Human Body shape
+            const flashing = (player.invincibleTimer > 0);
+            drawHumanBody(ctx, player.x, player.y, player.width, player.height, player.color, player.facing > 0, flashing);
 
-            // Draw Powerups (Glowing Cubes)
+            // Draw Powerups
             powerups.forEach(pu => {
                 ctx.fillStyle = pu.color;
                 ctx.shadowBlur = 15;
@@ -793,13 +1036,9 @@
                 ctx.shadowBlur = 0;
             });
 
-            // Draw Enemies
+            // Draw Enemy Bods
             enemies.forEach(enemy => {
-                ctx.fillStyle = enemy.color;
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = enemy.color;
-                ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
-                ctx.shadowBlur = 0;
+                drawEnemyBody(ctx, enemy.x, enemy.y, enemy.size, enemy.color, enemy.isBoss);
 
                 if (enemy.hp < enemy.maxHp) {
                     ctx.fillStyle = '#ff0033';
@@ -809,7 +1048,7 @@
                 }
             });
 
-            // Draw Bullets (Glowing circles)
+            // Draw Bullets
             bullets.forEach(b => {
                 ctx.fillStyle = b.color;
                 ctx.shadowBlur = 12;
@@ -820,7 +1059,7 @@
                 ctx.shadowBlur = 0;
             });
 
-            // Draw Enemy Bullets (Red Orbs)
+            // Draw Enemy Bullets
             enemyBullets.forEach(eb => {
                 ctx.fillStyle = eb.color;
                 ctx.shadowBlur = 10;
@@ -848,10 +1087,9 @@
             });
             ctx.globalAlpha = 1.0; 
 
-            ctx.restore(); // Restore context back from shake offsets
+            ctx.restore();
         }
 
-        // Main Game Loop Runner
         function loop() {
             update();
             draw();
