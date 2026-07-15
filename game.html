@@ -36,6 +36,7 @@
             font-weight: bold;
             flex-wrap: wrap;
             justify-content: center;
+            align-items: center;
         }
 
         .ui-box {
@@ -44,6 +45,19 @@
             border-radius: 5px;
             border: 1px solid var(--neon-color, #00ffcc);
             box-shadow: 0 0 5px var(--neon-color, #00ffcc);
+        }
+
+        /* Pause Button in UI */
+        #pause-toggle-btn {
+            background: #ffaa00;
+            color: #000;
+            box-shadow: 0 0 10px #ffaa00;
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
 
         #canvas-container {
@@ -87,7 +101,7 @@
             text-shadow: 0 0 15px #ff0000;
         }
 
-        #level-up-screen h2 {
+        #level-up-screen h2, #pause-screen h2 {
             color: #00ffcc;
             text-shadow: 0 0 15px #00ffcc;
         }
@@ -109,7 +123,7 @@
             transform: scale(1.05);
         }
 
-        #next-lvl-btn {
+        #next-lvl-btn, #resume-btn {
             background: #00ffcc;
             color: #000;
             box-shadow: 0 0 15px #00ffcc;
@@ -176,6 +190,7 @@
         <div class="ui-box">HP: <span id="hp-val">100</span>%</div>
         <div class="ui-box">Lives: <span id="lives-val">3</span></div>
         <div class="ui-box" id="mode-box" style="color: #00ffcc;">Normal Mode</div>
+        <button id="pause-toggle-btn" onclick="togglePause()">PAUSE ⏸️</button>
     </div>
 
     <div id="canvas-container">
@@ -193,6 +208,13 @@
             <p style="font-size: 18px; margin-bottom: 25px;">Tayyar ho jao aglay dushmanon ke liye!</p>
             <button id="next-lvl-btn" onclick="startNextLevel()">Next Level ➡️</button>
         </div>
+
+        <!-- Pause Overlay Screen -->
+        <div id="pause-screen" class="overlay-screen">
+            <h2>GAME PAUSED ⏸️</h2>
+            <p style="font-size: 18px; margin-bottom: 25px; color: #fff;">Saanse le lo thori der!</p>
+            <button id="resume-btn" onclick="togglePause()">Resume Game ▶️</button>
+        </div>
     </div>
 
     <!-- Mobile Screen Buttons -->
@@ -209,7 +231,7 @@
     </div>
 
     <div id="controls-info">
-        PC: <b>WASD/Arrows</b> to Move | <b>Space</b> Jump | <b>Shift</b> Dash | <b>Mouse Click</b> Shoot
+        PC: <b>WASD/Arrows</b> to Move | <b>Space</b> Jump | <b>Shift</b> Dash | <b>Mouse Click</b> Shoot | <b>P Key</b> Pause
     </div>
 
     <script>
@@ -217,6 +239,7 @@
         const ctx = canvas.getContext('2d');
         const govScreen = document.getElementById('game-over-screen');
         const lvlScreen = document.getElementById('level-up-screen');
+        const pauseScreen = document.getElementById('pause-screen');
         const govTitle = document.getElementById('gov-title');
         const modeBox = document.getElementById('mode-box');
 
@@ -230,6 +253,7 @@
         let kills = 0;
         let lives = 3;
         let gameActive = true;
+        let isPaused = false;
         let shakeTime = 0;
         let shakeIntensity = 0;
         
@@ -248,12 +272,9 @@
             vy: 0,
             isJumping: false,
             color: '#66fcf1',
-            facing: 1, // 1 for Right, -1 for Left
+            facing: 1, 
             
-            // Invincibility after hit
             invincibleTimer: 0,
-
-            // Advanced Mode System
             isAdvanced: false,
             advancedTimer: 0,
 
@@ -295,7 +316,7 @@
             EASY: { hp: 1, speed: 1.6, color: '#00ffcc', size: 24, points: 1, shootRate: 0, aerial: false },
             MEDIUM: { hp: 3, speed: 2.2, color: '#ffcc00', size: 26, points: 2, shootRate: 0.007, aerial: false },
             HARD: { hp: 6, speed: 2.8, color: '#ff3300', size: 28, points: 3, shootRate: 0.015, aerial: false },
-            AERIAL: { hp: 2, speed: 1.8, color: '#d946ef', size: 22, points: 2, shootRate: 0.01, aerial: true }, // Girnay wala dushman
+            AERIAL: { hp: 2, speed: 1.8, color: '#d946ef', size: 22, points: 2, shootRate: 0.01, aerial: true }, 
             BOSS: { hp: 120, speed: 1.0, color: '#ff0055', size: 60, points: 10, shootRate: 0.04, aerial: false }
         };
 
@@ -370,7 +391,6 @@
                 let type = ENEMY_TYPES.EASY;
                 let rand = Math.random() * 100;
 
-                // Pick type based on level
                 if (level > 25) {
                     if (rand > 75) type = ENEMY_TYPES.HARD;
                     else if (rand > 50) type = ENEMY_TYPES.AERIAL;
@@ -381,7 +401,7 @@
                 }
 
                 let spawnX = 350 + Math.random() * 400;
-                let spawnY = type.aerial ? -50 - (Math.random() * 150) : floorY - type.size; // Top spawn for air units
+                let spawnY = type.aerial ? -50 - (Math.random() * 150) : floorY - type.size; 
                 
                 enemies.push({
                     x: spawnX,
@@ -402,20 +422,42 @@
             }
         }
 
+        // --- PAUSE GAME SYSTEM ---
+        function togglePause() {
+            if (!gameActive) return; 
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseScreen.style.display = 'flex';
+                document.getElementById('pause-toggle-btn').innerText = "RESUME ▶️";
+            } else {
+                pauseScreen.style.display = 'none';
+                document.getElementById('pause-toggle-btn').innerText = "PAUSE ⏸️";
+            }
+        }
+
         // --- Keyboard Listener ---
         window.addEventListener('keydown', (e) => { 
             keys[e.code] = true; 
             if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash();
+            if (e.code === 'KeyP') togglePause();
         });
         window.addEventListener('keyup', (e) => { keys[e.code] = false; });
         
+        // FIXED MOUSE AIMING COORDINATES
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
-            mouseX = e.clientX - rect.left;
-            mouseY = e.clientY - rect.top;
+            // Scaling coordinates matching CSS responsive scale to actual Canvas dimensions
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
         });
 
-        canvas.addEventListener('mousedown', () => { isMouseDown = true; fireActiveWeapon(); });
+        canvas.addEventListener('mousedown', (e) => { 
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            isMouseDown = true; 
+            fireActiveWeapon(); 
+        });
         canvas.addEventListener('mouseup', () => { isMouseDown = false; });
 
         // --- Touch Buttons Listeners for Mobile ---
@@ -437,12 +479,12 @@
 
         document.getElementById('fire-btn')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            // Fire towards enemy closest, or forward based on player facing
+            // Automatically locks onto closest enemy if available
             let targetX = player.x + player.facing * 200;
             let targetY = player.y + player.height/2;
             if (enemies.length > 0) {
-                targetX = enemies[0].x;
-                targetY = enemies[0].y;
+                targetX = enemies[0].x + enemies[0].size/2;
+                targetY = enemies[0].y + enemies[0].size/2;
             }
             mouseX = targetX;
             mouseY = targetY;
@@ -454,9 +496,8 @@
             isMouseDown = false;
         });
 
-
         function triggerDash() {
-            if (player.dashCooldown > 0 || player.isDashing) return;
+            if (player.dashCooldown > 0 || player.isDashing || isPaused) return;
             
             player.isDashing = true;
             player.dashTime = 12; 
@@ -470,14 +511,11 @@
         }
 
         function fireActiveWeapon() {
-            if (!gameActive || freezeFrames > 0) return;
+            if (!gameActive || freezeFrames > 0 || isPaused) return;
 
             const angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
             const startX = player.x + player.width / 2;
             const startY = player.y + player.height / 2;
-
-            // Advanced Mode doubles attack and rates
-            const multiplier = player.isAdvanced ? 2 : 1;
 
             if (player.activeWeapon === 'PISTOL') {
                 createBullet(startX, startY, angle, 10, 6, '#fff', 1);
@@ -554,12 +592,13 @@
             spawnEnemies();
             
             gameActive = true;
+            isPaused = false;
             govScreen.style.display = 'none';
             lvlScreen.style.display = 'none';
+            pauseScreen.style.display = 'none';
         }
 
         function levelClearSequence() {
-            // Pause action and show the Popup Screen
             gameActive = false;
             lvlScreen.style.display = 'flex';
         }
@@ -586,41 +625,40 @@
         }
 
         function triggerHitFreeze() {
-            // Game 10 frames (approx 0.15s) k liye ruki rhegi recovery k liye
             freezeFrames = 10;
-            player.invincibleTimer = 60; // 1 second invincibility
+            player.invincibleTimer = 60; 
         }
 
-        // Drawing Helper for Human/Enemy Body Parts
+        // --- Body Shapes Rendering ---
         function drawHumanBody(ctx, x, y, width, height, color, isFacingRight, isHitFlash) {
             ctx.save();
             if (isHitFlash && Math.floor(Date.now() / 80) % 2 === 0) {
-                ctx.fillStyle = '#ff0000'; // Flash red color
+                ctx.fillStyle = '#ff0000'; 
             } else {
                 ctx.fillStyle = color;
             }
             ctx.shadowBlur = 10;
             ctx.shadowColor = color;
 
-            // 1. Head
+            // Head
             ctx.beginPath();
             ctx.arc(x + width/2, y + 8, 8, 0, Math.PI * 2);
             ctx.fill();
 
-            // 2. Torso (Body)
+            // Torso (Body)
             ctx.fillRect(x + width/2 - 6, y + 16, 12, 18);
 
-            // 3. Hands (Aiming direction)
+            // Hands
             ctx.fillStyle = '#ffffff';
             let handOffset = isFacingRight ? 8 : -8;
             ctx.fillRect(x + width/2 + handOffset - 3, y + 20, 6, 12);
 
-            // 4. Legs
+            // Legs
             ctx.fillStyle = color;
-            ctx.fillRect(x + width/2 - 5, y + 34, 4, 16); // Left leg
-            ctx.fillRect(x + width/2 + 1, y + 34, 4, 16); // Right leg
+            ctx.fillRect(x + width/2 - 5, y + 34, 4, 16); 
+            ctx.fillRect(x + width/2 + 1, y + 34, 4, 16); 
 
-            // 5. Eye / Visor
+            // Eye / Visor
             ctx.fillStyle = '#000';
             let eyeX = isFacingRight ? x + width/2 + 2 : x + width/2 - 6;
             ctx.fillRect(eyeX, y + 5, 4, 3);
@@ -635,17 +673,13 @@
             ctx.shadowColor = color;
 
             if (isBoss) {
-                // Large Cyber Boss Tank design
                 ctx.fillRect(x, y + 15, size, size - 15);
                 ctx.fillStyle = '#222';
                 ctx.fillRect(x + 10, y + 25, size - 20, size - 40);
-                // Glowing eyes
                 ctx.fillStyle = '#ff0000';
                 ctx.fillRect(x + 15, y + 5, 10, 5);
                 ctx.fillRect(x + size - 25, y + 5, 10, 5);
             } else {
-                // Alien/Robot Humanoid Shape
-                // Head (Spiked)
                 ctx.beginPath();
                 ctx.moveTo(x + size/2, y);
                 ctx.lineTo(x + size, y + size/3);
@@ -653,12 +687,9 @@
                 ctx.closePath();
                 ctx.fill();
                 
-                // Torso
                 ctx.fillRect(x + 3, y + size/3, size - 6, size/2);
-                // Glowing Eye center
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(x + size/2 - 2, y + size/4, 4, 4);
-                // Tiny spike legs
                 ctx.fillStyle = color;
                 ctx.fillRect(x + 4, y + (size * 0.8), 4, size * 0.2);
                 ctx.fillRect(x + size - 8, y + (size * 0.8), 4, size * 0.2);
@@ -667,25 +698,22 @@
         }
 
         function update() {
-            if (!gameActive) return;
+            if (!gameActive || isPaused) return;
 
-            // If Frame Freeze Active, don't update positions (Recovery State)
+            // If Frame Freeze Active (Recovery State)
             if (freezeFrames > 0) {
                 freezeFrames--;
                 return;
             }
 
-            // Decrement invincibility
             if (player.invincibleTimer > 0) player.invincibleTimer--;
-
-            // Camera Shake decay
             if (shakeTime > 0) shakeTime--;
 
-            // Advanced Overdrive Mode activation
+            // Advanced Mode activation
             if (kills >= 15 && !player.isAdvanced) {
                 player.isAdvanced = true;
-                player.advancedTimer = 600; // 10 seconds of glory
-                player.color = '#ffd700'; // Gold Advanced Color
+                player.advancedTimer = 600; 
+                player.color = '#ffd700'; 
                 modeBox.innerText = "⭐ ADVANCED MODE ⭐";
                 modeBox.style.color = '#ffd700';
                 spawnDamageText(player.x, player.y - 30, "ADVANCED OVERDRIVE! 🔥", '#ffd700');
@@ -703,7 +731,6 @@
                 }
             }
 
-            // Weapon timers
             if (player.activeWeapon !== 'PISTOL') {
                 player.weaponTimer--;
                 if (player.weaponTimer <= 0) {
@@ -711,7 +738,7 @@
                 }
             }
 
-            // Rapid Fire Firing
+            // Rapid Fire Auto-shoot
             if (player.activeWeapon === 'RAPID' && isMouseDown) {
                 rapidFireCooldown--;
                 if (rapidFireCooldown <= 0) {
@@ -724,7 +751,7 @@
                 }
             }
 
-            // Dash logic & Trail Spawning
+            // Keyboard Movement
             if (player.dashCooldown > 0) player.dashCooldown--;
             
             if (player.isDashing) {
@@ -763,11 +790,9 @@
                 player.vy += gravity;
             }
 
-            // Apply calculated movement
             player.x += player.vx;
             player.y += player.vy;
 
-            // Boundaries
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 
@@ -777,13 +802,12 @@
                 player.isJumping = false;
             }
 
-            // Update Dash Trails
             player.dashTrails.forEach((trail, idx) => {
                 trail.life--;
                 if (trail.life <= 0) player.dashTrails.splice(idx, 1);
             });
 
-            // Update Player Bullets
+            // Player Bullets
             bullets.forEach((bullet, bIdx) => {
                 bullet.x += bullet.vx;
                 bullet.y += bullet.vy;
@@ -793,12 +817,11 @@
                 }
             });
 
-            // Update Enemy Bullets
+            // Enemy Bullets
             enemyBullets.forEach((eb, ebIdx) => {
                 eb.x += eb.vx;
                 eb.y += eb.vy;
 
-                // Hit detection with player
                 if (eb.x > player.x && eb.x < player.x + player.width &&
                     eb.y > player.y && eb.y < player.y + player.height) {
                     
@@ -808,7 +831,7 @@
                         createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 10);
                         applyShake(8, 15);
                         spawnDamageText(player.x, player.y - 10, "-10 HP", "#ff3333");
-                        triggerHitFreeze(); // Freeze frame on hit
+                        triggerHitFreeze(); 
                         checkPlayerDeath();
                     }
                 }
@@ -818,17 +841,15 @@
                 }
             });
 
-            // Update Enemies
+            // Enemies Update
             enemies.forEach((enemy, eIdx) => {
-                // Aerial Drop Handling
                 if (enemy.aerial && enemy.descending) {
-                    enemy.y += 2.5; // fall gently from above
+                    enemy.y += 2.5; 
                     if (enemy.y >= enemy.targetY) {
                         enemy.y = enemy.targetY;
                         enemy.descending = false;
                     }
                 } else {
-                    // Regular ground AI tracking player
                     if (enemy.x > player.x) {
                         enemy.x -= enemy.speed;
                     } else {
@@ -853,7 +874,7 @@
                     }
                 }
 
-                // Enemy Body Collision with Player
+                // Collision Player / Enemy
                 if (enemy.x < player.x + player.width &&
                     enemy.x + enemy.size > player.x &&
                     enemy.y < player.y + player.height &&
@@ -864,12 +885,12 @@
                         createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 5);
                         applyShake(6, 10);
                         spawnDamageText(player.x, player.y - 10, enemy.isBoss ? "-3 HP" : "-1 HP", "#ff5555");
-                        triggerHitFreeze(); // Freeze frame on body crash
+                        triggerHitFreeze(); 
                         checkPlayerDeath();
                     }
                 }
 
-                // Player shooting enemy detection
+                // Bullet hits Enemy
                 bullets.forEach((b, bIdx) => {
                     if (b.x > enemy.x && b.x < enemy.x + enemy.size &&
                         b.y > enemy.y && b.y < enemy.y + enemy.size) {
@@ -899,14 +920,14 @@
                             }
 
                             if (enemies.length === 0) {
-                                levelClearSequence(); // Triggers Pop-up
+                                levelClearSequence(); 
                             }
                         }
                     }
                 });
             });
 
-            // Update Powerups
+            // Powerups Update
             powerups.forEach((pu, idx) => {
                 pu.y += Math.sin(Date.now() * 0.01) * 0.4;
                 
@@ -918,7 +939,6 @@
                 }
             });
 
-            // Damage and Particles Update
             damageTexts.forEach((dt, idx) => {
                 dt.x += dt.vx;
                 dt.y += dt.vy;
@@ -989,7 +1009,6 @@
             applyShake(10, 15);
         }
 
-        // Draw Render Loop
         function draw() {
             let themeIndex = Math.floor((level - 1) / 10);
             if (themeIndex > 9) themeIndex = 9;
@@ -1023,7 +1042,7 @@
                 ctx.restore();
             });
 
-            // Draw Player Human Body shape
+            // Draw Player Human Body
             const flashing = (player.invincibleTimer > 0);
             drawHumanBody(ctx, player.x, player.y, player.width, player.height, player.color, player.facing > 0, flashing);
 
