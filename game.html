@@ -1,14 +1,14 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber Arena: RPG Evolution</title>
+    <title>Hassan's Cyber Arena: RPG Evolution</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #08090a;
+            background-color: #050608;
             color: #fff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
@@ -23,13 +23,14 @@
 
         h1 {
             margin: 5px 0;
-            font-size: 20px;
+            font-size: 22px;
             text-shadow: 0 0 10px #00ffcc;
+            letter-spacing: 1px;
         }
 
         /* Top UI Header */
         #ui-container {
-            display: flex;
+            display: none; /* Hidden until game starts */
             gap: 8px;
             font-size: 13px;
             margin-bottom: 5px;
@@ -75,37 +76,37 @@
         }
 
         canvas {
-            background-color: #0d0e12;
+            background-color: #08090d;
             border: 4px solid #00ffcc;
             border-radius: 10px;
-            box-shadow: 0 0 25px #00ffcc;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
             display: block;
             max-width: 100vw;
             max-height: 55vh;
         }
 
-        /* Screens and Popups */
+        /* Overlays & Screen Styles */
         .overlay-screen {
             position: absolute;
             top: 0;
             left: 0;
-            display: none;
+            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.92);
+            background: rgba(4, 5, 8, 0.96);
             width: 100%;
             height: 100%;
             border-radius: 10px;
             z-index: 10;
             text-align: center;
             box-sizing: border-box;
-            padding: 10px;
+            padding: 15px;
             overflow-y: auto;
         }
 
         .overlay-screen h2 {
-            font-size: 28px;
+            font-size: 26px;
             color: #00ffcc;
             margin: 5px 0;
             text-shadow: 0 0 15px #00ffcc;
@@ -115,8 +116,8 @@
             background: #ff0055;
             color: white;
             border: none;
-            padding: 10px 25px;
-            font-size: 16px;
+            padding: 8px 20px;
+            font-size: 14px;
             font-weight: bold;
             border-radius: 5px;
             cursor: pointer;
@@ -129,37 +130,136 @@
             transform: scale(0.95);
         }
 
+        /* Welcome & Setup Screens */
+        #welcome-screen {
+            display: flex;
+        }
+
+        .mood-select {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .mood-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #888;
+            padding: 8px 16px;
+            font-size: 13px;
+            box-shadow: none;
+        }
+
+        .mood-btn.selected {
+            background: #00ffcc;
+            color: #000;
+            border-color: #00ffcc;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+
+        /* Level Selector Screen styling */
+        #level-select-screen {
+            display: none;
+        }
+
+        .level-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            max-width: 90%;
+        }
+
+        .level-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #555;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            position: relative;
+        }
+
+        .level-box.unlocked {
+            border-color: #00ffcc;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+            color: #00ffcc;
+        }
+
+        .level-box.locked {
+            color: #666;
+            cursor: not-allowed;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .level-box.locked::after {
+            content: "🔒";
+            position: absolute;
+            font-size: 11px;
+            bottom: 2px;
+            right: 5px;
+        }
+
+        /* 12-Hour Event Section */
+        .event-container {
+            background: linear-gradient(135deg, rgba(217, 70, 239, 0.15), rgba(0, 255, 204, 0.1));
+            border: 1px dashed #d946ef;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            width: 85%;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(217, 70, 239, 0.2);
+        }
+
+        /* Level Clear Prize Box Layout */
+        .prize-box {
+            background: rgba(255, 215, 0, 0.1);
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            margin: 10px 0;
+            width: 80%;
+        }
+
         /* Stat Upgrade Panel Grid */
         .stat-grid {
             display: flex;
-            gap: 15px;
-            margin: 15px 0;
+            gap: 10px;
+            margin: 10px 0;
         }
 
         .stat-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid #00ffcc;
             border-radius: 8px;
-            padding: 10px;
-            width: 90px;
+            padding: 8px;
+            width: 85px;
             text-align: center;
+            font-size: 11px;
         }
 
-        /* Shop / Store CSS */
+        /* Shop Grid Upgrades */
+        #shop-screen {
+            display: none;
+        }
+
         .shop-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            max-width: 90%;
-            margin-bottom: 10px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            max-width: 95%;
+            margin-bottom: 8px;
         }
 
         .shop-item {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid #d946ef;
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -167,16 +267,17 @@
         }
 
         .shop-item h4 {
-            margin: 3px 0;
+            margin: 2px 0;
             color: #d946ef;
+            font-size: 11px;
         }
 
         .shop-item button {
-            padding: 4px 8px;
-            font-size: 11px;
+            padding: 3px 6px;
+            font-size: 10px;
             background: #d946ef;
             box-shadow: 0 0 5px #d946ef;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         .shop-item button.equipped {
@@ -239,7 +340,7 @@
 </head>
 <body>
 
-    <h1 id="game-title">🤖 CYBER ARENA: RPG EVOLUTION 🧑</h1>
+    <h1 id="game-title">⚡ HASSAN'S CYBER ARENA ⚡</h1>
 
     <div id="ui-container">
         <div class="ui-box">LVL: <span id="level-val">1</span></div>
@@ -254,55 +355,102 @@
     <div id="canvas-container">
         <canvas id="gameCanvas" width="800" height="480"></canvas>
         
-        <!-- Game Over Screen -->
-        <div id="game-over-screen" class="overlay-screen">
-            <h2 id="gov-title">GAME OVER</h2>
-            <button onclick="resetGame()">Restart Match</button>
-            <button onclick="clearSaveData()" style="background:#555; box-shadow:none;">Reset All Progress</button>
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="overlay-screen">
+            <h2 style="color: #ffd700; text-shadow: 0 0 15px #ffd700; font-size: 28px;">👋 WELCOME TO HASSAN'S ARENA 👋</h2>
+            <p style="margin: 5px 0; font-size: 15px; color: #00ffcc;">The Ultimate Cybernetic Action RPG Game</p>
+            
+            <div style="margin: 10px 0;">
+                <label style="font-weight: bold; font-size: 14px;">SELECT GAME MOOD (DIFFICULTY):</label>
+                <div class="mood-select">
+                    <button class="mood-btn selected" id="mood-easy" onclick="setGameMood('EASY')">🟢 Easy</button>
+                    <button class="mood-btn" id="mood-normal" onclick="setGameMood('NORMAL')">🟡 Normal</button>
+                    <button class="mood-btn" id="mood-hard" onclick="setGameMood('HARD')">🔴 Hard</button>
+                </div>
+            </div>
+
+            <!-- Timed Event Box (12 Hour System) -->
+            <div class="event-container">
+                <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color:#d946ef; font-weight: bold;">⏳ Timed Event (Every 12 Hours)</span>
+                <h4 id="event-title" style="margin: 4px 0; color: #fff;">Chrono Blast Mini Boss Run</h4>
+                <p id="event-timer" style="margin: 2px 0 6px 0; font-size: 12px; color: #ff0055; font-weight: bold;">Loading Next Event...</p>
+                <button id="event-start-btn" onclick="startSpecialEvent()" style="background: #d946ef; font-size: 12px; padding: 4px 12px; box-shadow: 0 0 5px #d946ef;">Play Event (+250 Coins Prize)</button>
+            </div>
+
+            <button onclick="goToLevelSelector()" style="background:#00ffcc; color:#000; font-size:16px; padding:10px 30px; box-shadow:0 0 15px #00ffcc; margin-top: 15px;">ENTER ARENA ⚔️</button>
         </div>
 
-        <!-- Stat Upgrade (Level Clear) Screen -->
-        <div id="level-up-screen" class="overlay-screen">
+        <!-- Level Selector Screen -->
+        <div id="level-select-screen" class="overlay-screen">
+            <h2>ARENA LEVEL BOARD</h2>
+            <p style="font-size: 13px; color: #888; margin: 0 0 10px 0;">Complete levels to unlock the next challenge!</p>
+            
+            <div class="level-grid" id="level-grid-container">
+                <!-- Will be dynamically populated in JavaScript -->
+            </div>
+
+            <button onclick="backToWelcome()" style="background:#555; box-shadow:none; font-size: 12px; padding: 6px 15px;">Back to Menu</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="overlay-screen" style="display:none;">
+            <h2 id="gov-title">GAME OVER</h2>
+            <button onclick="resetGame()">Restart Match</button>
+            <button onclick="goToLevelSelector()" style="background:#00ffcc; color:#000; box-shadow:0 0 10px #00ffcc;">Choose Level</button>
+            <button onclick="clearSaveData()" style="background:#333; box-shadow:none; font-size:11px;">Reset All Progress</button>
+        </div>
+
+        <!-- Stat Upgrade (Level Clear) Screen + Prize Box -->
+        <div id="level-up-screen" class="overlay-screen" style="display:none;">
             <h2>LEVEL CLEARED! 🎉</h2>
-            <p style="font-size: 14px; margin: 0;">Aap ko milte hain <b>+100 Coins</b> aur <b>3 Stat Points</b>!</p>
-            <p style="color:#ffd700; font-size:15px; margin:5px 0;">Available Points: <span id="points-left">3</span></p>
+            
+            <!-- Dynamic Level End Prize Box -->
+            <div class="prize-box" id="level-prize-box">
+                <h4 style="margin: 0; color: #ffd700; text-transform: uppercase;">🎁 LEVEL PRIZE BOX 🎁</h4>
+                <p style="font-size: 14px; margin: 5px 0;">Coins Received: <b style="color:#00ffcc;">+150 Coins</b></p>
+                <p style="font-size: 14px; margin: 5px 0;">Stat Upgrades Unlocked: <b style="color:#ffaa00;">+3 Points</b></p>
+            </div>
+
+            <p style="color:#ffd700; font-size:14px; margin:3px 0;">Available Points: <span id="points-left">3</span></p>
             
             <div class="stat-grid">
                 <div class="stat-card">
                     <b>Health</b><br>
                     <span id="stat-hp-display">100</span><br>
-                    <button onclick="upgradeStat('HP')" style="padding:4px 10px; font-size:12px; background:#00ffcc; color:#000; box-shadow:none;">+10 HP</button>
+                    <button onclick="upgradeStat('HP')" style="padding:2px 8px; font-size:10px; background:#00ffcc; color:#000; box-shadow:none; margin-top:5px;">+10 HP</button>
                 </div>
                 <div class="stat-card">
                     <b>Speed</b><br>
                     <span id="stat-spd-display">5.5</span><br>
-                    <button onclick="upgradeStat('SPD')" style="padding:4px 10px; font-size:12px; background:#00ffcc; color:#000; box-shadow:none;">+0.3 Spd</button>
+                    <button onclick="upgradeStat('SPD')" style="padding:2px 8px; font-size:10px; background:#00ffcc; color:#000; box-shadow:none; margin-top:5px;">+0.3 Spd</button>
                 </div>
                 <div class="stat-card">
                     <b>Damage</b><br>
                     +<span id="stat-dmg-display">0</span><br>
-                    <button onclick="upgradeStat('DMG')" style="padding:4px 10px; font-size:12px; background:#00ffcc; color:#000; box-shadow:none;">+1 Dmg</button>
+                    <button onclick="upgradeStat('DMG')" style="padding:2px 8px; font-size:10px; background:#00ffcc; color:#000; box-shadow:none; margin-top:5px;">+1 Dmg</button>
                 </div>
             </div>
 
-            <p style="font-size:12px; color:#aaa; margin-bottom: 10px;">Portals are active! Proceed to the Next Level portal inside the arena once upgraded.</p>
-            <button onclick="closeStatPanel()" style="background:#00ffcc; color:#000; box-shadow:0 0 10px #00ffcc;">Go Back To Arena</button>
+            <p style="font-size:11px; color:#aaa; margin: 4px 0;">Portal is active! Proceed to the portal gate inside the arena to finish.</p>
+            <button onclick="closeStatPanel()" style="background:#00ffcc; color:#000; box-shadow:0 0 10px #00ffcc; padding: 6px 20px; font-size: 13px;">Proceed to Arena</button>
         </div>
 
-        <!-- Cyber Store Screen -->
+        <!-- Cyber Store Screen (Expanded) -->
         <div id="shop-screen" class="overlay-screen">
-            <h2>CYBER STORE 🛒</h2>
-            <p style="margin: 0 0 10px 0; font-size: 14px;">Your Coins: <b style="color:#ffd700;">💰 <span id="shop-coins-val">0</span></b></p>
+            <h2>MEGA CYBER STORE 🛒</h2>
+            <p style="margin: 0 0 10px 0; font-size: 13px;">Your Coins: <b style="color:#ffd700;">💰 <span id="shop-coins-val">0</span></b></p>
             
             <div class="shop-grid">
                 <!-- Skins -->
                 <div class="shop-item">
                     <h4>Stealth Suit</h4>
+                    <span>Hp Bonus: +20</span>
                     <span>Cost: 200</span>
                     <button id="buy-skin-stealth" onclick="buyItem('skin', 'STEALTH', 200)">Buy</button>
                 </div>
                 <div class="shop-item">
                     <h4>Golden Armor</h4>
+                    <span>Hp Bonus: +50</span>
                     <span>Cost: 450</span>
                     <button id="buy-skin-gold" onclick="buyItem('skin', 'GOLD', 450)">Buy</button>
                 </div>
@@ -310,45 +458,79 @@
                 <!-- Rides -->
                 <div class="shop-item">
                     <h4>Cyber Bike</h4>
+                    <span>Speed x1.4</span>
                     <span>Cost: 300</span>
                     <button id="buy-ride-bike" onclick="buyItem('ride', 'BIKE', 300)">Buy</button>
                 </div>
                 <div class="shop-item">
                     <h4>Jet Fighter</h4>
+                    <span>Speed x1.5</span>
                     <span>Cost: 600</span>
                     <button id="buy-ride-jet" onclick="buyItem('ride', 'JET', 600)">Buy</button>
                 </div>
                 <div class="shop-item">
                     <h4>Space Ship</h4>
+                    <span>Speed x1.6</span>
                     <span>Cost: 900</span>
                     <button id="buy-ride-ship" onclick="buyItem('ride', 'SHIP', 900)">Buy</button>
                 </div>
 
-                <!-- Weapons -->
+                <!-- Guns -->
                 <div class="shop-item">
                     <h4>Laser Rifle</h4>
+                    <span>Dmg: 2.2 | Fast</span>
                     <span>Cost: 250</span>
                     <button id="buy-gun-laser" onclick="buyItem('gun', 'LASER', 250)">Buy</button>
                 </div>
                 <div class="shop-item">
-                    <h4>Rocket Launcher</h4>
+                    <h4>Rocket L.</h4>
+                    <span>Dmg: 6.0 | Splash</span>
                     <span>Cost: 500</span>
                     <button id="buy-gun-rocket" onclick="buyItem('gun', 'ROCKET', 500)">Buy</button>
                 </div>
                 <div class="shop-item">
                     <h4>Cyber Cannon</h4>
+                    <span>Dmg: 8.5 | Pierce</span>
                     <span>Cost: 800</span>
                     <button id="buy-gun-cannon" onclick="buyItem('gun', 'CANNON', 800)">Buy</button>
                 </div>
+                
+                <!-- Expanded Store Items -->
+                <div class="shop-item">
+                    <h4>Plasma Beam</h4>
+                    <span>Dmg: 3.5 | Light</span>
+                    <span>Cost: 350</span>
+                    <button id="buy-gun-plasma" onclick="buyItem('gun', 'PLASMA', 350)">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <h4>Thunder Striker</h4>
+                    <span>Dmg: 12.0 | Shock</span>
+                    <span>Cost: 1100</span>
+                    <button id="buy-gun-thunder" onclick="buyItem('gun', 'THUNDER', 1100)">Buy</button>
+                </div>
+
+                <!-- Utility Tools -->
+                <div class="shop-item">
+                    <h4>Energy Shield</h4>
+                    <span>Blocks 10 Dmg</span>
+                    <span>Cost: 150</span>
+                    <button id="buy-tool-shield" onclick="buyItem('tool', 'SHIELD', 150)">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <h4>Nano-Regen Pack</h4>
+                    <span>Heals 5 HP/Sec</span>
+                    <span>Cost: 400</span>
+                    <button id="buy-tool-regen" onclick="buyItem('tool', 'REGEN', 400)">Buy</button>
+                </div>
             </div>
 
-            <button onclick="toggleShop()" style="background:#fff; color:#000; box-shadow:none;">Close Store</button>
+            <button onclick="toggleShop()" style="background:#fff; color:#000; box-shadow:none; font-size:12px; padding: 6px 15px;">Close Store</button>
         </div>
 
         <!-- Pause Screen -->
-        <div id="pause-screen" class="overlay-screen">
+        <div id="pause-screen" class="overlay-screen" style="display:none;">
             <h2>GAME PAUSED ⏸️</h2>
-            <p style="font-size: 15px; margin-bottom: 20px;">Game status saved successfully.</p>
+            <p style="font-size: 14px; margin-bottom: 20px;">Game state auto-saved safely.</p>
             <button onclick="togglePause()" style="background:#00ffcc; color:#000; box-shadow:0 0 10px #00ffcc;">Resume Game ▶️</button>
         </div>
     </div>
@@ -373,6 +555,8 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const levelSelectScreen = document.getElementById('level-select-screen');
         const govScreen = document.getElementById('game-over-screen');
         const lvlScreen = document.getElementById('level-up-screen');
         const shopScreen = document.getElementById('shop-screen');
@@ -384,16 +568,23 @@
             document.getElementById('mobile-controls').style.display = 'flex';
         }
 
-        // --- RPG & SAVE/RECORD SYSTEM VARIABLES ---
+        // --- GAME PLAY & SETTINGS VARIABLES ---
         let level = 1;
+        let selectedChallengeLevel = 1; 
+        let maxUnlockedLevel = 1; // Locked progression system
+        const TOTAL_LEVELS = 8;
+
         let coins = 0;
         let kills = 0;
         let lives = 3;
-        let gameActive = true;
+        let gameActive = false;
         let isPaused = false;
         let shakeTime = 0;
         let shakeIntensity = 0;
         let freezeFrames = 0;
+
+        let gameMood = 'NORMAL'; // Easy, Normal, Hard setting
+        let isSpecialEventChallenge = false;
 
         // Player Upgradable Stats (Base)
         let maxHP = 100;
@@ -405,7 +596,8 @@
         let inventory = {
             skins: ['DEFAULT'],
             rides: ['NONE'],
-            guns: ['PISTOL']
+            guns: ['PISTOL'],
+            tools: []
         };
 
         let equippedSkin = 'DEFAULT';
@@ -425,6 +617,12 @@
             color: '#66fcf1',
             facing: 1,
             invincibleTimer: 0,
+
+            // Tool active attributes
+            hasShield: false,
+            shieldStrength: 0,
+            hasRegen: false,
+            regenTimer: 0,
 
             // Dash system
             dashCooldown: 0,
@@ -455,8 +653,10 @@
         const WEAPONS = {
             PISTOL: { fireRate: 20, size: 5, speed: 10, dmg: 1.5, color: '#00ffcc' },
             LASER: { fireRate: 10, size: 6, speed: 16, dmg: 2.2, color: '#ff00ff' },
-            ROCKET: { fireRate: 40, size: 10, speed: 8, dmg: 6.0, color: '#ff3300', splash: true },
-            CANNON: { fireRate: 30, size: 12, speed: 12, dmg: 8.5, color: '#ffd700', pierces: true }
+            ROCKET: { fireRate: 45, size: 10, speed: 8, dmg: 6.0, color: '#ff3300', splash: true },
+            CANNON: { fireRate: 35, size: 12, speed: 12, dmg: 8.5, color: '#ffd700', pierces: true },
+            PLASMA: { fireRate: 15, size: 7, speed: 14, dmg: 3.5, color: '#00ffff' },
+            THUNDER: { fireRate: 50, size: 15, speed: 9, dmg: 12.0, color: '#ffff00', splash: true, pierces: true }
         };
 
         const SKINS = {
@@ -480,21 +680,41 @@
             { name: "Cyber Overlord X", hp: 200, speed: 1.8, size: 70, color: '#ef4444', shootRate: 0.06 }
         ];
 
-        // --- LOCAL STORAGE: PROGRESS SAVE SYSTEM ---
+        // --- 12-HOUR EVENT SYSTEM LOGIC ---
+        let nextEventTimestamp = Date.now() + (12 * 60 * 60 * 1000); // Next Event in 12 Hours
+        function runEventCountdown() {
+            setInterval(() => {
+                let timeLeft = nextEventTimestamp - Date.now();
+                if (timeLeft <= 0) {
+                    nextEventTimestamp = Date.now() + (12 * 60 * 60 * 1000);
+                    timeLeft = nextEventTimestamp - Date.now();
+                }
+                
+                let hrs = Math.floor(timeLeft / (1000 * 60 * 60));
+                let mins = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                let secs = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                document.getElementById('event-timer').innerText = 
+                    `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')} Left`;
+            }, 1000);
+        }
+
+        // --- LOCAL STORAGE: SAVE PROGRESS & RECORD SYSTEM ---
         function saveProgress() {
             const dataToSave = {
-                level, coins, maxHP, baseSpeed, damageBonus, unspentPoints,
-                inventory, equippedSkin, equippedRide, equippedGun
+                level, maxUnlockedLevel, coins, maxHP, baseSpeed, damageBonus, unspentPoints,
+                inventory, equippedSkin, equippedRide, equippedGun, gameMood
             };
-            localStorage.setItem('cyber_arena_save_rpg', JSON.stringify(dataToSave));
+            localStorage.setItem('hassan_cyber_arena_save', JSON.stringify(dataToSave));
         }
 
         function loadProgress() {
-            const saved = localStorage.getItem('cyber_arena_save_rpg');
+            const saved = localStorage.getItem('hassan_cyber_arena_save');
             if (saved) {
                 try {
                     const data = JSON.parse(saved);
                     level = data.level || 1;
+                    maxUnlockedLevel = data.maxUnlockedLevel || 1;
                     coins = data.coins || 0;
                     maxHP = data.maxHP || 100;
                     baseSpeed = data.baseSpeed || 5.5;
@@ -504,27 +724,88 @@
                     equippedSkin = data.equippedSkin || 'DEFAULT';
                     equippedRide = data.equippedRide || 'NONE';
                     equippedGun = data.equippedGun || 'PISTOL';
+                    gameMood = data.gameMood || 'NORMAL';
                 } catch (e) {
                     console.error("Failed to parse save data.", e);
                 }
             }
             updateShopUI();
+            setGameMood(gameMood);
             player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
         }
 
         function clearSaveData() {
-            localStorage.removeItem('cyber_arena_save_rpg');
+            localStorage.removeItem('hassan_cyber_arena_save');
             window.location.reload();
         }
 
-        // --- RIDE & RENDER ASSETS ---
+        // --- NAVIGATION BETWEEN SCREENS ---
+        function setGameMood(mood) {
+            gameMood = mood;
+            document.getElementById('mood-easy').classList.remove('selected');
+            document.getElementById('mood-normal').classList.remove('selected');
+            document.getElementById('mood-hard').classList.remove('selected');
+            
+            document.getElementById('mood-' + mood.toLowerCase()).classList.add('selected');
+            saveProgress();
+        }
+
+        function goToLevelSelector() {
+            welcomeScreen.style.display = 'none';
+            levelSelectScreen.style.display = 'flex';
+            renderLevelGrid();
+        }
+
+        function backToWelcome() {
+            levelSelectScreen.style.display = 'none';
+            welcomeScreen.style.display = 'flex';
+        }
+
+        function renderLevelGrid() {
+            const container = document.getElementById('level-grid-container');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= TOTAL_LEVELS; i++) {
+                const box = document.createElement('div');
+                box.className = `level-box ${i <= maxUnlockedLevel ? 'unlocked' : 'locked'}`;
+                box.innerText = `Lvl ${i}`;
+                
+                if (i <= maxUnlockedLevel) {
+                    box.onclick = () => selectAndStartLevel(i);
+                }
+                container.appendChild(box);
+            }
+        }
+
+        function selectAndStartLevel(lvlId) {
+            selectedChallengeLevel = lvlId;
+            level = lvlId;
+            isSpecialEventChallenge = false;
+            
+            levelSelectScreen.style.display = 'none';
+            document.getElementById('ui-container').style.display = 'flex';
+            gameActive = true;
+            resetGame();
+        }
+
+        function startSpecialEvent() {
+            isSpecialEventChallenge = true;
+            level = maxUnlockedLevel; // Challenging boss adapted to progress
+            
+            welcomeScreen.style.display = 'none';
+            document.getElementById('ui-container').style.display = 'flex';
+            gameActive = true;
+            resetGame();
+            spawnDamageText(400, 150, "⭐ TIMED EVENT INITIATED! ⭐", '#d946ef');
+        }
+
+        // --- DRAW ASSETS & RENDERS ---
         function drawRideVehicle(ctx, px, py, ride) {
             ctx.save();
             ctx.shadowBlur = 10;
             if (ride === 'BIKE') {
                 ctx.fillStyle = '#ef4444';
                 ctx.shadowColor = '#ef4444';
-                // Neon Bike body under player
                 ctx.fillRect(px - 15, py + 38, 55, 12);
                 ctx.fillStyle = '#111';
                 ctx.beginPath();
@@ -534,24 +815,20 @@
             } else if (ride === 'JET') {
                 ctx.fillStyle = '#3b82f6';
                 ctx.shadowColor = '#3b82f6';
-                // Wings on back of player
                 ctx.beginPath();
                 ctx.moveTo(px - 10, py + 15);
                 ctx.lineTo(px - 35, py + 5);
                 ctx.lineTo(px - 10, py + 30);
                 ctx.closePath();
                 ctx.fill();
-                // Flame trail
                 ctx.fillStyle = '#ff5500';
                 ctx.fillRect(px - 25, py + 22, 10, 3);
             } else if (ride === 'SHIP') {
                 ctx.fillStyle = '#ffd700';
                 ctx.shadowColor = '#ffd700';
-                // Floating Disc/Ship under player
                 ctx.beginPath();
                 ctx.ellipse(px + 14, py + 48, 25, 6, 0, 0, Math.PI * 2);
                 ctx.fill();
-                // Hover aura
                 ctx.strokeStyle = 'rgba(255,215,0,0.4)';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(px - 10, py + 54, 48, 2);
@@ -559,7 +836,6 @@
             ctx.restore();
         }
 
-        // Draw Player with skin color
         function drawHumanBody(ctx, x, y, width, height, color, isFacingRight, isHitFlash) {
             ctx.save();
             if (isHitFlash && Math.floor(Date.now() / 80) % 2 === 0) {
@@ -578,7 +854,7 @@
             // Torso
             ctx.fillRect(x + width/2 - 6, y + 16, 12, 18);
 
-            // Arm/Gun direction indicator
+            // Arm/Gun
             ctx.fillStyle = '#ffffff';
             let armOffset = isFacingRight ? 8 : -8;
             ctx.fillRect(x + width/2 + armOffset - 3, y + 20, 6, 10);
@@ -593,6 +869,17 @@
             let visorX = isFacingRight ? x + width/2 + 1 : x + width/2 - 5;
             ctx.fillRect(visorX, y + 6, 4, 3);
 
+            // Energy Shield effect (Visual Tool item)
+            if (player.hasShield && player.shieldStrength > 0) {
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = '#00ffff';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(x + width/2, y + height/2, 35, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
             ctx.restore();
         }
 
@@ -603,16 +890,13 @@
             ctx.shadowColor = enemy.color;
 
             if (enemy.isBoss) {
-                // Giant Mecha Boss Structure
                 ctx.fillRect(enemy.x, enemy.y + 15, enemy.size, enemy.size - 15);
                 ctx.fillStyle = '#222';
                 ctx.fillRect(enemy.x + 8, enemy.y + 25, enemy.size - 16, enemy.size - 45);
-                // Glowing Eyes
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(enemy.x + 12, enemy.y + 5, 8, 6);
                 ctx.fillRect(enemy.x + enemy.size - 20, enemy.y + 5, 8, 6);
             } else {
-                // Normal Minions
                 ctx.beginPath();
                 ctx.moveTo(enemy.x + enemy.size/2, enemy.y);
                 ctx.lineTo(enemy.x + enemy.size, enemy.y + enemy.size);
@@ -623,7 +907,6 @@
             ctx.restore();
         }
 
-        // --- ENGINE CONTROLS & SPONTANEOUS FUNCTIONS ---
         function applyShake(intensity, duration) {
             shakeIntensity = intensity;
             shakeTime = duration;
@@ -651,7 +934,7 @@
             }
         }
 
-        // --- GAME STAGES / ENEMY SPAWN ---
+        // --- STAGE SETUP ---
         function startStage() {
             enemies = [];
             enemyBullets = [];
@@ -660,26 +943,36 @@
             bossSpawned = false;
             currentWave = 1;
 
-            // Health adaptation
             let extraHP = SKINS[equippedSkin]?.hpBonus || 0;
             player.hp = maxHP + extraHP;
+
+            // Apply purchase/equipped tools
+            if (inventory.tools.includes('SHIELD')) {
+                player.hasShield = true;
+                player.shieldStrength = 10;
+            } else {
+                player.hasShield = false;
+            }
+
+            player.hasRegen = inventory.tools.includes('REGEN');
 
             spawnWave();
             saveProgress();
         }
 
         function spawnWave() {
-            let enemyCount = 3 + Math.floor(level * 0.4) + currentWave;
-            
-            // Generate standard stage minions
+            let moodMultiplier = (gameMood === 'EASY') ? 0.7 : (gameMood === 'HARD') ? 1.5 : 1.0;
+            let enemyCount = Math.floor((3 + Math.floor(level * 0.4) + currentWave) * moodMultiplier);
+            if (enemyCount < 1) enemyCount = 1;
+
             for (let i = 0; i < enemyCount; i++) {
                 let size = 25;
-                let hp = 3 + Math.floor(level * 0.6);
-                let speed = 1.6 + Math.random() * 1.0;
+                let hp = Math.floor((3 + Math.floor(level * 0.6)) * moodMultiplier);
+                let speed = 1.5 + Math.random() * 1.0;
                 let color = '#00ffcc';
 
                 if (i % 3 === 0) {
-                    color = '#ffcc00'; // Medium variant
+                    color = '#ffcc00';
                     hp += 3;
                 }
 
@@ -696,15 +989,15 @@
                     shootCooldown: Math.random() * 60
                 });
             }
-            spawnDamageText(400, 150, `Wave ${currentWave}! 🔥`, '#ff0055');
+            spawnDamageText(400, 150, `Wave ${currentWave}! ⚔️`, '#ff0055');
         }
 
         function spawnLevelBoss() {
             bossSpawned = true;
             let bossConfig = BOSS_TYPES[(level - 1) % BOSS_TYPES.length];
             
-            // scale stats dynamic based on current level
-            let calculatedHP = bossConfig.hp + (level * 10);
+            let moodMultiplier = (gameMood === 'EASY') ? 0.7 : (gameMood === 'HARD') ? 1.4 : 1.0;
+            let calculatedHP = Math.floor((bossConfig.hp + (level * 10)) * moodMultiplier);
             let calculatedSpeed = bossConfig.speed + (level * 0.05);
 
             enemies.push({
@@ -716,14 +1009,13 @@
                 color: bossConfig.color,
                 size: bossConfig.size,
                 isBoss: true,
-                shootRate: bossConfig.shootRate,
+                shootRate: bossConfig.shootRate * moodMultiplier,
                 shootCooldown: 30
             });
-            spawnDamageText(400, 120, "⚠️ BOSS DEMAND DETECTED ⚠️", '#ff0055');
+            spawnDamageText(400, 120, "⚠️ BOSS ALERT! ⚠️", '#ff0055');
             applyShake(10, 30);
         }
 
-        // Fire Weapons System
         function fireWeapon() {
             if (!gameActive || freezeFrames > 0 || isPaused || levelCleared) return;
 
@@ -734,7 +1026,6 @@
 
             let finalDamage = activeWpn.dmg + damageBonus;
 
-            // Trigger firing
             bullets.push({
                 x: startX,
                 y: startY,
@@ -753,7 +1044,6 @@
             fireCooldown = activeWpn.fireRate;
         }
 
-        // --- PAUSE & PORTAL ---
         function togglePause() {
             if (!gameActive) return;
             isPaused = !isPaused;
@@ -767,7 +1057,7 @@
             }
         }
 
-        // --- SHOPPING SYSTEM ---
+        // --- INTERACTIVE STORE ---
         function toggleShop() {
             if (!gameActive) return;
             const shopDisp = shopScreen.style.display;
@@ -783,16 +1073,19 @@
         }
 
         function updateShopUI() {
-            // Update items buttons based on owned/equipped status
             const updateItemBtn = (btnId, category, itemKey, cost) => {
                 const btn = document.getElementById(btnId);
                 if (!btn) return;
                 
-                if (inventory[category].includes(itemKey)) {
+                let listName = category + 's';
+                if (category === 'tool') listName = 'tools';
+
+                if (inventory[listName].includes(itemKey)) {
                     let isEquipped = false;
-                    if (category === 'skins' && equippedSkin === itemKey) isEquipped = true;
-                    if (category === 'rides' && equippedRide === itemKey) isEquipped = true;
-                    if (category === 'guns' && equippedGun === itemKey) isEquipped = true;
+                    if (category === 'skin' && equippedSkin === itemKey) isEquipped = true;
+                    if (category === 'ride' && equippedRide === itemKey) isEquipped = true;
+                    if (category === 'gun' && equippedGun === itemKey) isEquipped = true;
+                    if (category === 'tool') isEquipped = true; // Tools are passives
 
                     if (isEquipped) {
                         btn.innerText = "Equipped";
@@ -807,29 +1100,33 @@
                 }
             };
 
-            updateItemBtn('buy-skin-stealth', 'skins', 'STEALTH', 200);
-            updateItemBtn('buy-skin-gold', 'skins', 'GOLD', 450);
+            updateItemBtn('buy-skin-stealth', 'skin', 'STEALTH', 200);
+            updateItemBtn('buy-skin-gold', 'skin', 'GOLD', 450);
             
-            updateItemBtn('buy-ride-bike', 'rides', 'BIKE', 300);
-            updateItemBtn('buy-ride-jet', 'rides', 'JET', 600);
-            updateItemBtn('buy-ride-ship', 'rides', 'SHIP', 900);
+            updateItemBtn('buy-ride-bike', 'ride', 'BIKE', 300);
+            updateItemBtn('buy-ride-jet', 'ride', 'JET', 600);
+            updateItemBtn('buy-ride-ship', 'ride', 'SHIP', 900);
 
-            updateItemBtn('buy-gun-laser', 'guns', 'LASER', 250);
-            updateItemBtn('buy-gun-rocket', 'guns', 'ROCKET', 500);
-            updateItemBtn('buy-gun-cannon', 'guns', 'CANNON', 800);
+            updateItemBtn('buy-gun-laser', 'gun', 'LASER', 250);
+            updateItemBtn('buy-gun-rocket', 'gun', 'ROCKET', 500);
+            updateItemBtn('buy-gun-cannon', 'gun', 'CANNON', 800);
+            updateItemBtn('buy-gun-plasma', 'gun', 'PLASMA', 350);
+            updateItemBtn('buy-gun-thunder', 'gun', 'THUNDER', 1100);
+
+            updateItemBtn('buy-tool-shield', 'tool', 'SHIELD', 150);
+            updateItemBtn('buy-tool-regen', 'tool', 'REGEN', 400);
         }
 
         function buyItem(category, itemKey, cost) {
-            const listName = category === 'skin' ? 'skins' : category === 'ride' ? 'rides' : 'guns';
+            let listName = category + 's';
+            if (category === 'tool') listName = 'tools';
             
             if (inventory[listName].includes(itemKey)) {
-                // Already purchased, equip it
                 if (category === 'skin') equippedSkin = itemKey;
                 if (category === 'ride') equippedRide = itemKey;
                 if (category === 'gun') equippedGun = itemKey;
                 spawnDamageText(400, 200, `${itemKey} Equipped!`, '#00ffcc');
             } else {
-                // Buy flow
                 if (coins >= cost) {
                     coins -= cost;
                     inventory[listName].push(itemKey);
@@ -838,7 +1135,7 @@
                     if (category === 'ride') equippedRide = itemKey;
                     if (category === 'gun') equippedGun = itemKey;
 
-                    spawnDamageText(400, 200, `Purchased & Equipped ${itemKey}! 🎉`, '#ffd700');
+                    spawnDamageText(400, 200, `Bought ${itemKey}! 🎉`, '#ffd700');
                     document.getElementById('shop-coins-val').innerText = coins;
                 } else {
                     spawnDamageText(400, 200, "Incomplete Coins! ❌", '#ff3333');
@@ -873,7 +1170,6 @@
 
         function closeStatPanel() {
             lvlScreen.style.display = 'none';
-            // Spawn neon level end portal (door) inside the arena
             portal = {
                 x: 700,
                 y: floorY - 80,
@@ -889,7 +1185,7 @@
             player.invincibleTimer = 50;
         }
 
-        // Keyboard Actions
+        // --- USER ACTIONS MAP ---
         window.addEventListener('keydown', (e) => {
             keys[e.code] = true;
             if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash();
@@ -897,7 +1193,6 @@
         });
         window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-        // Accurate Scaling Coordinates
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -912,7 +1207,6 @@
         });
         canvas.addEventListener('mouseup', () => { isMouseDown = false; });
 
-        // --- Mobile Controls Mapping ---
         const mapMobileBtn = (id, keyVal) => {
             const element = document.getElementById(id);
             if (!element) return;
@@ -931,7 +1225,6 @@
 
         document.getElementById('fire-btn')?.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            // Fire towards closest target or direction
             let targetX = player.x + player.facing * 200;
             let targetY = player.y + player.height/2;
             if (enemies.length > 0) {
@@ -957,7 +1250,7 @@
             applyShake(4, 6);
         }
 
-        // --- CORE RUNTIME LOOP ---
+        // --- ENGINE COMPUTATIONS ---
         function update() {
             if (!gameActive || isPaused) return;
 
@@ -970,12 +1263,22 @@
             if (shakeTime > 0) shakeTime--;
             if (fireCooldown > 0) fireCooldown--;
 
-            // Handle Continuous Shoot
+            // Nano-Regenerative utility logic
+            if (player.hasRegen) {
+                player.regenTimer++;
+                if (player.regenTimer >= 60) { // Approx 1 Sec
+                    let currentMax = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+                    if (player.hp < currentMax) {
+                        player.hp = Math.min(currentMax, player.hp + 5);
+                    }
+                    player.regenTimer = 0;
+                }
+            }
+
             if (isMouseDown && fireCooldown <= 0) {
                 fireWeapon();
             }
 
-            // Player mechanics
             if (player.dashCooldown > 0) player.dashCooldown--;
 
             if (player.isDashing) {
@@ -991,7 +1294,7 @@
 
                 if (player.dashTime <= 0) player.isDashing = false;
             } else {
-                let speedMultiplier = (equippedRide === 'BIKE') ? 1.4 : (equippedRide === 'SHIP') ? 1.2 : 1.0;
+                let speedMultiplier = (equippedRide === 'BIKE') ? 1.4 : (equippedRide === 'SHIP') ? 1.6 : (equippedRide === 'JET') ? 1.5 : 1.0;
                 let activeSpeed = baseSpeed * speedMultiplier;
 
                 if (keys['KeyA'] || keys['ArrowLeft']) {
@@ -1015,7 +1318,6 @@
             player.x += player.vx;
             player.y += player.vy;
 
-            // Boundaries
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 
@@ -1030,18 +1332,24 @@
                 if (trail.life <= 0) player.dashTrails.splice(idx, 1);
             });
 
-            // Handle Portal Door Entry
+            // Portal entry
             if (levelCleared && portal) {
                 if (player.x + player.width > portal.x &&
                     player.x < portal.x + portal.width &&
                     player.y + player.height > portal.y) {
-                    // Start next stage
-                    level++;
-                    startStage();
+                    
+                    // Progressive level unlock
+                    if (!isSpecialEventChallenge) {
+                        if (level === maxUnlockedLevel && maxUnlockedLevel < TOTAL_LEVELS) {
+                            maxUnlockedLevel++;
+                        }
+                    }
+                    saveProgress();
+                    gameActive = false;
+                    goToLevelSelector();
                 }
             }
 
-            // Bullets movement
             bullets.forEach((bullet, bIdx) => {
                 bullet.x += bullet.vx;
                 bullet.y += bullet.vy;
@@ -1051,7 +1359,6 @@
                 }
             });
 
-            // Enemy bullets
             enemyBullets.forEach((eb, ebIdx) => {
                 eb.x += eb.vx;
                 eb.y += eb.vy;
@@ -1061,12 +1368,22 @@
                     
                     enemyBullets.splice(ebIdx, 1);
                     if (!player.isDashing && player.invincibleTimer === 0) {
-                        player.hp -= 10;
-                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 10);
-                        applyShake(8, 15);
-                        spawnDamageText(player.x, player.y - 10, "-10 HP", "#ff3333");
-                        triggerHitFreeze();
-                        checkPlayerDeath();
+                        
+                        let takenDamage = 10;
+                        if (player.hasShield && player.shieldStrength > 0) {
+                            player.shieldStrength -= 10;
+                            takenDamage = 0;
+                            spawnDamageText(player.x, player.y - 10, "SHIELD BLOCKED", "#00ffff");
+                        }
+
+                        if (takenDamage > 0) {
+                            player.hp -= takenDamage;
+                            createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 10);
+                            applyShake(8, 15);
+                            spawnDamageText(player.x, player.y - 10, `-${takenDamage} HP`, "#ff3333");
+                            triggerHitFreeze();
+                            checkPlayerDeath();
+                        }
                     }
                 }
 
@@ -1075,16 +1392,13 @@
                 }
             });
 
-            // Enemies interaction
             enemies.forEach((enemy, eIdx) => {
-                // Basic tracking horizontal
                 if (enemy.x > player.x) {
                     enemy.x -= enemy.speed;
                 } else {
                     enemy.x += enemy.speed;
                 }
 
-                // AI shooting rate
                 enemy.shootCooldown--;
                 if (enemy.shootCooldown <= 0 && Math.random() < enemy.shootRate) {
                     const angle = Math.atan2((player.y + player.height/2) - (enemy.y + enemy.size/2), (player.x + player.width/2) - (enemy.x + enemy.size/2));
@@ -1099,23 +1413,33 @@
                     enemy.shootCooldown = 80;
                 }
 
-                // Collision Player/Enemy
+                // Collide
                 if (enemy.x < player.x + player.width &&
                     enemy.x + enemy.size > player.x &&
                     enemy.y < player.y + player.height &&
                     enemy.y + enemy.size > player.y) {
                     
                     if (!player.isDashing && player.invincibleTimer === 0) {
-                        player.hp -= enemy.isBoss ? 20 : 10;
-                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 8);
-                        applyShake(8, 12);
-                        spawnDamageText(player.x, player.y - 10, enemy.isBoss ? "-20 HP" : "-10 HP", "#ff3333");
-                        triggerHitFreeze();
-                        checkPlayerDeath();
+                        let damage = enemy.isBoss ? 20 : 10;
+
+                        if (player.hasShield && player.shieldStrength > 0) {
+                            player.shieldStrength -= damage;
+                            damage = 0;
+                            spawnDamageText(player.x, player.y - 10, "SHIELD ABS", "#00ffff");
+                        }
+
+                        if (damage > 0) {
+                            player.hp -= damage;
+                            createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 8);
+                            applyShake(8, 12);
+                            spawnDamageText(player.x, player.y - 10, `-${damage} HP`, "#ff3333");
+                            triggerHitFreeze();
+                            checkPlayerDeath();
+                        }
                     }
                 }
 
-                // Bullet collision on enemy
+                // Bullet Collision on Enemy
                 bullets.forEach((b, bIdx) => {
                     if (b.x > enemy.x && b.x < enemy.x + enemy.size &&
                         b.y > enemy.y && b.y < enemy.y + enemy.size) {
@@ -1137,7 +1461,6 @@
                             enemies.splice(eIdx, 1);
                             kills++;
                             
-                            // Checking next waves or boss spawn
                             if (enemies.length === 0) {
                                 if (currentWave < 2) {
                                     currentWave++;
@@ -1145,10 +1468,18 @@
                                 } else if (!bossSpawned) {
                                     spawnLevelBoss();
                                 } else {
-                                    // Boss killed -> level completion flow
-                                    coins += 100;
-                                    unspentPoints += 3;
-                                    triggerLevelClearUI();
+                                    // Settle Rewards
+                                    let baseCoinsReceived = 150;
+                                    let pointsReceived = 3;
+
+                                    if (isSpecialEventChallenge) {
+                                        baseCoinsReceived = 250; // Special 12 hr reward
+                                    }
+
+                                    coins += baseCoinsReceived;
+                                    unspentPoints += pointsReceived;
+
+                                    triggerLevelClearUI(baseCoinsReceived, pointsReceived);
                                 }
                             }
                         }
@@ -1156,7 +1487,6 @@
                 });
             });
 
-            // Damage Text physics
             damageTexts.forEach((dt, idx) => {
                 dt.x += dt.vx;
                 dt.y += dt.vy;
@@ -1180,9 +1510,14 @@
             document.getElementById('lives-val').innerText = lives;
         }
 
-        function triggerLevelClearUI() {
-            // Open screen upgrade
+        function triggerLevelClearUI(coinsWon, pointsWon) {
             lvlScreen.style.display = 'flex';
+            document.getElementById('level-prize-box').innerHTML = `
+                <h4 style="margin: 0; color: #ffd700; text-transform: uppercase;">🎁 LEVEL PRIZE BOX 🎁</h4>
+                <p style="font-size: 14px; margin: 5px 0;">Coins Received: <b style="color:#00ffcc;">+${coinsWon} Coins</b></p>
+                <p style="font-size: 14px; margin: 5px 0;">Stat Upgrades Unlocked: <b style="color:#ffaa00;">+${pointsWon} Points</b></p>
+            `;
+
             document.getElementById('points-left').innerText = unspentPoints;
             document.getElementById('stat-hp-display').innerText = maxHP;
             document.getElementById('stat-spd-display').innerText = baseSpeed.toFixed(1);
@@ -1194,6 +1529,11 @@
                 lives--;
                 player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
                 player.x = 100;
+
+                // Reset shields on death
+                if (inventory.tools.includes('SHIELD')) {
+                    player.shieldStrength = 10;
+                }
 
                 if (lives <= 0) {
                     gameActive = false;
@@ -1223,11 +1563,11 @@
                 ctx.translate(dx, dy);
             }
 
-            ctx.fillStyle = '#0d0e12';
+            ctx.fillStyle = '#07080c';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Neon Grid Line Floor
-            ctx.fillStyle = '#141721';
+            // Floor lines drawing
+            ctx.fillStyle = '#10121a';
             ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
             ctx.strokeStyle = '#00ffcc';
             ctx.lineWidth = 4;
@@ -1236,18 +1576,16 @@
             ctx.lineTo(canvas.width, floorY);
             ctx.stroke();
 
-            // Next Level Door/Portal drawing
+            // Next Level Portal Drawing
             if (levelCleared && portal) {
                 portal.glow += 0.05;
                 ctx.save();
                 ctx.shadowBlur = 20 + Math.sin(portal.glow) * 8;
                 ctx.shadowColor = '#d946ef';
                 ctx.fillStyle = '#d946ef';
-                // Draw door frame
                 ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
                 ctx.fillStyle = '#000';
                 ctx.fillRect(portal.x + 4, portal.y + 4, portal.width - 8, portal.height - 4);
-                // Glowing text
                 ctx.fillStyle = '#d946ef';
                 ctx.font = 'bold 10px "Segoe UI"';
                 ctx.fillText("PORTAL", portal.x + 3, portal.y - 10);
@@ -1262,7 +1600,7 @@
                 ctx.restore();
             });
 
-            // Draw Rides/Vehicles (if any)
+            // Draw Rides/Vehicles
             if (equippedRide !== 'NONE') {
                 drawRideVehicle(ctx, player.x, player.y, equippedRide);
             }
@@ -1274,7 +1612,6 @@
             // Draw Enemies
             enemies.forEach(enemy => {
                 drawEnemy(ctx, enemy);
-                // HP Bar
                 if (enemy.hp < enemy.maxHp) {
                     ctx.fillStyle = '#ff0033';
                     ctx.fillRect(enemy.x, enemy.y - 10, enemy.size, 4);
@@ -1305,7 +1642,7 @@
                 ctx.shadowBlur = 0;
             });
 
-            // Damage Text indicators
+            // Damage text
             damageTexts.forEach(dt => {
                 ctx.font = 'bold 12px "Segoe UI"';
                 ctx.fillStyle = dt.color;
@@ -1333,9 +1670,9 @@
 
         // --- Initialization ---
         loadProgress();
+        runEventCountdown();
         player.color = SKINS[equippedSkin]?.color || '#66fcf1';
-        startStage();
         loop();
     </script>
 </body>
-</html>
+</html> 
