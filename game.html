@@ -1,1 +1,1341 @@
- 
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Arena: RPG Evolution</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #08090a;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+
+        h1 {
+            margin: 5px 0;
+            font-size: 20px;
+            text-shadow: 0 0 10px #00ffcc;
+        }
+
+        /* Top UI Header */
+        #ui-container {
+            display: flex;
+            gap: 8px;
+            font-size: 13px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ui-box {
+            background: rgba(0, 255, 204, 0.1);
+            padding: 4px 10px;
+            border-radius: 5px;
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 5px #00ffcc;
+        }
+
+        /* Utility Buttons */
+        .utility-btn {
+            background: #ffaa00;
+            color: #000;
+            box-shadow: 0 0 10px #ffaa00;
+            padding: 5px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        #shop-toggle-btn {
+            background: #d946ef;
+            color: #fff;
+            box-shadow: 0 0 10px #d946ef;
+        }
+
+        #canvas-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            max-width: 100%;
+        }
+
+        canvas {
+            background-color: #0d0e12;
+            border: 4px solid #00ffcc;
+            border-radius: 10px;
+            box-shadow: 0 0 25px #00ffcc;
+            display: block;
+            max-width: 100vw;
+            max-height: 55vh;
+        }
+
+        /* Screens and Popups */
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.92);
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            z-index: 10;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .overlay-screen h2 {
+            font-size: 28px;
+            color: #00ffcc;
+            margin: 5px 0;
+            text-shadow: 0 0 15px #00ffcc;
+        }
+
+        button {
+            background: #ff0055;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ff0055;
+            margin: 5px;
+            transition: 0.2s ease;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        /* Stat Upgrade Panel Grid */
+        .stat-grid {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #00ffcc;
+            border-radius: 8px;
+            padding: 10px;
+            width: 90px;
+            text-align: center;
+        }
+
+        /* Shop / Store CSS */
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 90%;
+            margin-bottom: 10px;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid #d946ef;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .shop-item h4 {
+            margin: 3px 0;
+            color: #d946ef;
+        }
+
+        .shop-item button {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: #d946ef;
+            box-shadow: 0 0 5px #d946ef;
+            margin-top: 5px;
+        }
+
+        .shop-item button.equipped {
+            background: #22c55e;
+            box-shadow: 0 0 5px #22c55e;
+        }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            justify-content: space-between;
+            padding: 5px 15px;
+            box-sizing: border-box;
+            margin-top: 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .touch-btn {
+            width: 55px;
+            height: 55px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid #00ffcc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: white;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
+            user-select: none;
+        }
+
+        .touch-btn:active {
+            background: rgba(0, 255, 255, 0.35);
+            transform: scale(0.9);
+        }
+
+        #fire-btn {
+            background: rgba(255, 50, 50, 0.25);
+            border-color: #ff3333;
+            width: 65px;
+            height: 65px;
+            font-size: 24px;
+        }
+
+        #controls-info {
+            margin-top: 3px;
+            font-size: 11px;
+            color: #888;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="game-title">🤖 CYBER ARENA: RPG EVOLUTION 🧑</h1>
+
+    <div id="ui-container">
+        <div class="ui-box">LVL: <span id="level-val">1</span></div>
+        <div class="ui-box">💰 <span id="coins-val">0</span></div>
+        <div class="ui-box">HP: <span id="hp-val">100</span>/<span id="max-hp-val">100</span></div>
+        <div class="ui-box">DMG Bonus: +<span id="dmg-val">0</span></div>
+        <div class="ui-box">Lives: <span id="lives-val">3</span></div>
+        <button class="utility-btn" id="pause-toggle-btn" onclick="togglePause()">PAUSE ⏸️</button>
+        <button class="utility-btn" id="shop-toggle-btn" onclick="toggleShop()">STORE 🛒</button>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="gameCanvas" width="800" height="480"></canvas>
+        
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="overlay-screen">
+            <h2 id="gov-title">GAME OVER</h2>
+            <button onclick="resetGame()">Restart Match</button>
+            <button onclick="clearSaveData()" style="background:#555; box-shadow:none;">Reset All Progress</button>
+        </div>
+
+        <!-- Stat Upgrade (Level Clear) Screen -->
+        <div id="level-up-screen" class="overlay-screen">
+            <h2>LEVEL CLEARED! 🎉</h2>
+            <p style="font-size: 14px; margin: 0;">Aap ko milte hain <b>+100 Coins</b> aur <b>3 Stat Points</b>!</p>
+            <p style="color:#ffd700; font-size:15px; margin:5px 0;">Available Points: <span id="points-left">3</span></p>
+            
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <b>Health</b><br>
+                    <span id="stat-hp-display">100</span><br>
+                    <button onclick="upgradeStat('HP')" style="padding:4px 10px; font-size:12px; background:#00ffcc; color:#000; box-shadow:none;">+10 HP</button>
+                </div>
+                <div class="stat-card">
+                    <b>Speed</b><br>
+                    <span id="stat-spd-display">5.5</span><br>
+                    <button onclick="upgradeStat('SPD')" style="padding:4px 10px; font-size:12px; background:#00ffcc; color:#000; box-shadow:none;">+0.3 Spd</button>
+                </div>
+                <div class="stat-card">
+                    <b>Damage</b><br>
+                    +<span id="stat-dmg-display">0</span><br>
+                    <button onclick="upgradeStat('DMG')" style="padding:4px 10px; font-size:12px; background:#00ffcc; color:#000; box-shadow:none;">+1 Dmg</button>
+                </div>
+            </div>
+
+            <p style="font-size:12px; color:#aaa; margin-bottom: 10px;">Portals are active! Proceed to the Next Level portal inside the arena once upgraded.</p>
+            <button onclick="closeStatPanel()" style="background:#00ffcc; color:#000; box-shadow:0 0 10px #00ffcc;">Go Back To Arena</button>
+        </div>
+
+        <!-- Cyber Store Screen -->
+        <div id="shop-screen" class="overlay-screen">
+            <h2>CYBER STORE 🛒</h2>
+            <p style="margin: 0 0 10px 0; font-size: 14px;">Your Coins: <b style="color:#ffd700;">💰 <span id="shop-coins-val">0</span></b></p>
+            
+            <div class="shop-grid">
+                <!-- Skins -->
+                <div class="shop-item">
+                    <h4>Stealth Suit</h4>
+                    <span>Cost: 200</span>
+                    <button id="buy-skin-stealth" onclick="buyItem('skin', 'STEALTH', 200)">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <h4>Golden Armor</h4>
+                    <span>Cost: 450</span>
+                    <button id="buy-skin-gold" onclick="buyItem('skin', 'GOLD', 450)">Buy</button>
+                </div>
+
+                <!-- Rides -->
+                <div class="shop-item">
+                    <h4>Cyber Bike</h4>
+                    <span>Cost: 300</span>
+                    <button id="buy-ride-bike" onclick="buyItem('ride', 'BIKE', 300)">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <h4>Jet Fighter</h4>
+                    <span>Cost: 600</span>
+                    <button id="buy-ride-jet" onclick="buyItem('ride', 'JET', 600)">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <h4>Space Ship</h4>
+                    <span>Cost: 900</span>
+                    <button id="buy-ride-ship" onclick="buyItem('ride', 'SHIP', 900)">Buy</button>
+                </div>
+
+                <!-- Weapons -->
+                <div class="shop-item">
+                    <h4>Laser Rifle</h4>
+                    <span>Cost: 250</span>
+                    <button id="buy-gun-laser" onclick="buyItem('gun', 'LASER', 250)">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <h4>Rocket Launcher</h4>
+                    <span>Cost: 500</span>
+                    <button id="buy-gun-rocket" onclick="buyItem('gun', 'ROCKET', 500)">Buy</button>
+                </div>
+                <div class="shop-item">
+                    <h4>Cyber Cannon</h4>
+                    <span>Cost: 800</span>
+                    <button id="buy-gun-cannon" onclick="buyItem('gun', 'CANNON', 800)">Buy</button>
+                </div>
+            </div>
+
+            <button onclick="toggleShop()" style="background:#fff; color:#000; box-shadow:none;">Close Store</button>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="overlay-screen">
+            <h2>GAME PAUSED ⏸️</h2>
+            <p style="font-size: 15px; margin-bottom: 20px;">Game status saved successfully.</p>
+            <button onclick="togglePause()" style="background:#00ffcc; color:#000; box-shadow:0 0 10px #00ffcc;">Resume Game ▶️</button>
+        </div>
+    </div>
+
+    <!-- Mobile Touch Controls Layout -->
+    <div id="mobile-controls">
+        <div class="btn-group">
+            <div class="touch-btn" id="btn-left">◀</div>
+            <div class="touch-btn" id="btn-right">▶</div>
+            <div class="touch-btn" id="btn-up">▲</div>
+        </div>
+        <div class="btn-group">
+            <div class="touch-btn" id="btn-dash" style="font-size:11px; background:rgba(0, 255, 204, 0.25);">DASH</div>
+            <div class="touch-btn" id="fire-btn">🔥</div>
+        </div>
+    </div>
+
+    <div id="controls-info">
+        PC: <b>A/D</b> Move | <b>W / Space</b> Jump | <b>Shift</b> Dash | <b>Mouse Click</b> Shoot | <b>P</b> Pause
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const govScreen = document.getElementById('game-over-screen');
+        const lvlScreen = document.getElementById('level-up-screen');
+        const shopScreen = document.getElementById('shop-screen');
+        const pauseScreen = document.getElementById('pause-screen');
+        const govTitle = document.getElementById('gov-title');
+
+        // Force Show Mobile Controls if screen size matches mobile touch points
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            document.getElementById('mobile-controls').style.display = 'flex';
+        }
+
+        // --- RPG & SAVE/RECORD SYSTEM VARIABLES ---
+        let level = 1;
+        let coins = 0;
+        let kills = 0;
+        let lives = 3;
+        let gameActive = true;
+        let isPaused = false;
+        let shakeTime = 0;
+        let shakeIntensity = 0;
+        let freezeFrames = 0;
+
+        // Player Upgradable Stats (Base)
+        let maxHP = 100;
+        let baseSpeed = 5.5;
+        let damageBonus = 0;
+        let unspentPoints = 0;
+
+        // Player Equipment / Shopping Records
+        let inventory = {
+            skins: ['DEFAULT'],
+            rides: ['NONE'],
+            guns: ['PISTOL']
+        };
+
+        let equippedSkin = 'DEFAULT';
+        let equippedRide = 'NONE';
+        let equippedGun = 'PISTOL';
+
+        // Player Object
+        const player = {
+            x: 100,
+            y: 380,
+            width: 28,
+            height: 50,
+            hp: 100,
+            vx: 0,
+            vy: 0,
+            isJumping: false,
+            color: '#66fcf1',
+            facing: 1,
+            invincibleTimer: 0,
+
+            // Dash system
+            dashCooldown: 0,
+            dashTime: 0,
+            isDashing: false,
+            dashSpeed: 18,
+            dashDirection: 1,
+            dashTrails: []
+        };
+
+        const gravity = 0.65;
+        const floorY = 420;
+
+        // Wave control & Portal
+        let currentWave = 1;
+        let bossSpawned = false;
+        let levelCleared = false;
+        let portal = null; // Next Level Gate
+
+        // Lists
+        let bullets = [];
+        let enemyBullets = [];
+        let enemies = [];
+        let particles = [];
+        let damageTexts = [];
+
+        // Weapon Configuration
+        const WEAPONS = {
+            PISTOL: { fireRate: 20, size: 5, speed: 10, dmg: 1.5, color: '#00ffcc' },
+            LASER: { fireRate: 10, size: 6, speed: 16, dmg: 2.2, color: '#ff00ff' },
+            ROCKET: { fireRate: 40, size: 10, speed: 8, dmg: 6.0, color: '#ff3300', splash: true },
+            CANNON: { fireRate: 30, size: 12, speed: 12, dmg: 8.5, color: '#ffd700', pierces: true }
+        };
+
+        const SKINS = {
+            DEFAULT: { color: '#66fcf1', hpBonus: 0 },
+            STEALTH: { color: '#4d4dff', hpBonus: 20 },
+            GOLD: { color: '#ffd700', hpBonus: 50 }
+        };
+
+        // Inputs
+        const keys = {};
+        let mouseX = 600;
+        let mouseY = 250;
+        let isMouseDown = false;
+        let fireCooldown = 0;
+
+        // --- ENEMY BOSS SYSTEM ---
+        const BOSS_TYPES = [
+            { name: "Cyber Goliath", hp: 40, speed: 1.0, size: 55, color: '#ff0055', shootRate: 0.03 },
+            { name: "Mecha Serpent", hp: 80, speed: 1.5, size: 50, color: '#d946ef', shootRate: 0.05 },
+            { name: "Neon Titan", hp: 130, speed: 1.2, size: 65, color: '#ff8800', shootRate: 0.04 },
+            { name: "Cyber Overlord X", hp: 200, speed: 1.8, size: 70, color: '#ef4444', shootRate: 0.06 }
+        ];
+
+        // --- LOCAL STORAGE: PROGRESS SAVE SYSTEM ---
+        function saveProgress() {
+            const dataToSave = {
+                level, coins, maxHP, baseSpeed, damageBonus, unspentPoints,
+                inventory, equippedSkin, equippedRide, equippedGun
+            };
+            localStorage.setItem('cyber_arena_save_rpg', JSON.stringify(dataToSave));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem('cyber_arena_save_rpg');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    level = data.level || 1;
+                    coins = data.coins || 0;
+                    maxHP = data.maxHP || 100;
+                    baseSpeed = data.baseSpeed || 5.5;
+                    damageBonus = data.damageBonus || 0;
+                    unspentPoints = data.unspentPoints || 0;
+                    inventory = data.inventory || inventory;
+                    equippedSkin = data.equippedSkin || 'DEFAULT';
+                    equippedRide = data.equippedRide || 'NONE';
+                    equippedGun = data.equippedGun || 'PISTOL';
+                } catch (e) {
+                    console.error("Failed to parse save data.", e);
+                }
+            }
+            updateShopUI();
+            player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+        }
+
+        function clearSaveData() {
+            localStorage.removeItem('cyber_arena_save_rpg');
+            window.location.reload();
+        }
+
+        // --- RIDE & RENDER ASSETS ---
+        function drawRideVehicle(ctx, px, py, ride) {
+            ctx.save();
+            ctx.shadowBlur = 10;
+            if (ride === 'BIKE') {
+                ctx.fillStyle = '#ef4444';
+                ctx.shadowColor = '#ef4444';
+                // Neon Bike body under player
+                ctx.fillRect(px - 15, py + 38, 55, 12);
+                ctx.fillStyle = '#111';
+                ctx.beginPath();
+                ctx.arc(px - 10, py + 44, 8, 0, Math.PI*2);
+                ctx.arc(px + 35, py + 44, 8, 0, Math.PI*2);
+                ctx.fill();
+            } else if (ride === 'JET') {
+                ctx.fillStyle = '#3b82f6';
+                ctx.shadowColor = '#3b82f6';
+                // Wings on back of player
+                ctx.beginPath();
+                ctx.moveTo(px - 10, py + 15);
+                ctx.lineTo(px - 35, py + 5);
+                ctx.lineTo(px - 10, py + 30);
+                ctx.closePath();
+                ctx.fill();
+                // Flame trail
+                ctx.fillStyle = '#ff5500';
+                ctx.fillRect(px - 25, py + 22, 10, 3);
+            } else if (ride === 'SHIP') {
+                ctx.fillStyle = '#ffd700';
+                ctx.shadowColor = '#ffd700';
+                // Floating Disc/Ship under player
+                ctx.beginPath();
+                ctx.ellipse(px + 14, py + 48, 25, 6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Hover aura
+                ctx.strokeStyle = 'rgba(255,215,0,0.4)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(px - 10, py + 54, 48, 2);
+            }
+            ctx.restore();
+        }
+
+        // Draw Player with skin color
+        function drawHumanBody(ctx, x, y, width, height, color, isFacingRight, isHitFlash) {
+            ctx.save();
+            if (isHitFlash && Math.floor(Date.now() / 80) % 2 === 0) {
+                ctx.fillStyle = '#ff0000';
+            } else {
+                ctx.fillStyle = color;
+            }
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = color;
+
+            // Head
+            ctx.beginPath();
+            ctx.arc(x + width/2, y + 8, 8, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Torso
+            ctx.fillRect(x + width/2 - 6, y + 16, 12, 18);
+
+            // Arm/Gun direction indicator
+            ctx.fillStyle = '#ffffff';
+            let armOffset = isFacingRight ? 8 : -8;
+            ctx.fillRect(x + width/2 + armOffset - 3, y + 20, 6, 10);
+
+            // Legs
+            ctx.fillStyle = color;
+            ctx.fillRect(x + width/2 - 5, y + 34, 4, 16);
+            ctx.fillRect(x + width/2 + 1, y + 34, 4, 16);
+
+            // Visor
+            ctx.fillStyle = '#000';
+            let visorX = isFacingRight ? x + width/2 + 1 : x + width/2 - 5;
+            ctx.fillRect(visorX, y + 6, 4, 3);
+
+            ctx.restore();
+        }
+
+        function drawEnemy(ctx, enemy) {
+            ctx.save();
+            ctx.fillStyle = enemy.color;
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = enemy.color;
+
+            if (enemy.isBoss) {
+                // Giant Mecha Boss Structure
+                ctx.fillRect(enemy.x, enemy.y + 15, enemy.size, enemy.size - 15);
+                ctx.fillStyle = '#222';
+                ctx.fillRect(enemy.x + 8, enemy.y + 25, enemy.size - 16, enemy.size - 45);
+                // Glowing Eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(enemy.x + 12, enemy.y + 5, 8, 6);
+                ctx.fillRect(enemy.x + enemy.size - 20, enemy.y + 5, 8, 6);
+            } else {
+                // Normal Minions
+                ctx.beginPath();
+                ctx.moveTo(enemy.x + enemy.size/2, enemy.y);
+                ctx.lineTo(enemy.x + enemy.size, enemy.y + enemy.size);
+                ctx.lineTo(enemy.x, enemy.y + enemy.size);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // --- ENGINE CONTROLS & SPONTANEOUS FUNCTIONS ---
+        function applyShake(intensity, duration) {
+            shakeIntensity = intensity;
+            shakeTime = duration;
+        }
+
+        function spawnDamageText(x, y, text, color) {
+            damageTexts.push({
+                x: x, y: y,
+                vy: -2 - Math.random() * 2,
+                vx: (Math.random() - 0.5) * 2,
+                life: 35, text: text, color: color || '#fff'
+            });
+        }
+
+        function createExplosion(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 7,
+                    vy: (Math.random() - 0.5) * 7,
+                    life: 25 + Math.random() * 15,
+                    maxLife: 40, size: Math.random() * 4 + 1.5,
+                    color: color
+                });
+            }
+        }
+
+        // --- GAME STAGES / ENEMY SPAWN ---
+        function startStage() {
+            enemies = [];
+            enemyBullets = [];
+            portal = null;
+            levelCleared = false;
+            bossSpawned = false;
+            currentWave = 1;
+
+            // Health adaptation
+            let extraHP = SKINS[equippedSkin]?.hpBonus || 0;
+            player.hp = maxHP + extraHP;
+
+            spawnWave();
+            saveProgress();
+        }
+
+        function spawnWave() {
+            let enemyCount = 3 + Math.floor(level * 0.4) + currentWave;
+            
+            // Generate standard stage minions
+            for (let i = 0; i < enemyCount; i++) {
+                let size = 25;
+                let hp = 3 + Math.floor(level * 0.6);
+                let speed = 1.6 + Math.random() * 1.0;
+                let color = '#00ffcc';
+
+                if (i % 3 === 0) {
+                    color = '#ffcc00'; // Medium variant
+                    hp += 3;
+                }
+
+                enemies.push({
+                    x: 400 + Math.random() * 380,
+                    y: floorY - size,
+                    hp: hp,
+                    maxHp: hp,
+                    speed: speed,
+                    color: color,
+                    size: size,
+                    isBoss: false,
+                    shootRate: 0.005 + (level * 0.001),
+                    shootCooldown: Math.random() * 60
+                });
+            }
+            spawnDamageText(400, 150, `Wave ${currentWave}! 🔥`, '#ff0055');
+        }
+
+        function spawnLevelBoss() {
+            bossSpawned = true;
+            let bossConfig = BOSS_TYPES[(level - 1) % BOSS_TYPES.length];
+            
+            // scale stats dynamic based on current level
+            let calculatedHP = bossConfig.hp + (level * 10);
+            let calculatedSpeed = bossConfig.speed + (level * 0.05);
+
+            enemies.push({
+                x: 650,
+                y: floorY - bossConfig.size,
+                hp: calculatedHP,
+                maxHp: calculatedHP,
+                speed: calculatedSpeed,
+                color: bossConfig.color,
+                size: bossConfig.size,
+                isBoss: true,
+                shootRate: bossConfig.shootRate,
+                shootCooldown: 30
+            });
+            spawnDamageText(400, 120, "⚠️ BOSS DEMAND DETECTED ⚠️", '#ff0055');
+            applyShake(10, 30);
+        }
+
+        // Fire Weapons System
+        function fireWeapon() {
+            if (!gameActive || freezeFrames > 0 || isPaused || levelCleared) return;
+
+            const activeWpn = WEAPONS[equippedGun];
+            const angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
+            const startX = player.x + player.width / 2;
+            const startY = player.y + player.height / 2;
+
+            let finalDamage = activeWpn.dmg + damageBonus;
+
+            // Trigger firing
+            bullets.push({
+                x: startX,
+                y: startY,
+                vx: Math.cos(angle) * activeWpn.speed,
+                vy: Math.sin(angle) * activeWpn.speed,
+                size: activeWpn.size,
+                color: activeWpn.color,
+                damage: finalDamage,
+                pierces: activeWpn.pierces || false,
+                splash: activeWpn.splash || false,
+                hitEnemies: []
+            });
+
+            createExplosion(startX, startY, activeWpn.color, 3);
+            applyShake(1.5, 3);
+            fireCooldown = activeWpn.fireRate;
+        }
+
+        // --- PAUSE & PORTAL ---
+        function togglePause() {
+            if (!gameActive) return;
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseScreen.style.display = 'flex';
+                document.getElementById('pause-toggle-btn').innerText = "RESUME ▶️";
+                saveProgress();
+            } else {
+                pauseScreen.style.display = 'none';
+                document.getElementById('pause-toggle-btn').innerText = "PAUSE ⏸️";
+            }
+        }
+
+        // --- SHOPPING SYSTEM ---
+        function toggleShop() {
+            if (!gameActive) return;
+            const shopDisp = shopScreen.style.display;
+            if (shopDisp === 'flex') {
+                shopScreen.style.display = 'none';
+                isPaused = false;
+            } else {
+                shopScreen.style.display = 'flex';
+                isPaused = true;
+                document.getElementById('shop-coins-val').innerText = coins;
+                updateShopUI();
+            }
+        }
+
+        function updateShopUI() {
+            // Update items buttons based on owned/equipped status
+            const updateItemBtn = (btnId, category, itemKey, cost) => {
+                const btn = document.getElementById(btnId);
+                if (!btn) return;
+                
+                if (inventory[category].includes(itemKey)) {
+                    let isEquipped = false;
+                    if (category === 'skins' && equippedSkin === itemKey) isEquipped = true;
+                    if (category === 'rides' && equippedRide === itemKey) isEquipped = true;
+                    if (category === 'guns' && equippedGun === itemKey) isEquipped = true;
+
+                    if (isEquipped) {
+                        btn.innerText = "Equipped";
+                        btn.className = "equipped";
+                    } else {
+                        btn.innerText = "Equip";
+                        btn.className = "";
+                    }
+                } else {
+                    btn.innerText = `Buy (${cost})`;
+                    btn.className = "";
+                }
+            };
+
+            updateItemBtn('buy-skin-stealth', 'skins', 'STEALTH', 200);
+            updateItemBtn('buy-skin-gold', 'skins', 'GOLD', 450);
+            
+            updateItemBtn('buy-ride-bike', 'rides', 'BIKE', 300);
+            updateItemBtn('buy-ride-jet', 'rides', 'JET', 600);
+            updateItemBtn('buy-ride-ship', 'rides', 'SHIP', 900);
+
+            updateItemBtn('buy-gun-laser', 'guns', 'LASER', 250);
+            updateItemBtn('buy-gun-rocket', 'guns', 'ROCKET', 500);
+            updateItemBtn('buy-gun-cannon', 'guns', 'CANNON', 800);
+        }
+
+        function buyItem(category, itemKey, cost) {
+            const listName = category === 'skin' ? 'skins' : category === 'ride' ? 'rides' : 'guns';
+            
+            if (inventory[listName].includes(itemKey)) {
+                // Already purchased, equip it
+                if (category === 'skin') equippedSkin = itemKey;
+                if (category === 'ride') equippedRide = itemKey;
+                if (category === 'gun') equippedGun = itemKey;
+                spawnDamageText(400, 200, `${itemKey} Equipped!`, '#00ffcc');
+            } else {
+                // Buy flow
+                if (coins >= cost) {
+                    coins -= cost;
+                    inventory[listName].push(itemKey);
+                    
+                    if (category === 'skin') equippedSkin = itemKey;
+                    if (category === 'ride') equippedRide = itemKey;
+                    if (category === 'gun') equippedGun = itemKey;
+
+                    spawnDamageText(400, 200, `Purchased & Equipped ${itemKey}! 🎉`, '#ffd700');
+                    document.getElementById('shop-coins-val').innerText = coins;
+                } else {
+                    spawnDamageText(400, 200, "Incomplete Coins! ❌", '#ff3333');
+                }
+            }
+            player.color = SKINS[equippedSkin]?.color || '#66fcf1';
+            updateShopUI();
+            saveProgress();
+        }
+
+        // --- UPGRADE SYSTEM ---
+        function upgradeStat(type) {
+            if (unspentPoints <= 0) return;
+            unspentPoints--;
+
+            if (type === 'HP') {
+                maxHP += 10;
+                player.hp += 10;
+            } else if (type === 'SPD') {
+                baseSpeed += 0.3;
+            } else if (type === 'DMG') {
+                damageBonus += 1;
+            }
+
+            document.getElementById('points-left').innerText = unspentPoints;
+            document.getElementById('stat-hp-display').innerText = maxHP;
+            document.getElementById('stat-spd-display').innerText = baseSpeed.toFixed(1);
+            document.getElementById('stat-dmg-display').innerText = damageBonus;
+
+            saveProgress();
+        }
+
+        function closeStatPanel() {
+            lvlScreen.style.display = 'none';
+            // Spawn neon level end portal (door) inside the arena
+            portal = {
+                x: 700,
+                y: floorY - 80,
+                width: 45,
+                height: 80,
+                glow: 0
+            };
+            levelCleared = true;
+        }
+
+        function triggerHitFreeze() {
+            freezeFrames = 8;
+            player.invincibleTimer = 50;
+        }
+
+        // Keyboard Actions
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash();
+            if (e.code === 'KeyP') togglePause();
+        });
+        window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+        // Accurate Scaling Coordinates
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            isMouseDown = true;
+        });
+        canvas.addEventListener('mouseup', () => { isMouseDown = false; });
+
+        // --- Mobile Controls Mapping ---
+        const mapMobileBtn = (id, keyVal) => {
+            const element = document.getElementById(id);
+            if (!element) return;
+            element.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyVal] = true; });
+            element.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyVal] = false; });
+        };
+
+        mapMobileBtn('btn-left', 'KeyA');
+        mapMobileBtn('btn-right', 'KeyD');
+        mapMobileBtn('btn-up', 'Space');
+
+        document.getElementById('btn-dash')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            triggerDash();
+        });
+
+        document.getElementById('fire-btn')?.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            // Fire towards closest target or direction
+            let targetX = player.x + player.facing * 200;
+            let targetY = player.y + player.height/2;
+            if (enemies.length > 0) {
+                targetX = enemies[0].x + enemies[0].size/2;
+                targetY = enemies[0].y + enemies[0].size/2;
+            }
+            mouseX = targetX;
+            mouseY = targetY;
+            isMouseDown = true;
+        });
+
+        document.getElementById('fire-btn')?.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isMouseDown = false;
+        });
+
+        function triggerDash() {
+            if (player.dashCooldown > 0 || player.isDashing || isPaused) return;
+            player.isDashing = true;
+            player.dashTime = 10;
+            player.dashCooldown = 40;
+            player.dashDirection = (keys['KeyA'] || keys['ArrowLeft']) ? -1 : (keys['KeyD'] || keys['ArrowRight']) ? 1 : player.facing;
+            applyShake(4, 6);
+        }
+
+        // --- CORE RUNTIME LOOP ---
+        function update() {
+            if (!gameActive || isPaused) return;
+
+            if (freezeFrames > 0) {
+                freezeFrames--;
+                return;
+            }
+
+            if (player.invincibleTimer > 0) player.invincibleTimer--;
+            if (shakeTime > 0) shakeTime--;
+            if (fireCooldown > 0) fireCooldown--;
+
+            // Handle Continuous Shoot
+            if (isMouseDown && fireCooldown <= 0) {
+                fireWeapon();
+            }
+
+            // Player mechanics
+            if (player.dashCooldown > 0) player.dashCooldown--;
+
+            if (player.isDashing) {
+                player.vx = player.dashSpeed * player.dashDirection;
+                player.vy = 0;
+                player.dashTime--;
+
+                player.dashTrails.push({
+                    x: player.x, y: player.y,
+                    width: player.width, height: player.height,
+                    life: 8, color: player.color
+                });
+
+                if (player.dashTime <= 0) player.isDashing = false;
+            } else {
+                let speedMultiplier = (equippedRide === 'BIKE') ? 1.4 : (equippedRide === 'SHIP') ? 1.2 : 1.0;
+                let activeSpeed = baseSpeed * speedMultiplier;
+
+                if (keys['KeyA'] || keys['ArrowLeft']) {
+                    player.vx = -activeSpeed;
+                    player.facing = -1;
+                } else if (keys['KeyD'] || keys['ArrowRight']) {
+                    player.vx = activeSpeed;
+                    player.facing = 1;
+                } else {
+                    player.vx = 0;
+                }
+
+                if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && !player.isJumping) {
+                    player.vy = -12.0;
+                    player.isJumping = true;
+                }
+
+                player.vy += gravity;
+            }
+
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // Boundaries
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            if (player.y + player.height >= floorY) {
+                player.y = floorY - player.height;
+                player.vy = 0;
+                player.isJumping = false;
+            }
+
+            player.dashTrails.forEach((trail, idx) => {
+                trail.life--;
+                if (trail.life <= 0) player.dashTrails.splice(idx, 1);
+            });
+
+            // Handle Portal Door Entry
+            if (levelCleared && portal) {
+                if (player.x + player.width > portal.x &&
+                    player.x < portal.x + portal.width &&
+                    player.y + player.height > portal.y) {
+                    // Start next stage
+                    level++;
+                    startStage();
+                }
+            }
+
+            // Bullets movement
+            bullets.forEach((bullet, bIdx) => {
+                bullet.x += bullet.vx;
+                bullet.y += bullet.vy;
+
+                if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+                    bullets.splice(bIdx, 1);
+                }
+            });
+
+            // Enemy bullets
+            enemyBullets.forEach((eb, ebIdx) => {
+                eb.x += eb.vx;
+                eb.y += eb.vy;
+
+                if (eb.x > player.x && eb.x < player.x + player.width &&
+                    eb.y > player.y && eb.y < player.y + player.height) {
+                    
+                    enemyBullets.splice(ebIdx, 1);
+                    if (!player.isDashing && player.invincibleTimer === 0) {
+                        player.hp -= 10;
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 10);
+                        applyShake(8, 15);
+                        spawnDamageText(player.x, player.y - 10, "-10 HP", "#ff3333");
+                        triggerHitFreeze();
+                        checkPlayerDeath();
+                    }
+                }
+
+                if (eb.x < 0 || eb.x > canvas.width || eb.y < 0 || eb.y > canvas.height) {
+                    enemyBullets.splice(ebIdx, 1);
+                }
+            });
+
+            // Enemies interaction
+            enemies.forEach((enemy, eIdx) => {
+                // Basic tracking horizontal
+                if (enemy.x > player.x) {
+                    enemy.x -= enemy.speed;
+                } else {
+                    enemy.x += enemy.speed;
+                }
+
+                // AI shooting rate
+                enemy.shootCooldown--;
+                if (enemy.shootCooldown <= 0 && Math.random() < enemy.shootRate) {
+                    const angle = Math.atan2((player.y + player.height/2) - (enemy.y + enemy.size/2), (player.x + player.width/2) - (enemy.x + enemy.size/2));
+                    enemyBullets.push({
+                        x: enemy.x + enemy.size / 2,
+                        y: enemy.y + enemy.size / 2,
+                        vx: Math.cos(angle) * 5,
+                        vy: Math.sin(angle) * 5,
+                        size: 5,
+                        color: '#ff3300'
+                    });
+                    enemy.shootCooldown = 80;
+                }
+
+                // Collision Player/Enemy
+                if (enemy.x < player.x + player.width &&
+                    enemy.x + enemy.size > player.x &&
+                    enemy.y < player.y + player.height &&
+                    enemy.y + enemy.size > player.y) {
+                    
+                    if (!player.isDashing && player.invincibleTimer === 0) {
+                        player.hp -= enemy.isBoss ? 20 : 10;
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 8);
+                        applyShake(8, 12);
+                        spawnDamageText(player.x, player.y - 10, enemy.isBoss ? "-20 HP" : "-10 HP", "#ff3333");
+                        triggerHitFreeze();
+                        checkPlayerDeath();
+                    }
+                }
+
+                // Bullet collision on enemy
+                bullets.forEach((b, bIdx) => {
+                    if (b.x > enemy.x && b.x < enemy.x + enemy.size &&
+                        b.y > enemy.y && b.y < enemy.y + enemy.size) {
+
+                        if (b.pierces && b.hitEnemies.includes(enemy)) return;
+
+                        if (!b.pierces) {
+                            bullets.splice(bIdx, 1);
+                        } else {
+                            b.hitEnemies.push(enemy);
+                        }
+
+                        enemy.hp -= b.damage;
+                        spawnDamageText(enemy.x + enemy.size/2, enemy.y - 10, `-${b.damage.toFixed(1)}`, b.color);
+                        createExplosion(b.x, b.y, enemy.color, 4);
+
+                        if (enemy.hp <= 0) {
+                            createExplosion(enemy.x + enemy.size/2, enemy.y + enemy.size/2, enemy.color, 20);
+                            enemies.splice(eIdx, 1);
+                            kills++;
+                            
+                            // Checking next waves or boss spawn
+                            if (enemies.length === 0) {
+                                if (currentWave < 2) {
+                                    currentWave++;
+                                    spawnWave();
+                                } else if (!bossSpawned) {
+                                    spawnLevelBoss();
+                                } else {
+                                    // Boss killed -> level completion flow
+                                    coins += 100;
+                                    unspentPoints += 3;
+                                    triggerLevelClearUI();
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Damage Text physics
+            damageTexts.forEach((dt, idx) => {
+                dt.x += dt.vx;
+                dt.y += dt.vy;
+                dt.life--;
+                if (dt.life <= 0) damageTexts.splice(idx, 1);
+            });
+
+            particles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+                if (p.life <= 0) particles.splice(idx, 1);
+            });
+
+            // Updating stats display labels
+            document.getElementById('level-val').innerText = level;
+            document.getElementById('coins-val').innerText = coins;
+            document.getElementById('hp-val').innerText = Math.round(player.hp);
+            document.getElementById('max-hp-val').innerText = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+            document.getElementById('dmg-val').innerText = damageBonus;
+            document.getElementById('lives-val').innerText = lives;
+        }
+
+        function triggerLevelClearUI() {
+            // Open screen upgrade
+            lvlScreen.style.display = 'flex';
+            document.getElementById('points-left').innerText = unspentPoints;
+            document.getElementById('stat-hp-display').innerText = maxHP;
+            document.getElementById('stat-spd-display').innerText = baseSpeed.toFixed(1);
+            document.getElementById('stat-dmg-display').innerText = damageBonus;
+        }
+
+        function checkPlayerDeath() {
+            if (player.hp <= 0) {
+                lives--;
+                player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+                player.x = 100;
+
+                if (lives <= 0) {
+                    gameActive = false;
+                    govTitle.innerText = "GAME OVER 💀";
+                    govScreen.style.display = 'flex';
+                }
+            }
+        }
+
+        function resetGame() {
+            lives = 3;
+            currentWave = 1;
+            bossSpawned = false;
+            levelCleared = false;
+            portal = null;
+            govScreen.style.display = 'none';
+            gameActive = true;
+            isPaused = false;
+            startStage();
+        }
+
+        function draw() {
+            ctx.save();
+            if (shakeTime > 0) {
+                let dx = (Math.random() - 0.5) * shakeIntensity;
+                let dy = (Math.random() - 0.5) * shakeIntensity;
+                ctx.translate(dx, dy);
+            }
+
+            ctx.fillStyle = '#0d0e12';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Neon Grid Line Floor
+            ctx.fillStyle = '#141721';
+            ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
+            ctx.strokeStyle = '#00ffcc';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(0, floorY);
+            ctx.lineTo(canvas.width, floorY);
+            ctx.stroke();
+
+            // Next Level Door/Portal drawing
+            if (levelCleared && portal) {
+                portal.glow += 0.05;
+                ctx.save();
+                ctx.shadowBlur = 20 + Math.sin(portal.glow) * 8;
+                ctx.shadowColor = '#d946ef';
+                ctx.fillStyle = '#d946ef';
+                // Draw door frame
+                ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(portal.x + 4, portal.y + 4, portal.width - 8, portal.height - 4);
+                // Glowing text
+                ctx.fillStyle = '#d946ef';
+                ctx.font = 'bold 10px "Segoe UI"';
+                ctx.fillText("PORTAL", portal.x + 3, portal.y - 10);
+                ctx.restore();
+            }
+
+            // Ghost Trails
+            player.dashTrails.forEach(trail => {
+                ctx.save();
+                ctx.globalAlpha = trail.life / 8 * 0.3;
+                drawHumanBody(ctx, trail.x, trail.y, trail.width, trail.height, trail.color, player.facing > 0, false);
+                ctx.restore();
+            });
+
+            // Draw Rides/Vehicles (if any)
+            if (equippedRide !== 'NONE') {
+                drawRideVehicle(ctx, player.x, player.y, equippedRide);
+            }
+
+            // Draw Player
+            const flashing = (player.invincibleTimer > 0);
+            drawHumanBody(ctx, player.x, player.y, player.width, player.height, player.color, player.facing > 0, flashing);
+
+            // Draw Enemies
+            enemies.forEach(enemy => {
+                drawEnemy(ctx, enemy);
+                // HP Bar
+                if (enemy.hp < enemy.maxHp) {
+                    ctx.fillStyle = '#ff0033';
+                    ctx.fillRect(enemy.x, enemy.y - 10, enemy.size, 4);
+                    ctx.fillStyle = '#00ff66';
+                    ctx.fillRect(enemy.x, enemy.y - 10, enemy.size * (enemy.hp / enemy.maxHp), 4);
+                }
+            });
+
+            // Draw Player Bullets
+            bullets.forEach(b => {
+                ctx.fillStyle = b.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = b.color;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            // Draw Enemy Bullets
+            enemyBullets.forEach(eb => {
+                ctx.fillStyle = eb.color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = eb.color;
+                ctx.beginPath();
+                ctx.arc(eb.x, eb.y, eb.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+
+            // Damage Text indicators
+            damageTexts.forEach(dt => {
+                ctx.font = 'bold 12px "Segoe UI"';
+                ctx.fillStyle = dt.color;
+                ctx.globalAlpha = dt.life / 35;
+                ctx.fillText(dt.text, dt.x, dt.y);
+            });
+            ctx.globalAlpha = 1.0;
+
+            // Particles
+            particles.forEach(p => {
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life / p.maxLife;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+            ctx.globalAlpha = 1.0;
+
+            ctx.restore();
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        // --- Initialization ---
+        loadProgress();
+        player.color = SKINS[equippedSkin]?.color || '#66fcf1';
+        startStage();
+        loop();
+    </script>
+</body>
+</html>
