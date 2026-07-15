@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -228,11 +228,9 @@
             }
 
             // Normal levels difficulty scaling
-            // More enemies spawn as levels increase
             let enemyCount = 3 + Math.floor(level * 0.4); 
 
             for (let i = 0; i < enemyCount; i++) {
-                // Determine enemy type based on current level range
                 let type = ENEMY_TYPES.EASY;
                 let rand = Math.random() * 100;
 
@@ -243,15 +241,14 @@
                     if (rand > 60) type = ENEMY_TYPES.MEDIUM;
                 }
 
-                // Place them on the right side initially
                 let spawnX = 400 + Math.random() * 350;
                 
                 enemies.push({
                     x: spawnX,
                     y: floorY - type.size,
-                    hp: type.hp + Math.floor(level / 15), // enemies get slightly tankier
+                    hp: type.hp + Math.floor(level / 15), 
                     maxHp: type.hp + Math.floor(level / 15),
-                    speed: type.speed + (level * 0.02),   // enemies get faster
+                    speed: type.speed + (level * 0.02),   
                     color: type.color,
                     size: type.size,
                     isBoss: false,
@@ -324,14 +321,13 @@
         function nextLevel() {
             level++;
             if (level > 100) {
-                // Game Won Screen
                 gameActive = false;
                 govTitle.innerText = "🏆 VICTORY! 🏆\nYou Saved Earth!";
                 govScreen.style.display = 'flex';
                 return;
             }
             
-            player.x = 100; // Reset player position to start of stage
+            player.x = 100; 
             bullets = [];
             
             updateGraphicsTheme();
@@ -378,7 +374,6 @@
                 bullet.x += bullet.vx;
                 bullet.y += bullet.vy;
                 
-                // Out of screen delete
                 if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
                     bullets.splice(index, 1);
                 }
@@ -386,7 +381,6 @@
 
             // Update Enemies
             enemies.forEach((enemy, eIdx) => {
-                // Enemies move towards the player
                 if (enemy.x > player.x) {
                     enemy.x -= enemy.speed;
                 } else {
@@ -399,14 +393,13 @@
                     enemy.y < player.y + player.height &&
                     enemy.y + enemy.size > player.y) {
                     
-                    // Deduct HP when touched
                     player.hp -= enemy.isBoss ? 2.5 : 0.5; 
                     createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 3);
 
                     if (player.hp <= 0) {
                         lives--;
-                        player.hp = 100; // Reset HP bar
-                        player.x = 100; // Back to spawn
+                        player.hp = 100; 
+                        player.x = 100; 
                         
                         if (lives <= 0) {
                             gameActive = false;
@@ -430,7 +423,6 @@
                             enemies.splice(eIdx, 1);
                             kills += enemy.points;
 
-                            // Level Cleared!
                             if (enemies.length === 0) {
                                 nextLevel();
                             }
@@ -456,13 +448,12 @@
 
         // Main Draw Render Loop
         function draw() {
-            // Background Clear
             let themeIndex = Math.floor((level - 1) / 10);
             if (themeIndex > 9) themeIndex = 9;
             ctx.fillStyle = THEMES[themeIndex].canvasBg;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Ground (Zameen)
+            // Draw Ground
             ctx.fillStyle = '#1c1c1c';
             ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
             
@@ -480,10 +471,10 @@
             ctx.shadowColor = player.color;
             ctx.fillRect(player.x, player.y, player.width, player.height);
             
-            // Player Eye/Visor
+            // Player Visor
             ctx.fillStyle = '#fff';
             ctx.fillRect(player.x + 10, player.y + 10, 10, 5);
-            ctx.shadowBlur = 0; // Reset glow
+            ctx.shadowBlur = 0; 
 
             // Draw Enemies
             enemies.forEach(enemy => {
@@ -493,7 +484,6 @@
                 ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
                 ctx.shadowBlur = 0;
 
-                // Draw Mini HP bar over Enemy
                 if (enemy.hp < enemy.maxHp) {
                     ctx.fillStyle = '#ff0033';
                     ctx.fillRect(enemy.x, enemy.y - 10, enemy.size, 4);
@@ -516,7 +506,7 @@
                 ctx.globalAlpha = p.life / p.maxLife;
                 ctx.fillRect(p.x, p.y, p.size, p.size);
             });
-            ctx.globalAlpha = 1.0; // Reset transparency
+            ctx.globalAlpha = 1.0; 
         }
 
         // Main Game Loop Runner
@@ -526,10 +516,9 @@
             requestAnimationFrame(loop);
         }
 
-        // Start the Game Initializer
         updateGraphicsTheme();
         spawnEnemies();
         loop();
     </script>
 </body>
-</html> 
+</html>
