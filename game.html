@@ -62,11 +62,13 @@
 
         #game-over-screen {
             position: absolute;
+            top: 0;
+            left: 0;
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             width: 800px;
             height: 500px;
             border-radius: 10px;
@@ -78,6 +80,8 @@
             color: #ff3333;
             margin: 0 0 20px 0;
             text-shadow: 0 0 15px #ff0000;
+            text-align: center;
+            white-space: pre-wrap;
         }
 
         button {
@@ -113,7 +117,7 @@
     <div style="position: relative;">
         <canvas id="gameCanvas" width="800" height="500"></canvas>
         
-        <div id="game-over-screen" id="gov-screen">
+        <div id="game-over-screen">
             <h2 id="gov-title">GAME OVER</h2>
             <button onclick="resetGame()">Play Again</button>
         </div>
@@ -404,7 +408,7 @@
                         player.hp = 100; // Reset HP bar
                         player.x = 100; // Back to spawn
                         
-                        if (lives < 0) {
+                        if (lives <= 0) {
                             gameActive = false;
                             govTitle.innerText = "GAME OVER 💀";
                             govScreen.style.display = 'flex';
