@@ -450,6 +450,12 @@
                 </div>
             </div>
 
+            <!-- Interactivity in Lobby (Level Select & Store Directly Open) -->
+            <div style="display: flex; gap: 15px; margin: 10px 0;">
+                <button onclick="goToLevelSelector()" style="background:#00ffcc; color:#000; font-size:15px; padding:8px 20px; box-shadow:0 0 15px #00ffcc;">CHOOSE LEVEL 🗺️</button>
+                <button onclick="openStoreFromLobby()" style="background:#d946ef; color:#fff; font-size:15px; padding:8px 20px; box-shadow:0 0 15px #d946ef;">CYBER STORE 🛒</button>
+            </div>
+
             <!-- Timed Event Box (12 Hour System) -->
             <div class="event-container">
                 <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color:#d946ef; font-weight: bold;">⏳ Timed Event (Every 12 Hours)</span>
@@ -457,8 +463,6 @@
                 <p id="event-timer" style="margin: 2px 0 6px 0; font-size: 12px; color: #ff0055; font-weight: bold;">Loading Next Event...</p>
                 <button id="event-start-btn" onclick="startSpecialEvent()" style="background: #d946ef; font-size: 12px; padding: 4px 12px; box-shadow: 0 0 5px #d946ef;">Play Event (+250 Coins Prize)</button>
             </div>
-
-            <button onclick="goToLevelSelector()" style="background:#00ffcc; color:#000; font-size:16px; padding:10px 30px; box-shadow:0 0 15px #00ffcc; margin-top: 15px;">ENTER ARENA ⚔️</button>
         </div>
 
         <!-- Level Selector Screen (Now supports 100 levels) -->
@@ -617,7 +621,7 @@
                 </div>
             </div>
 
-            <button onclick="toggleShop()" style="background:#fff; color:#000; box-shadow:none; font-size:12px; padding: 6px 15px; margin-top: 5px;">Close Store</button>
+            <button id="close-shop-btn" onclick="toggleShop()" style="background:#fff; color:#000; box-shadow:none; font-size:12px; padding: 6px 15px; margin-top: 5px;">Close Store</button>
         </div>
 
         <!-- Pause Screen -->
@@ -668,7 +672,7 @@
         let level = 1;
         let selectedChallengeLevel = 1; 
         let maxUnlockedLevel = 1; // Locked progression system
-        const TOTAL_LEVELS = 100; // Increased to 100
+        const TOTAL_LEVELS = 100; // 100 levels
 
         let coins = 0;
         let kills = 0;
@@ -678,6 +682,7 @@
         let shakeTime = 0;
         let shakeIntensity = 0;
         let freezeFrames = 0;
+        let isShoppingFromLobby = false; // Check if store is opened from Lobby
 
         let gameMood = 'NORMAL'; // Easy, Normal, Hard setting
         let isSpecialEventChallenge = false;
@@ -886,7 +891,7 @@
             const container = document.getElementById('level-grid-container');
             container.innerHTML = '';
             
-            // Re-render upto 100 levels
+            // Render 100 levels
             for (let i = 1; i <= TOTAL_LEVELS; i++) {
                 const box = document.createElement('div');
                 box.className = `level-box ${i <= maxUnlockedLevel ? 'unlocked' : 'locked'}`;
@@ -908,6 +913,15 @@
             document.getElementById('ui-container').style.display = 'flex';
             gameActive = true;
             resetGame();
+        }
+
+        function openStoreFromLobby() {
+            isShoppingFromLobby = true;
+            shopScreen.style.display = 'flex';
+            document.getElementById('shop-coins-val').innerText = coins;
+            document.getElementById('close-shop-btn').innerText = "Back to Lobby";
+            updateShopUI();
+            drawShopAvatarPreview();
         }
 
         function startSpecialEvent() {
@@ -958,7 +972,7 @@
             ctx.restore();
         }
 
-        // Drew a Golden Crown (Taj) on top of Hassan Arena title/text
+        // Drew a Golden Crown (Taj) on top of Hassan Arena title/text (Demand 2)
         function drawCrown(ctx, x, y, width) {
             ctx.save();
             ctx.fillStyle = '#ffd700';
@@ -1060,7 +1074,7 @@
             ctx.restore();
         }
 
-        // Live Shop Avatar preview update
+        // Live Shop Avatar preview update (Demand 4)
         function drawShopAvatarPreview() {
             previewCtx.fillStyle = '#12131a';
             previewCtx.fillRect(0, 0, previewCanvas.width, previewCanvas.height);
@@ -1143,18 +1157,21 @@
 
         function spawnWave() {
             let moodMultiplier = (gameMood === 'EASY') ? 0.7 : (gameMood === 'HARD') ? 1.5 : 1.0;
-            let enemyCount = Math.floor((3 + Math.floor(level * 0.4) + currentWave) * moodMultiplier);
+            
+            // Progressive Difficulty: Scale HP and speed multiplier by level (Demand 6)
+            let levelDifficultyMultiplier = 1.0 + (level * 0.08); 
+            let enemyCount = Math.floor((3 + Math.floor(level * 0.3) + currentWave) * moodMultiplier);
             if (enemyCount < 1) enemyCount = 1;
 
             for (let i = 0; i < enemyCount; i++) {
                 let size = 25;
-                let hp = Math.floor((3 + Math.floor(level * 0.6)) * moodMultiplier);
-                let speed = 1.5 + Math.random() * 1.0;
+                let hp = Math.floor((3 + Math.floor(level * 0.6)) * moodMultiplier * levelDifficultyMultiplier);
+                let speed = (1.5 + Math.random() * 1.0) * (1.0 + (level * 0.015)); // Faster enemies in higher levels
                 let color = '#00ffcc';
 
                 if (i % 3 === 0) {
                     color = '#ffcc00';
-                    hp += 3;
+                    hp += Math.floor(3 * levelDifficultyMultiplier);
                 }
 
                 enemies.push({
@@ -1166,7 +1183,7 @@
                     color: color,
                     size: size,
                     isBoss: false,
-                    shootRate: 0.005 + (level * 0.001),
+                    shootRate: (0.005 + (level * 0.001)) * levelDifficultyMultiplier,
                     shootCooldown: Math.random() * 60
                 });
             }
@@ -1178,8 +1195,9 @@
             let bossConfig = BOSS_TYPES[(level - 1) % BOSS_TYPES.length];
             
             let moodMultiplier = (gameMood === 'EASY') ? 0.7 : (gameMood === 'HARD') ? 1.4 : 1.0;
-            let calculatedHP = Math.floor((bossConfig.hp + (level * 10)) * moodMultiplier);
-            let calculatedSpeed = bossConfig.speed + (level * 0.05);
+            let levelDifficultyMultiplier = 1.0 + (level * 0.1); 
+            let calculatedHP = Math.floor((bossConfig.hp + (level * 10)) * moodMultiplier * levelDifficultyMultiplier);
+            let calculatedSpeed = (bossConfig.speed + (level * 0.05)) * (1.0 + (level * 0.01));
 
             enemies.push({
                 x: 650,
@@ -1190,7 +1208,7 @@
                 color: bossConfig.color,
                 size: bossConfig.size,
                 isBoss: true,
-                shootRate: bossConfig.shootRate * moodMultiplier,
+                shootRate: bossConfig.shootRate * moodMultiplier * (1.0 + (level * 0.01)),
                 shootCooldown: 30
             });
             spawnDamageText(400, 120, "⚠️ BOSS ALERT! ⚠️", '#ff0055');
@@ -1240,15 +1258,20 @@
 
         // --- INTERACTIVE STORE ---
         function toggleShop() {
-            if (!gameActive) return;
             const shopDisp = shopScreen.style.display;
             if (shopDisp === 'flex') {
                 shopScreen.style.display = 'none';
-                isPaused = false;
+                if (isShoppingFromLobby) {
+                    isShoppingFromLobby = false;
+                    welcomeScreen.style.display = 'flex';
+                } else {
+                    isPaused = false;
+                }
             } else {
                 shopScreen.style.display = 'flex';
                 isPaused = true;
                 document.getElementById('shop-coins-val').innerText = coins;
+                document.getElementById('close-shop-btn').innerText = "Close Store";
                 updateShopUI();
                 drawShopAvatarPreview();
             }
@@ -1382,7 +1405,7 @@
             mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
         });
 
-        // Click/Touch canvas listener to check if pet is clicked/touched
+        // Click/Touch canvas listener to check if pet is clicked/touched (Demand 3)
         canvas.addEventListener('mousedown', (e) => {
             const rect = canvas.getBoundingClientRect();
             mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
@@ -1434,7 +1457,7 @@
             isMouseDown = false;
         });
 
-        // --- ROUND JOYSTICK (GOOL CONTROLLER) BEHAVIOR ---
+        // --- ROUND JOYSTICK (GOOL CONTROLLER) BEHAVIOR (Demand 5) ---
         function handleJoystickMove(touch) {
             const rect = joystickBoundary.getBoundingClientRect();
             const centerX = rect.left + rect.width / 2;
@@ -1582,7 +1605,7 @@
                 if (trail.life <= 0) player.dashTrails.splice(idx, 1);
             });
 
-            // --- PET ANIMATION & PHYSICS LOGIC ---
+            // --- PET ANIMATION & PHYSICS LOGIC (Demand 3) ---
             pet.angle += pet.floatSpeed;
             if (!pet.isFreeMoving) {
                 // Follow the player smoothly, floating beside him
@@ -1872,7 +1895,7 @@
                 ctx.restore();
             }
 
-            // Draw Crown (Taaj) on "HASSAN ARENA" branding inside game
+            // Draw Crown (Taaj) on "HASSAN ARENA" branding inside game (Demand 2)
             ctx.fillStyle = '#00ffcc';
             ctx.font = 'bold 18px "Segoe UI"';
             ctx.shadowBlur = 10;
@@ -1903,7 +1926,7 @@
             const flashing = (player.invincibleTimer > 0);
             drawHumanBody(ctx, player.x, player.y, player.width, player.height, player.color, player.facing > 0, flashing);
 
-            // --- DRAW CUTE PET WITH ANIMATION ---
+            // --- DRAW CUTE PET WITH ANIMATION (Demand 3) ---
             ctx.save();
             ctx.shadowBlur = 10;
             ctx.shadowColor = pet.color;
