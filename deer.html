@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Humans Vs Robots: Cyber Evolution</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #080911;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+        }
+        #gameCanvas {
+            background-color: #0f111a;
+            background-image: radial-gradient(circle, #1a1c2e 1px, transparent 1px);
+            background-size: 25px 25px;
+            border: 3px solid #00ffcc;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0, 255, 204, 0.3);
+            max-width: 95vw;
+            max-height: 60vh;
+        }
+        .scoreboard {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .level-badge {
+            background-color: #00ffcc;
+            color: black;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 900;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+        .health-bar-container {
+            width: 80px;
+            background-color: #222;
+            border-radius: 6px;
+            display: inline-block;
+            overflow: hidden;
+            height: 12px;
+            vertical-align: middle;
+            border: 2px solid #fff;
+        }
+        .health-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ffaa, #00b374);
+        }
+        .lives-container {
+            color: #ff0055;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+        /* Mobile Controls Styling */
+        .mobile-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 500px;
+            margin-top: 20px;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        /* Joystick Container */
+        .joystick-container {
+            width: 90px;
+            height: 90px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed #00ffcc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            touch-action: none;
+        }
+        /* Joystick Moving Handle */
+        .joystick-handle {
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #00ffcc, #009977);
+            border-radius: 50%;
+            color: black;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px #00ffcc;
+            position: absolute;
+            transition: transform 0.05s linear;
+            cursor: pointer;
+            user-select: none;
+        }
+        .touch-btn {
+            width: 75px;
+            height: 75px;
+            background: rgba(255, 0, 85, 0.2);
+            border: 2px solid #ff0055;
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: none;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+        }
+        .touch-btn:active {
+            background: rgba(255, 0, 85, 0.6);
+            box-shadow: 0 0 25px #ff0055;
+        }
+        #restart-btn {
+            display: none;
+            margin-top: 10px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 15px #ff0055;
+        }
+    </style>
+</head>
+<body>
+
+    <h3 style="margin: 5px; color: #00ffcc; text-shadow: 0 0 10px #00ffcc;">🤖 CYBER ARENA: EVOLUTION 🧑</h3>
+    
+    <div class="scoreboard">
+        <span>Level: <span id="level-num" class="level-badge">1</span></span>
+        <span>Kills: <span id="score" style="color: #ff0055;">0</span></span>
+        <span>HP: <div class="health-bar-container"><div id="health" class="health-bar"></div></div></span>
+        <span>Lives: <span id="lives-display" class="lives-container">❤️ ❤️ ❤️</span></span>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="480"></canvas>
+    
+    <button id="restart-btn" onclick="resetGame()">Play Again</button>
+
+    <!-- Upgraded Mobile Controls -->
+    <div class="mobile-controls">
+        <!-- Manual Drag Joystick -->
+        <div class="joystick-container" id="joystick-container">
+            <div class="joystick-handle" id="joystick-handle">MOVE</div>
+        </div>
+        <!-- Fire Button -->
+        <div class="touch-btn" id="fire-pad">FIRE</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let player, bullets, enemies, keys, isGameOver;
+    let currentLevel = 1;
+    let levelUpTimer = 0; 
+    let lives = 3;
+    let respawnTimer = 0; // Respawn immunity shield timer
+
+    function updateLivesDisplay() {
+        let hearts = "";
+        for (let i = 0; i < lives; i++) {
+            hearts += "❤️ ";
+        }
+        document.getElementById("lives-display").innerText = hearts || "💀 GONE";
+    }
+
+    function resetGame() {
+        player = { x: 400, y: 240, size: 16, speed: 4.2, health: 100, kills: 0, angle: 0 };
+        bullets = [];
+        enemies = [];
+        keys = {};
+        isGameOver = false;
+        currentLevel = 1;
+        levelUpTimer = 0;
+        lives = 3;
+        respawnTimer = 0;
+        document.getElementById("restart-btn").style.display = "none";
+        document.getElementById("score").innerText = "0";
+        document.getElementById("level-num").innerText = "1";
+        document.getElementById("health").style.width = "100%";
+        updateLivesDisplay();
+    }
+    resetGame();
+
+    // Keyboard Controls
+    window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+    // Mouse Aiming
+    canvas.addEventListener("mousemove", e => {
+        let rect = canvas.getBoundingClientRect();
+        let mX = (e.clientX - rect.left) * (canvas.width / rect.width);
+        let mY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        player.angle = Math.atan2(mY - player.y, mX - player.x);
+    });
+    canvas.addEventListener("mousedown", () => { if(!isGameOver && respawnTimer <= 0) fireBullet(); });
+
+    // --- JOYSTICK LOGIC ---
+    const joystickContainer = document.getElementById("joystick-container");
+    const joystickHandle = document.getElementById("joystick-handle");
+    const firePad = document.getElementById("fire-pad");
+
+    let joystickActive = false;
+    let joystickOriginX = 0;
+    let joystickOriginY = 0;
+    const joystickRadius = 20;
+
+    joystickContainer.addEventListener("touchstart", (e) => {
+        joystickActive = true;
+        const touch = e.touches[0];
+        const containerRect = joystickContainer.getBoundingClientRect();
+        joystickOriginX = containerRect.left + containerRect.width / 2;
+        joystickOriginY = containerRect.top + containerRect.height / 2;
+        e.preventDefault();
+    });
+
+    document.addEventListener("touchmove", (e) => {
+        if (!joystickActive || isGameOver || respawnTimer > 0) return;
+        const touch = e.touches[0];
+        
+        let distX = touch.clientX - joystickOriginX;
+        let distY = touch.clientY - joystickOriginY;
+        let totalDist = Math.sqrt(distX * distX + distY * distY);
+
+        if (totalDist === 0) return;
+
+        player.angle = Math.atan2(distY, distX);
+
+        let clampDist = Math.min(totalDist, joystickRadius);
+        let clampX = (distX / totalDist) * clampDist;
+        let clampY = (distY / totalDist) * clampDist;
+        joystickHandle.style.transform = `translate(${clampX}px, ${clampY}px)`;
+
+        // Move Human
+        player.x += Math.cos(player.angle) * player.speed;
+        player.y += Math.sin(player.angle) * player.speed;
+
+        player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+        player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
+
+        e.preventDefault();
+    }, { passive: false });
+
+    document.addEventListener("touchend", (e) => {
+        if (!joystickActive) return;
+        joystickActive = false;
+        joystickHandle.style.transform = "translate(0px, 0px)";
+    });
+
+    // Fire Laser Pad
+    firePad.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        if(!isGameOver && respawnTimer <= 0) {
+            if(enemies.length > 0) {
+                let nearest = enemies[0];
+                let minDist = Math.hypot(nearest.x - player.x, nearest.y - player.y);
+                enemies.forEach(en => {
+                    let d = Math.hypot(en.x - player.x, en.y - player.y);
+                    if(d < minDist) { minDist = d; nearest = en; }
+                });
+                player.angle = Math.atan2(nearest.y - player.y, nearest.x - player.x);
+            }
+            fireBullet();
+        }
+    });
+
+    // --- EVOLVED WEAPONS / DYNAMIC BULLETS ---
+    function fireBullet() {
+        let bSpeed = 10;
+        
+        if (currentLevel === 1) {
+            // Level 1: Standard Single Fire
+            createBullet(player.angle, bSpeed);
+        } 
+        else if (currentLevel === 2) {
+            // Level 2: Double Parallel Lasers
+            let offsetAngle = Math.PI / 2; // 90 degrees to side
+            let spawnX1 = player.x + Math.cos(player.angle + offsetAngle) * 8;
+            let spawnY1 = player.y + Math.sin(player.angle + offsetAngle) * 8;
+            let spawnX2 = player.x - Math.cos(player.angle + offsetAngle) * 8;
+            let spawnY2 = player.y - Math.sin(player.angle + offsetAngle) * 8;
+            
+            createBulletCustom(spawnX1, spawnY1, player.angle, bSpeed);
+            createBulletCustom(spawnX2, spawnY2, player.angle, bSpeed);
+        } 
+        else {
+            // Level 3+: Triple Spread Shot (Maza hi maza!)
+            createBullet(player.angle, bSpeed); // Straight
+            createBullet(player.angle - 0.2, bSpeed); // Left angle
+            createBullet(player.angle + 0.2, bSpeed); // Right angle
+        }
+    }
+
+    function createBullet(angle, speed) {
+        bullets.push({
+            x: player.x + Math.cos(angle) * 18,
+            y: player.y + Math.sin(angle) * 18,
+            vX: Math.cos(angle) * speed,
+            vY: Math.sin(angle) * speed,
+            angle: angle
+        });
+    }
+
+    function createBulletCustom(x, y, angle, speed) {
+        bullets.push({
+            x: x + Math.cos(angle) * 10,
+            y: y + Math.sin(angle) * 10,
+            vX: Math.cos(angle) * speed,
+            vY: Math.sin(angle) * speed,
+            angle: angle
+        });
+    }
+
+    // --- ROBOT SPAWNING ---
+    function spawnRobot() {
+        let maxEnemies = 5 + currentLevel; 
+        if (enemies.length < maxEnemies && !isGameOver) {
+            let side = Math.floor(Math.random() * 4);
+            let x, y;
+            if (side === 0) { x = -30; y = Math.random() * canvas.height; }
+            else if (side === 1) { x = canvas.width + 30; y = Math.random() * canvas.height; }
+            else if (side === 2) { x = Math.random() * canvas.width; y = -30; }
+            else { x = Math.random() * canvas.width; y = canvas.height + 30; }
+
+            let rand = Math.random();
+            let robotType;
+
+            if (rand < 0.5) {
+                robotType = { type: "normal", color: "#ff0055", size: 20, speed: 1.5 + (currentLevel * 0.15), hp: 1, maxHp: 1, scoreVal: 1 };
+            } else if (rand < 0.8) {
+                robotType = { type: "runner", color: "#ffcc00", size: 16, speed: 2.8 + (currentLevel * 0.15), hp: 1, maxHp: 1, scoreVal: 2 };
+            } else {
+                robotType = { type: "boss", color: "#b000ff", size: 28, speed: 0.9 + (currentLevel * 0.1), hp: 3, maxHp: 3, scoreVal: 5 };
+            }
+
+            enemies.push({ x: x, y: y, ...robotType });
+        }
+    }
+    let spawnInterval = setInterval(spawnRobot, 1200);
+
+    function update() {
+        // Checking if completely Dead
+        if (lives <= 0) {
+            isGameOver = true;
+            ctx.fillStyle = "rgba(8, 9, 17, 0.95)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ff0055";
+            ctx.font = "bold 30px Arial";
+            ctx.fillText("❌ GAME OVER ❌", canvas.width/2 - 120, canvas.height/2);
+            document.getElementById("restart-btn").style.display = "block";
+            requestAnimationFrame(update);
+            return;
+        }
+
+        // Keyboard Movement
+        if (respawnTimer <= 0) {
+            if (keys['w'] && player.y > player.size) player.y -= player.speed;
+            if (keys['s'] && player.y < canvas.height - player.size) player.y += player.speed;
+            if (keys['a'] && player.x > player.size) player.x -= player.speed;
+            if (keys['d'] && player.x < canvas.width - player.size) player.x += player.speed;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Respawn Timer (Immunity Shield Visual)
+        if (respawnTimer > 0) {
+            respawnTimer--;
+            ctx.beginPath();
+            ctx.arc(player.x, player.y, player.size + 15, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(0, 255, 204, " + (respawnTimer / 60) + ")";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Text on Center Screen for Respawning
+            ctx.fillStyle = "#00ffcc";
+            ctx.font = "bold 20px Arial";
+            ctx.fillText("SHIELD ACTIVE 🛡️", player.x - 70, player.y - 35);
+        }
+
+        // 🧑 DRAW PLAYER (Flashes when Immune)
+        if (respawnTimer === 0 || Math.floor(respawnTimer / 5) % 2 === 0) {
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.angle);
+            ctx.fillStyle = "#1b4d3e";
+            ctx.fillRect(-10, -15, 20, 30);
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fillStyle = "#00ffaa";
+            ctx.fill();
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(3, -3, 3, 6);
+            ctx.fillStyle = "#444";
+            ctx.fillRect(6, 5, 14, 5);
+            ctx.restore();
+        }
+
+        // ⚡ DRAW LASERS
+        bullets.forEach((bullet, bIndex) => {
+            bullet.x += bullet.vX;
+            bullet.y += bullet.vY;
+            ctx.fillStyle = "#00ffcc";
+            ctx.fillRect(bullet.x - 4, bullet.y - 2, 8, 4);
+            if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+                bullets.splice(bIndex, 1);
+            }
+        });
+
+        // 🤖 ROBOT PROCESSING
+        enemies.forEach((robot, eIndex) => {
+            let rAngle = Math.atan2(player.y - robot.y, player.x - robot.x);
+            robot.x += Math.cos(rAngle) * robot.speed;
+            robot.y += Math.sin(rAngle) * robot.speed;
+
+            ctx.save();
+            ctx.translate(robot.x, robot.y);
+            ctx.rotate(rAngle);
+            ctx.fillStyle = "#222533";
+            ctx.fillRect(-robot.size/2, -robot.size/2, robot.size, robot.size);
+            ctx.fillStyle = robot.color;
+            ctx.fillRect(robot.size/2 - 4, -4, 4, 8); 
+
+            if(robot.type === "boss") {
+                ctx.restore();
+                ctx.fillStyle = "rgba(0,0,0,0.5)";
+                ctx.fillRect(robot.x - 15, robot.y - 22, 30, 4);
+                ctx.fillStyle = "#ff0055";
+                ctx.fillRect(robot.x - 15, robot.y - 22, (robot.hp / robot.maxHp) * 30, 4);
+                ctx.save();
+                ctx.translate(robot.x, robot.y);
+                ctx.rotate(rAngle);
+            }
+            ctx.restore();
+
+            // Collision with Human (Only if not immune!)
+            if (respawnTimer <= 0) {
+                let damageVal = robot.type === "boss" ? 1.2 : 0.6;
+                if (Math.hypot(player.x - robot.x, player.y - robot.y) < player.size + robot.size - 5) {
+                    player.health -= damageVal;
+                    document.getElementById("health").style.width = Math.max(0, player.health) + "%";
+
+                    // Single Life Lost Logic
+                    if (player.health <= 0) {
+                        lives--;
+                        updateLivesDisplay();
+                        if (lives > 0) {
+                            // Reset Player Position & Give Shield
+                            player.x = 400;
+                            player.y = 240;
+                            player.health = 100;
+                            respawnTimer = 120; // 2 seconds of dynamic shield
+                            enemies = []; // Clear surrounding enemies
+                            document.getElementById("health").style.width = "100%";
+                        }
+                    }
+                }
+            }
+
+            // Laser hit Robot
+            bullets.forEach((bullet, bIndex) => {
+                if (Math.hypot(robot.x - bullet.x, robot.y - bullet.y) < robot.size) {
+                    bullets.splice(bIndex, 1);
+                    robot.hp--;
+
+                    if (robot.hp <= 0) {
+                        enemies.splice(eIndex, 1);
+                        player.kills += robot.scoreVal;
+                        document.getElementById("score").innerText = player.kills;
+
+                        // Level Up Logic (Every 10 Kills)
+                        let nextLvl = Math.floor(player.kills / 10) + 1;
+                        if (nextLvl > currentLevel) {
+                            currentLevel = nextLvl;
+                            document.getElementById("level-num").innerText = currentLevel;
+                            levelUpTimer = 90;
+                            
+                            clearInterval(spawnInterval);
+                            spawnInterval = setInterval(spawnRobot, Math.max(400, 1200 - (currentLevel * 100)));
+                        }
+                    }
+                }
+            });
+        });
+
+        // "LEVEL UP" Alert text
+        if (levelUpTimer > 0) {
+            ctx.fillStyle = "#00ffcc";
+            ctx.font = "bold 28px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(`STAGE ${currentLevel} REACHED! ⚡`, canvas.width / 2, 80);
+            
+            // Bullet Type Text Hint
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#fff";
+            let gunText = currentLevel === 2 ? "WEAPON UPGRADE: DOUBLE LASERS! 🔫🔫" : (currentLevel >= 3 ? "WEAPON UPGRADE: TRIPLE SPREAD! 🔥" : "SINGLE LASER");
+            ctx.fillText(gunText, canvas.width / 2, 110);
+
+            levelUpTimer--;
+        }
+
+        requestAnimationFrame(update);
+    }
+    update();
+</script>
+
+</body>
+</html> 
