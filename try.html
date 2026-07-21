@@ -1,0 +1,1527 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPG Evolution - Hassan Arena Ultimate</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #050508;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            margin: 10px auto;
+            border: 4px solid #00ffcc;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            background: #000;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* Top HUD Styling */
+        #top-hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background: rgba(16, 18, 27, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            padding: 0 15px;
+            border-bottom: 2px solid #1f2438;
+            font-size: 13px;
+            z-index: 10;
+        }
+        .hud-item { margin-right: 15px; display: inline-block; }
+        .hud-item span { color: #00ffcc; font-weight: bold; }
+        
+        /* Menu Screens styling */
+        .overlay-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 8, 12, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+        .btn {
+            background: linear-gradient(135deg, #00ffcc 0%, #00a3ff 100%);
+            border: none;
+            color: #000;
+            padding: 10px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 8px;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.6);
+        }
+        
+        /* Flexible Multi-row Shopping Layout */
+        #store-screen { overflow-y: auto; justify-content: flex-start; padding-top: 50px; box-sizing: border-box; }
+        .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90%; max-height: 320px; overflow-y: auto; padding: 5px; }
+        .store-card { background: #111422; border: 1px solid #1f2438; border-radius: 4px; padding: 10px; text-align: center; }
+        .store-card.owned { border-color: #00ffcc; background: #0c1a24; }
+        .store-card p { margin: 5px 0; font-size: 12px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab-btn { background: #222; border: 1px solid #444; color: #fff; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px;}
+        .tab-btn.active { background: #00ffcc; color: #000; font-weight: bold; }
+
+        /* Level Selector Layout */
+        .lvl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 80%; margin: 15px 0; }
+        .lvl-node { background: #161a2b; border: 2px solid #3b4261; padding: 15px 0; text-align: center; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .lvl-node.unlocked { border-color: #00ffcc; color: #00ffcc; cursor: pointer; }
+        .lvl-node.locked { opacity: 0.4; cursor: not-allowed; }
+
+        /* Custom Stat Prize Selector styling */
+        #prize-stat-controls { display: flex; flex-direction: column; gap: 8px; width: 60%; margin: 10px 0; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; background: #111424; padding: 6px 12px; border-radius: 4px; }
+
+        /* Mobile Controller Layout Overlay */
+        #mobile-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            height: 120px;
+            pointer-events: none;
+            z-index: 15;
+            display: none; /* Auto toggled via script if touch is used */
+        }
+        .touch-zone { pointer-events: auto; position: absolute; }
+        #joystick-boundary { bottom: 10px; left: 20px; width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
+        #joystick-knob { position: absolute; top: 27px; left: 27px; width: 36px; height: 36px; background: #00ffcc; border-radius: 50%; box-shadow: 0 0 10px #00ffcc; }
+        .action-circle-btn { bottom: 20px; width: 55px; height: 55px; background: rgba(0,255,204,0.2); border: 2px solid #00ffcc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #fff; text-shadow: 0 0 4px #000; }
+        #btn-dash { right: 90px; }
+        #fire-btn { right: 20px; width: 62px; height: 62px; bottom: 16px; background: rgba(255, 51, 51, 0.25); border-color: #ff3333; }
+        #btn-emote-trigger { right: 160px; width: 50px; height: 50px; bottom: 22px; background: rgba(217, 70, 239, 0.25); border-color: #d946ef; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- Top HUD Panel -->
+        <div id="top-hud">
+            <div>
+                <div class="hud-item">Level: <span id="level-val">1</span></div>
+                <div class="hud-item">Coins: <span id="coins-val">0</span></div>
+                <div class="hud-item">HP: <span id="hp-val">100</span>/<span id="max-hp-val">100</span></div>
+            </div>
+            <div>
+                <div class="hud-item">Bonus DMG: <span id="dmg-val">0</span></div>
+                <div class="hud-item">Lives: <span id="lives-val">3</span></div>
+                <button id="hud-pause-btn" style="background:#222; color:#fff; border:1px solid #444; padding:2px 8px; cursor:pointer;" onclick="togglePauseGame()">PAUSE</button>
+            </div>
+        </div>
+
+        <!-- Canvas Rendering Target -->
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <!-- Dynamic Screen Overlay: Main Dashboard Menu -->
+        <div id="main-menu" class="overlay-screen">
+            <h1 style="margin:0 0 5px 0; color:#00ffcc; font-size:32px; letter-spacing:2px;">RPG EVOLUTION</h1>
+            <h3 style="margin:0 0 20px 0; color:#ffd700; font-style:italic;">HASSAN ARENA PRO EDITION</h3>
+            <button class="btn" onclick="goToLevelSelector()">Campaign Levels</button>
+            <button class="btn" style="background:linear-gradient(135deg, #d946ef 0%, #c084fc 100%);" onclick="startStoryEventMode()">10-Min Story Event Challenge</button>
+            <button class="btn" style="background:#555; color:#fff;" onclick="openStore()">Super Store & Emotes</button>
+            <div id="event-timer-bar" style="margin-top:15px; font-size:12px; color:#aaa;">Event Refresh Syncing...</div>
+        </div>
+
+        <!-- Dynamic Screen Overlay: Level Node Selector -->
+        <div id="level-selector" class="overlay-screen" style="display:none;">
+            <h2 style="color:#00ffcc; margin-top:0;">CHOOSE CHALLENGE LEVEL</h2>
+            <div class="lvl-grid" id="lvl-nodes-container"></div>
+            <button class="btn" style="background:#333; color:#fff;" onclick="backToMain()">Back</button>
+        </div>
+
+        <!-- Dynamic Screen Overlay: Customizable Upgrade Stat Prize Screen -->
+        <div id="level-clear-screen" class="overlay-screen" style="display:none;">
+            <h2 style="color:#00ff66; margin:0 0 10px 0;">STAGE COMPLETED!</h2>
+            <div id="level-prize-box" style="background:#111625; padding:15px; border-radius:6px; border:1px solid #00ffcc; text-align:center; margin-bottom:10px; width:70%;"></div>
+            
+            <div style="font-size:14px; margin-bottom:5px;">Unspent Upgrade Points: <b id="points-left" style="color:#ffaa00;">0</b></div>
+            
+            <!-- Customizable Point Effect Factor Controller -->
+            <div style="margin-bottom:12px; font-size:12px; color:#aaa;">
+                Upgrade Strength Multiplier: 
+                <select id="stat-multiplier-select" style="background:#222; color:#00ffcc; border:1px solid #444;" onchange="updateStatMultiplierFactor(this.value)">
+                    <option value="1">1x Standard Effect</option>
+                    <option value="2">2x High Boost</option>
+                    <option value="4">4x Extreme Power</option>
+                </select>
+            </div>
+
+            <div id="prize-stat-controls">
+                <div class="stat-row">
+                    <span>Max Health Pool (<b id="stat-hp-display">0</b>)</span>
+                    <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('HP')">+</button>
+                </div>
+                <div class="stat-row">
+                    <span>Base Movement Velocity (<b id="stat-spd-display">0</b>)</span>
+                    <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('SPD')">+</button>
+                </div>
+                <div class="stat-row">
+                    <span>Weapon Bullet Damage (<b id="stat-dmg-display">0</b>)</span>
+                    <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('DMG')">+</button>
+                </div>
+            </div>
+            <button class="btn" style="background:#00ffcc; color:#000;" onclick="confirmUpgradesAndExit()">Save Progress & Exit</button>
+        </div>
+
+        <!-- Dynamic Screen Overlay: Expanded Super Store -->
+        <div id="store-screen" class="overlay-screen" style="display:none;">
+            <h2 style="color:#ffd700; margin:5px 0 10px 0;">MEGA EVOLUTION SUPER STORE</h2>
+            <div class="tabs">
+                <button class="tab-btn active" id="tab-btn-skins" onclick="switchStoreTab('skins')">Skins</button>
+                <button class="tab-btn" id="tab-btn-weapons" onclick="switchStoreTab('weapons')">Weapons</button>
+                <button class="tab-btn" id="tab-btn-rides" onclick="switchStoreTab('rides')">Rides/Vehicles</button>
+                <button class="tab-btn" id="tab-btn-parachutes" onclick="switchStoreTab('parachutes')">Parachutes</button>
+                <button class="tab-btn" id="tab-btn-emotes" onclick="switchStoreTab('emotes')">Emotes (30)</button>
+            </div>
+            <div class="store-grid" id="store-items-container"></div>
+            <button class="btn" style="background:#333; color:#fff; margin-top:10px;" onclick="backToMain()">Back Menu</button>
+        </div>
+
+        <!-- Dynamic Screen Overlay: Game Over Screen -->
+        <div id="game-over-screen" class="overlay-screen" style="display:none;">
+            <h1 id="game-over-title" style="color:#ff3333; font-size:40px; margin:0 0 10px 0;">GAME OVER</h1>
+            <p style="color:#aaa; margin:0 0 20px 0;">Challenge was too severe! Don't lose hope.</p>
+            <button class="btn" onclick="resetGame()">Respawn & Retry</button>
+            <button class="btn" style="background:#333; color:#fff;" onclick="backToMain()">Main Menu</button>
+        </div>
+
+        <!-- Mobile Touch Controller Overlay Components -->
+        <div id="mobile-controls">
+            <!-- Left Side Interactive Dynamic D-Pad Joystick -->
+            <div id="joystick-boundary" class="touch-zone">
+                <div id="joystick-knob"></div>
+            </div>
+            <!-- Right Action Matrix buttons -->
+            <div id="btn-emote-trigger" class="touch-zone action-circle-btn" onclick="playActiveEmoteFromMobile()">🎭 EMOTE</div>
+            <div id="btn-dash" class="touch-zone action-circle-btn">DASH</div>
+            <div id="fire-btn" class="touch-zone action-circle-btn">FIRE</div>
+        </div>
+    </div>
+
+    <script>
+        // GLOBAL STATE VARIABLE REGISTRY
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Layout screens DOM handles
+        const mainMenu = document.getElementById('main-menu');
+        const lvlScreen = document.getElementById('level-clear-screen');
+        const storeScreen = document.getElementById('store-screen');
+        const govScreen = document.getElementById('game-over-screen');
+        const govTitle = document.getElementById('game-over-title');
+        const lvlSelectorScreen = document.getElementById('level-selector');
+        const mobileControlsContainer = document.getElementById('mobile-controls');
+
+        // Engine Loop & Configuration State Flags
+        let gameActive = false;
+        let isPaused = false;
+        let level = 1;
+        let maxUnlockedLevel = 1;
+        const TOTAL_LEVELS = 10;
+        let coins = 0;
+        let kills = 0;
+        let lives = 3;
+        const floorY = 440;
+        let gravity = 0.5;
+
+        // Stat Upgrades Point Management Configurations
+        let unspentPoints = 0;
+        let maxHP = 100;
+        let baseSpeed = 4.0;
+        let damageBonus = 0;
+        let statMultiplierFactor = 1;
+
+        // Active Player Custom Loadout Inventory Tracking
+        let equippedSkin = 'DEFAULT';
+        let equippedWeapon = 'BASIC';
+        let equippedRide = 'NONE';
+        let equippedParachute = 'RED';
+        let equippedEmote = 'NONE';
+
+        // Expanded Core Items Specifications
+        const SKINS = {
+            'DEFAULT': { name: 'Standard Hero', cost: 0, color: '#66fcf1', hpBonus: 0 },
+            'CYBER': { name: 'Cyber Rogue', cost: 500, color: '#00ffcc', hpBonus: 25 },
+            'PHANTOM': { name: 'Phantom Knight', cost: 1200, color: '#a855f7', hpBonus: 60 },
+            'GOLD': { name: 'Gold Overlord', cost: 3000, color: '#eab308', hpBonus: 150 }
+        };
+
+        const WEAPONS = {
+            'BASIC': { name: 'Basic Blaster', cost: 0, damage: 15, cooldown: 20, color: '#66fcf1', pierce: false },
+            'LASER': { name: 'Plasma Repeater', cost: 600, damage: 22, cooldown: 12, color: '#38bdf8', pierce: false },
+            'RAILGUN': { name: 'Volt Railgun', cost: 1600, damage: 55, cooldown: 35, color: '#f43f5e', pierce: true }
+        };
+
+        const RIDES = {
+            'NONE': { name: 'No Vehicle Ride', cost: 0 },
+            'BIKE': { name: 'Cyber Motorbike', cost: 400 },
+            'CAR': { name: 'Super Sports Car', cost: 1500 },
+            'SHIP': { name: 'Galactic Spaceship', cost: 2500 },
+            'JET': { name: 'VTOL Stealth Fighter Fighter', cost: 3500 },
+            'HELI': { name: 'Attack Helicopter Helicopter', cost: 2000 },
+            'TIGER': { name: 'Saber Wild Tiger Animal', cost: 1800 }
+        };
+
+        const PARACHUTES = {
+            'RED': { name: 'Crimson Drop Parachute', cost: 0, color: '#ff3333' },
+            'NEON': { name: 'Neon Toxic Parachute', cost: 300, color: '#39ff14' },
+            'GOLD': { name: 'Royal Gold Parachute', cost: 1000, color: '#ffd700' },
+            'PINK': { name: 'Magical Blossom Parachute', cost: 500, color: '#ff66cc' },
+            'CYAN': { name: 'Glacial Ice Parachute', cost: 400, color: '#00ffff' }
+        };
+
+        // Complete 30 Items Emotes Array Registry
+        const EMOTES_INVENTORY = [
+            { id: 'E_LOL', name: 'LOL Taunt Emote (Super Toxic)', cost: 5000, label: '😂 HAHAHA! LOSER! 😂' },
+            { id: 'E_CHAIR', name: 'Royal Golden Chair Relax', cost: 8000, label: '🪑 Sitting Like a King 🪑' },
+            { id: 'E_WAVE', name: 'Simple Friendly Wave', cost: 100, label: '👋 Hello There! 👋' },
+            { id: 'E_DANCE', name: 'Victory Breakdance Step', cost: 800, label: '💃 *Impeccable Footwork Dance* 💃' },
+            { id: 'E_FLEX', name: 'Heavy Alpha Muscle Flex', cost: 600, label: '💪 Pure Power Gains! 💪' },
+            { id: 'E_CRY', name: 'Salty Baby Cry Outpour', cost: 400, label: '😭 Boohoo! Go Cry! 😭' },
+            { id: 'E_CLAP', name: 'Sarcastic Slow Applause', cost: 200, label: '👏 Wow... Spectacular Failure 👏' },
+            { id: 'E_HEART', name: 'Kawaii Love Hearts Sign', cost: 500, label: '💖 Much Love 💖' },
+            { id: 'E_SALUTE', name: 'Military Vanguard Salute', cost: 350, label: '🫡 I Respect You Comrade 🫡' },
+            { id: 'E_THUMB', name: 'Direct Approval Thumbs Up', cost: 150, label: '👍 Good Job! 👍' },
+            { id: 'E_RAGE', name: 'Enraged Super Saiyan Scream', cost: 1000, label: '🤬 UNLEASHING RAGE TRUCKS! 🤬' },
+            { id: 'E_DAB', name: 'Classic Retro Style Dab', cost: 700, label: '🙅‍♂️ Absolute Style Dab! 🙅‍♂️' },
+            { id: 'E_FACEPALM', name: 'Ultimate Disbelief Facepalm', cost: 300, label: '🤦‍♂️ Unbelievable Blunder... 🤦‍♂️' },
+            { id: 'E_PEACE', name: 'Classic Anime Peace Sign', cost: 250, label: '✌️ Peace Out! Victory! ✌️' },
+            { id: 'E_SHRUG', name: 'Clueless Confused Shrug', cost: 200, label: '🤷‍♂️ Who Knows? IDK! 🤷‍♂️' },
+            { id: 'E_SLEEP', name: 'Boring Match Snore Sleep', cost: 450, label: '😴 Wake Me Up Later... Zzz 😴' },
+            { id: 'E_FIRE', name: 'On Flame Match Burner', cost: 1100, label: '🔥 ABSOLUTELY ON FIRE! 🔥' },
+            { id: 'E_CROWN', name: 'Arena Taj Summoning Crown', cost: 2500, label: '👑 Claiming My Throne 👑' },
+            { id: 'E_SHOCK', name: 'Absolute Stunned Mindblown', cost: 350, label: '😱 OMG! WHAT JUST HAPPENED?! 😱' },
+            { id: 'E_MONEY', name: 'Wealth Rain Rainmaker Cash', cost: 4000, label: '💸 Making It Rain Cash! 💸' },
+            { id: 'E_GHOST', name: 'Spooky Haunting Scare Ghost', cost: 600, label: '👻 Boo! Scared Ya? 👻' },
+            { id: 'E_CLOWN', name: 'Circus Clown Target Mark', cost: 1500, label: '🤡 You Are The Whole Circus 🤡' },
+            { id: 'E_WINK', name: 'Flirty Smooth Eyes Wink', cost: 200, label: '😉 All Calculated Smoothly 😉' },
+            { id: 'E_GG', name: 'Sportsmanlike Good Game Text', cost: 100, label: '🎮 GG WP! Well Played! 🎮' },
+            { id: 'E_BOO', name: 'Disapproving Crowd Thumbs Down', cost: 300, label: '👎 BOO! GET OFF STAGE! 👎' },
+            { id: 'E_ANGEL', name: 'Pure Holy Saint Halo Aura', cost: 900, label: '😇 Completely Innocent Angel 😇' },
+            { id: 'E_DEVIL', name: 'Sinister Mischievous Evil Smile', cost: 950, label: '😈 Pure Villain Energy Active 😈' },
+            { id: 'E_100', name: 'Flawless Score Keep Perfect', cost: 1200, label: '💯 Keeping It 100% Real 💯' },
+            { id: 'E_SPIN', name: 'Tornado Whirlwind Body Spin', cost: 1300, label: '🌀 Spinning Into Matrix! 🌀' },
+            { id: 'E_BOAST', name: 'Invincible Flex Champion Pose', cost: 3500, label: '🏆 UNDEFEATED ARENA GOD! 🏆' }
+        ];
+
+        let inventory = { skins: ['DEFAULT'], weapons: ['BASIC'], rides: ['NONE'], parachutes: ['RED'], emotes: [] };
+
+        // Real-time Physics Engine Processing Arrays
+        let players = []; 
+        let bullets = [];
+        let enemyBullets = [];
+        let enemies = [];
+        let particles = [];
+        let damageTexts = [];
+
+        // Global Interactive Entities Data Structures
+        let player = {
+            x: 100, y: 300, width: 24, height: 42,
+            vx: 0, vy: 0,
+            isJumping: false, facing: 1, color: '#66fcf1',
+            isDashing: false, dashTime: 0, dashCooldown: 0, dashSpeed: 14, dashDirection: 1,
+            dashTrails: [], invincibleTimer: 0,
+            hp: 100, hasShield: false, shieldStrength: 0, hasRegen: false, regenTimer: 0
+        };
+
+        let pet = { x: 70, y: 280, radius: 7, color: '#ff00ff', angle: 0, floatSpeed: 0.08, floatAmplitude: 3, isFreeMoving: false, vx: 0, vy: 0, bounceTimer: 0 };
+
+        let portal = null;
+        let levelCleared = false;
+        let currentWave = 1;
+        let bossSpawned = false;
+
+        // Visual Screen Camera Shaking Handles
+        let shakeTime = 0, shakeIntensity = 0;
+        function applyShake(t, i) { shakeTime = t; shakeIntensity = i; }
+
+        let freezeFrames = 0;
+        function triggerHitFreeze() { freezeFrames = 4; }
+
+        // Core Input Management Buffers
+        let keys = {};
+        let mouseX = 0, mouseY = 0;
+        let isMouseDown = false;
+        let fireCooldown = 0;
+
+        // Virtual Touch Joystick Calculations Data Registers
+        let joystickBoundary = document.getElementById('joystick-boundary');
+        let joystickKnob = document.getElementById('joystick-knob');
+        let joystickActive = false;
+        let joystickAngle = 0;
+        let joystickDistance = 0;
+        const maxJoystickDist = 40;
+
+        // Custom 10-Min Story Mode Persistent Framework Registers
+        let isStoryModeActive = false;
+        let storyTimer = 600; // 10 Minutes running stopwatch countdown
+        let storyProgressDistance = 0;
+        let currentBiome = 'VILLAGE'; // VILLAGE -> JUNGLE -> DESERT cycle transitions
+        let storyGunLevel = 1;
+        let foodItems = [];
+        let gunPickups = [];
+        let stayShelters = [];
+        let activeEmoteTimer = 0;
+        let activeEmoteText = "";
+
+        // Interactive Parachute Dropping Flight state configuration logic
+        let airDropLandingActive = false;
+        let airDropHeight = 0; // Starts high up, slides slowly to floor level target
+
+        // PERSISTENCE LOCALSTORAGE API SYNC CHANNELS
+        function saveProgress() {
+            const package = { maxUnlockedLevel, coins, unspentPoints, maxHP, baseSpeed, damageBonus, inventory, equippedSkin, equippedWeapon, equippedRide, equippedParachute, equippedEmote };
+            localStorage.setItem('RPGEvo_HassanArena_Save', JSON.stringify(package));
+        }
+
+        function loadProgress() {
+            const raw = localStorage.getItem('RPGEvo_HassanArena_Save');
+            if(!raw) return;
+            try {
+                const d = JSON.parse(raw);
+                if(d.maxUnlockedLevel) maxUnlockedLevel = d.maxUnlockedLevel;
+                if(d.coins !== undefined) coins = d.coins;
+                if(d.unspentPoints !== undefined) unspentPoints = d.unspentPoints;
+                if(d.maxHP) maxHP = d.maxHP;
+                if(d.baseSpeed) baseSpeed = d.baseSpeed;
+                if(d.damageBonus !== undefined) damageBonus = d.damageBonus;
+                if(d.inventory) inventory = d.inventory;
+                if(d.equippedSkin) equippedSkin = d.equippedSkin;
+                if(d.equippedWeapon) equippedWeapon = d.equippedWeapon;
+                if(d.equippedRide) equippedRide = d.equippedRide;
+                if(d.equippedParachute) equippedParachute = d.equippedParachute;
+                if(d.equippedEmote) equippedEmote = d.equippedEmote;
+            } catch(e) { console.error("Save state decryption issue: ", e); }
+        }
+
+        // TIMER INTERVAL MANAGEMENT SYSTEM (12-Hour Sync System Simulation)
+        function runEventCountdown() {
+            setInterval(() => {
+                const now = new Date();
+                const target = new Date();
+                target.setHours(target.getHours() + (12 - (target.getHours() % 12)), 0, 0, 0);
+                letdiff = target - now;
+                let hrs = Math.floor(letdiff / 3600000);
+                let mins = Math.floor((letdiff % 3600000) / 60000);
+                let secs = Math.floor((letdiff % 60000) / 1000);
+                document.getElementById('event-timer-bar').innerText = `Challenge Reset In: ${hrs}h ${mins}m ${secs}s`;
+            }, 1000);
+        }
+
+        // CORE SYSTEM STATE NAVIGATION HANDLERS
+        function backToMain() {
+            isStoryModeActive = false;
+            gameActive = false;
+            storeScreen.style.display = 'none';
+            lvlSelectorScreen.style.display = 'none';
+            govScreen.style.display = 'none';
+            mainMenu.style.display = 'flex';
+        }
+
+        function togglePauseGame() {
+            isPaused = !isPaused;
+            document.getElementById('hud-pause-btn').innerText = isPaused ? "RESUME" : "PAUSE";
+        }
+
+        function goToLevelSelector() {
+            mainMenu.style.display = 'none';
+            lvlSelectorScreen.style.display = 'flex';
+            const container = document.getElementById('lvl-nodes-container');
+            container.innerHTML = '';
+            for(let i=1; i<=TOTAL_LEVELS; i++) {
+                let node = document.createElement('div');
+                node.className = `lvl-node ${i <= maxUnlockedLevel ? 'unlocked' : 'locked'}`;
+                node.innerText = `Lvl ${i}`;
+                if(i <= maxUnlockedLevel) {
+                    node.onclick = () => launchCampaignStage(i);
+                }
+                container.appendChild(node);
+            }
+        }
+
+        function updateStatMultiplierFactor(val) {
+            statMultiplierFactor = parseInt(val) || 1;
+        }
+
+        function allocateStatPoint(type) {
+            if(unspentPoints <= 0) return;
+            unspentPoints--;
+            let effect = statMultiplierFactor;
+            if(type === 'HP') {
+                maxHP += 15 * effect;
+            } else if(type === 'SPD') {
+                baseSpeed += 0.4 * effect;
+            } else if(type === 'DMG') {
+                damageBonus += 4 * effect;
+            }
+            document.getElementById('points-left').innerText = unspentPoints;
+            document.getElementById('stat-hp-display').innerText = maxHP;
+            document.getElementById('stat-spd-display').innerText = baseSpeed.toFixed(1);
+            document.getElementById('stat-dmg-display').innerText = damageBonus;
+        }
+
+        function confirmUpgradesAndExit() {
+            saveProgress();
+            lvlScreen.style.display = 'none';
+            goToLevelSelector();
+        }
+
+        // AIR-DROP SEQUENCER ANIMATION MAPPING
+        function triggerAirDropInitialization() {
+            airDropLandingActive = true;
+            airDropHeight = 50; // High atmospheric visual coordinate
+            player.y = airDropHeight;
+            player.vx = 0; player.vy = 1.2; // Smooth glided rate velocity
+            player.invincibleTimer = 90;
+        }
+
+        // STAGE INITIALIZATION ROUTINES
+        function launchCampaignStage(selectedLevel) {
+            level = selectedLevel;
+            isStoryModeActive = false;
+            lvlSelectorScreen.style.display = 'none';
+            mainMenu.style.display = 'none';
+            if (window.innerWidth < 900) mobileControlsContainer.style.display = 'block';
+
+            // Reset Level configurations
+            currentWave = 1;
+            bossSpawned = false;
+            levelCleared = false;
+            portal = null;
+            bullets = []; enemyBullets = []; enemies = []; particles = []; damageTexts = [];
+            
+            player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+            player.x = 100;
+            player.color = SKINS[equippedSkin]?.color || '#66fcf1';
+
+            triggerAirDropInitialization();
+            spawnCampaignWave();
+            gameActive = true;
+        }
+
+        function startStoryEventMode() {
+            isStoryModeActive = true;
+            level = 99; // Flag identifier code
+            mainMenu.style.display = 'none';
+            if (window.innerWidth < 900) mobileControlsContainer.style.display = 'block';
+
+            storyTimer = 600; 
+            storyProgressDistance = 0;
+            currentBiome = 'VILLAGE';
+            storyGunLevel = 1;
+            player.hp = 200; // Strict demand requirement parameter bound
+            player.x = 80;
+            player.color = SKINS[equippedSkin]?.color || '#66fcf1';
+
+            bullets = []; enemyBullets = []; enemies = []; particles = []; damageTexts = [];
+            foodItems = []; gunPickups = []; stayShelters = [];
+            activeEmoteTimer = 0;
+
+            // Generate procedurally array nodes for continuous path scrolling
+            generateStoryEnvironmentalNodes();
+            triggerAirDropInitialization();
+            gameActive = true;
+        }
+
+        function generateStoryEnvironmentalNodes() {
+            // Seed objects across linear space coordinates
+            for (let i = 1; i <= 20; i++) {
+                let distAnchor = i * 400;
+                // Scatter food types drops
+                let fType = (i % 3 === 0) ? 'MEDKIT' : (i % 2 === 0) ? 'PIZZA' : 'APPLE';
+                foodItems.push({ x: distAnchor + Math.random()*150, y: floorY - 20, type: fType, radius: 10, used: false });
+
+                // Scatter upgrades gun parts chests
+                if (i % 4 === 0) {
+                    gunPickups.push({ x: distAnchor + 50, y: floorY - 25, size: 16, picked: false });
+                }
+
+                // Inject shelter bases checkpoints
+                if (i % 6 === 0) {
+                    stayShelters.push({ x: distAnchor - 100, y: floorY - 80, width: 90, height: 80 });
+                }
+            }
+            // Spawn initial localized guards
+            spawnStoryBiomeEnemies();
+        }
+
+        function spawnStoryBiomeEnemies() {
+            enemies = [];
+            let count = 4;
+            let typeName = (currentBiome === 'VILLAGE') ? 'Bandit Slasher' : (currentBiome === 'JUNGLE') ? 'Wild Alien Dog' : 'Mutant Desert Scorpion';
+            let colorCode = (currentBiome === 'VILLAGE') ? '#fca5a5' : (currentBiome === 'JUNGLE') ? '#4ade80' : '#fbbf24';
+
+            for(let i=0; i<count; i++) {
+                enemies.push({
+                    x: 400 + (i * 130), y: floorY - 30, size: 30,
+                    hp: 40, maxHp: 40, speed: 1.5 + Math.random(),
+                    color: colorCode, name: typeName, shootRate: 0.015, shootCooldown: 40, isBoss: false
+                });
+            }
+        }
+
+        // CAMPAIGN ENEMY GENERATION MODULE
+        function spawnCampaignWave() {
+            enemies = [];
+            let count = 2 + level;
+            let enemyName = "Minion Mech";
+            let enemyColor = '#f87171';
+            
+            // Dynamic thematic alignment based on requested explicit progression structures
+            if(level === 1) { enemyName = "Baby Fire Dragon"; enemyColor = "#ef4444"; }
+            else if(level === 2) { enemyName = "Rabid Cyber Dog"; enemyColor = "#b45309"; }
+            else if(level === 3) { enemyName = "Venomous Neon Snake"; enemyColor = "#10b981"; }
+            else if(level === 4) { enemyName = "Armored Stegosaurus Dino"; enemyColor = "#06b6d4"; }
+
+            for(let i=0; i<count; i++) {
+                enemies.push({
+                    x: 500 + (i * 90),
+                    y: floorY - 28,
+                    size: 28,
+                    hp: 30 + (level * 10),
+                    maxHp: 30 + (level * 10),
+                    speed: 1.0 + (level * 0.15),
+                    color: enemyColor,
+                    name: enemyName,
+                    shootRate: 0.008 + (level * 0.002),
+                    shootCooldown: 30 + Math.random()*40,
+                    isBoss: false
+                });
+            }
+        }
+
+        function spawnCampaignLevelBoss() {
+            bossSpawned = true;
+            let bossName = "Alpha Omega Mech";
+            let bossColor = '#ff0055';
+            let bossHp = 200 + (level * 80);
+            let bSize = 55;
+
+            if(level === 1) { bossName = "Ancient Red Dragon Alpha"; bossColor = "#b91c1c"; }
+            else if(level === 2) { bossName = "Cerberus Guard Dog Hound"; bossColor = "#78350f"; }
+            else if(level === 3) { bossName = "Basilisk King Snake Monster"; bossColor = "#047857"; }
+            else if(level === 4) { bossName = "Tyrannosaurus Rex Dinosaur God"; bossColor = "#0e7490"; }
+
+            enemies.push({
+                x: 700,
+                y: floorY - bSize,
+                size: bSize,
+                hp: bossHp,
+                maxHp: bossHp,
+                speed: 1.2,
+                color: bossColor,
+                name: `BOSS: ${bossName}`,
+                shootRate: 0.03,
+                shootCooldown: 20,
+                isBoss: true
+            });
+            spawnDamageText(600, 200, "⚠️ BOSS DETECTED IN SECTOR ⚠️", '#ff3333');
+        }
+
+        // GLOBAL WEAPON FIRING MATRIX
+        function fireWeapon() {
+            if (airDropLandingActive) return; // Prevent input freeze during descent
+            let wCfg = WEAPONS[equippedWeapon] || WEAPONS['BASIC'];
+            fireCooldown = wCfg.cooldown;
+
+            let baseDmg = wCfg.damage + damageBonus;
+            if(isStoryModeActive) {
+                baseDmg = 12 + (storyGunLevel * 6); // Mode isolation override variable scaling
+            }
+
+            // Target vector math
+            let angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
+            if(window.innerWidth < 900) {
+                // If mobile auto trace closest foe vector targets
+                angle = player.facing > 0 ? 0 : Math.PI;
+                if(enemies.length > 0) {
+                    angle = Math.atan2((enemies[0].y + enemies[0].size/2) - (player.y + player.height/2), (enemies[0].x + enemies[0].size/2) - (player.x + player.width/2));
+                }
+            }
+
+            bullets.push({
+                x: player.x + player.width/2 + Math.cos(angle)*15,
+                y: player.y + player.height/2 + Math.sin(angle)*15,
+                vx: Math.cos(angle) * 9,
+                vy: Math.sin(angle) * 9,
+                size: wCfg.pierce ? 5 : 4,
+                color: wCfg.color,
+                damage: baseDmg,
+                pierces: wCfg.pierce,
+                hitEnemies: []
+            });
+            applyShake(1, 2);
+        }
+
+        // DYNAMIC PARTICLES EXPLOSION DISPATCHER
+        function createExplosion(x, y, color, amt) {
+            for(let i=0; i<amt; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    size: 2 + Math.random()*3,
+                    color: color,
+                    life: 20 + Math.random()*20,
+                    maxLife: 40
+                });
+            }
+        }
+
+        function spawnDamageText(x, y, txt, color) {
+            damageTexts.push({ x: x, y: y, text: txt, color: color, vx: (Math.random()-0.5)*2, vy: -1.5, life: 35 });
+        }
+
+        // TRIGGER EMOTE EVENT ACTIONS VIA HOTKEYS/TOUCH
+        function playActiveEmoteFromMobile() {
+            if(equippedEmote === 'NONE') {
+                spawnDamageText(player.x, player.y - 30, "No Emote Equipped In Super Store!", '#ffaa00');
+                return;
+            }
+            let findNode = EMOTES_INVENTORY.find(e => e.id === equippedEmote);
+            if(findNode) {
+                activeEmoteText = findNode.label;
+                activeEmoteTimer = 100; // Render ticks persistence limit boundaries
+                spawnDamageText(player.x, player.y - 25, "🎭 EMOTE ACTIVATED", '#d946ef');
+            }
+        }
+
+        // INPUT REGISTERING LISTENERS (KEYBOARD + INTERACTIVE MOUSE CLICK)
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if(e.code === 'KeyE') { playActiveEmoteFromMobile(); }
+            if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') { triggerDash(); }
+        });
+        window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            isMouseDown = true;
+
+            let distToPet = Math.hypot(mouseX - pet.x, mouseY - pet.y);
+            if (distToPet < 25) {
+                pet.isFreeMoving = true;
+                pet.vx = (Math.random() - 0.5) * 11;
+                pet.vy = (Math.random() - 0.5) * 11;
+                pet.bounceTimer = 180;
+                createExplosion(pet.x, pet.y, pet.color, 8);
+                spawnDamageText(pet.x, pet.y - 12, "Wheee! 🐾", '#00ffcc');
+            }
+        });
+        window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+        // MOBILE CONTROL OVERLAYS PHYSICAL MAPPINGS INTERFACES
+        const mapMobileBtn = (id, keyVal) => {
+            const element = document.getElementById(id);
+            if (!element) return;
+            element.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyVal] = true; });
+            element.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyVal] = false; });
+        };
+
+        document.getElementById('btn-dash')?.addEventListener('touchstart', (e) => { e.preventDefault(); triggerDash(); });
+        document.getElementById('fire-btn')?.addEventListener('touchstart', (e) => { e.preventDefault(); isMouseDown = true; fireWeapon(); });
+        document.getElementById('fire-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); isMouseDown = false; });
+
+        function handleJoystickMove(touch) {
+            const rect = joystickBoundary.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const dx = touch.clientX - centerX;
+            const dy = touch.clientY - centerY;
+            
+            joystickDistance = Math.min(Math.hypot(dx, dy), maxJoystickDist);
+            joystickAngle = Math.atan2(dy, dx);
+
+            const knobX = Math.cos(joystickAngle) * joystickDistance;
+            const knobY = Math.sin(joystickAngle) * joystickDistance;
+            joystickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+
+            joystickActive = true;
+        }
+
+        function resetJoystick() {
+            joystickKnob.style.transform = 'translate(0, 0)';
+            joystickActive = false;
+            joystickDistance = 0;
+            keys['KeyA'] = false; keys['KeyD'] = false; keys['Space'] = false;
+        }
+
+        joystickBoundary.addEventListener('touchstart', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
+        joystickBoundary.addEventListener('touchmove', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
+        joystickBoundary.addEventListener('touchend', (e) => { e.preventDefault(); resetJoystick(); });
+
+        function triggerDash() {
+            if (player.dashCooldown > 0 || player.isDashing || isPaused || airDropLandingActive) return;
+            player.isDashing = true;
+            player.dashTime = 10;
+            player.dashCooldown = 45;
+            player.dashDirection = (keys['KeyA'] || keys['ArrowLeft']) ? -1 : (keys['KeyD'] || keys['ArrowRight']) ? 1 : player.facing;
+            applyShake(4, 5);
+        }
+
+        // ENGINE COMPUTATIONS TICK ENGINE LOOP
+        function update() {
+            if (!gameActive || isPaused) return;
+
+            if (freezeFrames > 0) { freezeFrames--; return; }
+            if (player.invincibleTimer > 0) player.invincibleTimer--;
+            if (shakeTime > 0) shakeTime--;
+            if (fireCooldown > 0) fireCooldown--;
+            if (activeEmoteTimer > 0) activeEmoteTimer--;
+
+            // AIR-DROP ACTIVE PARACHUTE RENDER LOGIC
+            if(airDropLandingActive) {
+                player.y += player.vy;
+                if(player.y + player.height >= floorY) {
+                    player.y = floorY - player.height;
+                    player.vy = 0;
+                    airDropLandingActive = false;
+                    spawnDamageText(player.x, player.y - 10, "🪂 SAFE LANDING START!", '#00ffcc');
+                }
+                return; // Suppress control frames during parachuting operations
+            }
+
+            // Joystick Vector Input Mappings Integration
+            if (joystickActive && joystickDistance > 12) {
+                const cosA = Math.cos(joystickAngle);
+                const sinA = Math.sin(joystickAngle);
+
+                // ADVANCED UP DRAG DETECTOR JUMP INTEGRATION
+                if (sinA < -0.65 && !player.isJumping) {
+                    keys['Space'] = true;
+                }
+
+                // Horizontal translation mapping thresholds
+                if (cosA < -0.35) {
+                    keys['KeyA'] = true; keys['KeyD'] = false;
+                } else if (cosA > 0.35) {
+                    keys['KeyD'] = true; keys['KeyA'] = false;
+                } else {
+                    keys['KeyA'] = false; keys['KeyD'] = false;
+                }
+            }
+
+            // Core Player Translation Updates
+            if (player.isDashing) {
+                player.vx = player.dashSpeed * player.dashDirection;
+                player.vy = 0;
+                player.dashTime--;
+
+                player.dashTrails.push({ x: player.x, y: player.y, width: player.width, height: player.height, life: 8, color: player.color });
+                if (player.dashTime <= 0) player.isDashing = false;
+            } else {
+                let rideMult = 1.0;
+                if(equippedRide === 'BIKE') rideMult = 1.4;
+                else if(equippedRide === 'CAR') rideMult = 1.6;
+                else if(equippedRide === 'HELI') rideMult = 1.5;
+                else if(equippedRide === 'SHIP') rideMult = 1.8;
+                else if(equippedRide === 'JET') rideMult = 1.9;
+                else if(equippedRide === 'TIGER') rideMult = 1.5;
+
+                let currentWalkSpeed = baseSpeed * rideMult;
+
+                if (keys['KeyA'] || keys['ArrowLeft']) {
+                    player.vx = -currentWalkSpeed;
+                    player.facing = -1;
+                } else if (keys['KeyD'] || keys['ArrowRight']) {
+                    player.vx = currentWalkSpeed;
+                    player.facing = 1;
+                } else {
+                    player.vx = 0;
+                }
+
+                if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && !player.isJumping) {
+                    player.vy = -12.5;
+                    player.isJumping = true;
+                    keys['Space'] = false; // Consume structural touch frame input
+                }
+                player.vy += gravity;
+            }
+
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // Enforce hard layout screen constraints
+            if(!isStoryModeActive) {
+                if (player.x < 0) player.x = 0;
+                if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            } else {
+                // STORY MODE RUNNER SCROLL ENGINE MAP TRANSLATION LOGIC
+                if(player.x > 450 && player.vx > 0) {
+                    let diffShift = player.x - 450;
+                    player.x = 450;
+                    storyProgressDistance += diffShift;
+
+                    // Scroll dynamic objects array positions leftward
+                    foodItems.forEach(f => f.x -= diffShift);
+                    gunPickups.forEach(g => g.x -= diffShift);
+                    stayShelters.forEach(s => s.x -= diffShift);
+                    enemies.forEach(e => e.x -= diffShift);
+                    if(portal) portal.x -= diffShift;
+                }
+                if (player.x < 0) player.x = 0;
+            }
+
+            if (player.y + player.height >= floorY) {
+                player.y = floorY - player.height;
+                player.vy = 0;
+                player.isJumping = false;
+            }
+
+            player.dashTrails.forEach((trail, idx) => {
+                trail.life--;
+                if (trail.life <= 0) player.dashTrails.splice(idx, 1);
+            });
+
+            // COMPUTE PET FOLLOW MATHEMATICS ENGINE
+            pet.angle += pet.floatSpeed;
+            if (!pet.isFreeMoving) {
+                let targetX = player.x + (player.facing > 0 ? -32 : 42);
+                let targetY = player.y - 10 + Math.sin(pet.angle) * pet.floatAmplitude;
+                pet.x += (targetX - pet.x) * 0.12;
+                pet.y += (targetY - pet.y) * 0.12;
+            } else {
+                pet.x += pet.vx; pet.y += pet.vy;
+                if (pet.x - pet.radius < 0 || pet.x + pet.radius > canvas.width) { pet.vx *= -1; createExplosion(pet.x, pet.y, pet.color, 3); }
+                if (pet.y - pet.radius < 0 || pet.y + pet.radius > floorY) { pet.vy *= -1; createExplosion(pet.x, pet.y, pet.color, 3); }
+                pet.bounceTimer--;
+                if (pet.bounceTimer <= 0) pet.isFreeMoving = false;
+            }
+
+            // DYNAMIC UPDATE LOOP FOR BULLETS MATRIX
+            bullets.forEach((bullet, bIdx) => {
+                bullet.x += bullet.vx; bullet.y += bullet.vy;
+                if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
+                    bullets.splice(bIdx, 1);
+                }
+            });
+
+            enemyBullets.forEach((eb, ebIdx) => {
+                eb.x += eb.vx; eb.y += eb.vy;
+                if (eb.x > player.x && eb.x < player.x + player.width &&
+                    eb.y > player.y && eb.y < player.y + player.height) {
+                    
+                    enemyBullets.splice(ebIdx, 1);
+                    if (!player.isDashing && player.invincibleTimer === 0) {
+                        let takenDamage = 12;
+                        player.hp -= takenDamage;
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 10);
+                        applyShake(6, 12);
+                        spawnDamageText(player.x, player.y - 10, `-${takenDamage} HP`, "#ff3333");
+                        triggerHitFreeze();
+                        checkPlayerDeath();
+                    }
+                }
+                if (eb.x < 0 || eb.x > canvas.width || eb.y < 0 || eb.y > canvas.height) {
+                    enemyBullets.splice(ebIdx, 1);
+                }
+            });
+
+            // DYNAMIC STORY EVENT MODE MODE INTERACTIONS UTILITIES
+            if(isStoryModeActive) {
+                storyTimer -= 0.0166; // Subtraction equivalent conversion matching ticks rate
+                if(storyTimer <= 0) {
+                    settleStoryModeVictory();
+                    return;
+                }
+
+                // Cyclic tracking updates for biome environmental maps shifts
+                if(storyProgressDistance > 5000 && currentBiome === 'VILLAGE') { currentBiome = 'JUNGLE'; spawnStoryBiomeEnemies(); spawnDamageText(400,150,"🌴 ENTERED DENSE JUNGLE BIOME 🌴",'#4ade80'); }
+                if(storyProgressDistance > 10000 && currentBiome === 'JUNGLE') { currentBiome = 'DESERT'; spawnStoryBiomeEnemies(); spawnDamageText(400,150,"🏜️ ENTERED ARID DESERT BIOME 🏜️",'#fbbf24'); }
+
+                // Repopulate endless enemy waves dynamically if cleared out completely
+                if(enemies.length === 0 && Math.random() < 0.02) {
+                    spawnStoryBiomeEnemies();
+                }
+
+                // Compute interactive food components collision
+                foodItems.forEach(f => {
+                    if(!f.used && Math.hypot(player.x + player.width/2 - f.x, player.y + player.height/2 - f.y) < 25) {
+                        f.used = true;
+                        let healingAmt = 15;
+                        let labelColor = '#4ade80';
+                        if(f.type === 'PIZZA') healingAmt = 35;
+                        if(f.type === 'MEDKIT') healingAmt = 75;
+
+                        player.hp = Math.min(200, player.hp + healingAmt); // Enforce max caps limits
+                        spawnDamageText(player.x, player.y - 15, `🍉 Ate ${f.type} (+${healingAmt} HP)`, labelColor);
+                        createExplosion(f.x, f.y, '#4ade80', 6);
+                    }
+                });
+
+                // Compute interactive weapon pickups parts adjustments
+                gunPickups.forEach(g => {
+                    if(!g.picked && Math.hypot(player.x + player.width/2 - g.x, player.y + player.height/2 - g.y) < 25) {
+                        g.picked = true;
+                        storyGunLevel++;
+                        spawnDamageText(player.x, player.y - 20, `🔥 GUN PARTS UPGRADED (LVL ${storyGunLevel})!`, '#d946ef');
+                        createExplosion(g.x, g.y, '#d946ef', 12);
+                    }
+                });
+            }
+
+            // SYSTEM CALCULATIONS COMPUTE ENEMY MATRIX TARGETS
+            enemies.forEach((enemy, eIdx) => {
+                if (enemy.x > player.x) { enemy.x -= enemy.speed; } else { enemy.x += enemy.speed; }
+
+                enemy.shootCooldown--;
+                if (enemy.shootCooldown <= 0 && Math.random() < enemy.shootRate) {
+                    const angle = Math.atan2((player.y + player.height/2) - (enemy.y + enemy.size/2), (player.x + player.width/2) - (enemy.x + enemy.size/2));
+                    enemyBullets.push({
+                        x: enemy.x + enemy.size / 2, y: enemy.y + enemy.size / 2,
+                        vx: Math.cos(angle) * 5.5, vy: Math.sin(angle) * 5.5,
+                        size: 5, color: '#ff3300'
+                    });
+                    enemy.shootCooldown = 70;
+                }
+
+                // Player physical body contact collision
+                if (enemy.x < player.x + player.width && enemy.x + enemy.size > player.x &&
+                    enemy.y < player.y + player.height && enemy.y + enemy.size > player.y) {
+                    
+                    if (!player.isDashing && player.invincibleTimer === 0) {
+                        let damage = enemy.isBoss ? 25 : 12;
+                        player.hp -= damage;
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 8);
+                        applyShake(6, 10);
+                        spawnDamageText(player.x, player.y - 10, `-${damage} HP`, "#ff3333");
+                        triggerHitFreeze();
+                        checkPlayerDeath();
+                    }
+                }
+
+                // Projectile impacts validation
+                bullets.forEach((b, bIdx) => {
+                    if (b.x > enemy.x && b.x < enemy.x + enemy.size && b.y > enemy.y && b.y < enemy.y + enemy.size) {
+                        if (b.pierces && b.hitEnemies.includes(enemy)) return;
+                        if (!b.pierces) { bullets.splice(bIdx, 1); } else { b.hitEnemies.push(enemy); }
+
+                        enemy.hp -= b.damage;
+                        spawnDamageText(enemy.x + enemy.size/2, enemy.y - 10, `-${b.damage.toFixed(0)}`, b.color);
+                        createExplosion(b.x, b.y, enemy.color, 4);
+
+                        if (enemy.hp <= 0) {
+                            createExplosion(enemy.x + enemy.size/2, enemy.y + enemy.size/2, enemy.color, 22);
+                            enemies.splice(eIdx, 1);
+                            kills++;
+                            
+                            if(!isStoryModeActive) {
+                                coins += 25; // Continuous revenue injection stream
+                                if (enemies.length === 0) {
+                                    if (currentWave < 2) { currentWave++; spawnCampaignWave(); } 
+                                    else if (!bossSpawned) { spawnCampaignLevelBoss(); } 
+                                    else { triggerCampaignSuccessExecution(); }
+                                }
+                            } else {
+                                coins += 40; // Augmented event coins multiplier payouts
+                            }
+                        }
+                    }
+                });
+            });
+
+            // SYSTEM LEVEL PORTAL COLLISION ROUTINES
+            if (levelCleared && portal) {
+                portal.glow += 0.05;
+                if (player.x + player.width > portal.x && player.x < portal.x + portal.width && player.y + player.height > portal.y) {
+                    if (level === maxUnlockedLevel && maxUnlockedLevel < TOTAL_LEVELS) {
+                        maxUnlockedLevel++;
+                    }
+                    saveProgress();
+                    gameActive = false;
+                    goToLevelSelector();
+                }
+            }
+
+            // Render array updates cleanup counters
+            damageTexts.forEach((dt, idx) => { dt.y += dt.vy; dt.life--; if (dt.life <= 0) damageTexts.splice(idx, 1); });
+            particles.forEach((p, idx) => { p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) particles.splice(idx, 1); });
+
+            // Update DOM hud labels registers
+            document.getElementById('level-val').innerText = isStoryModeActive ? "STORY EVENT" : level;
+            document.getElementById('coins-val').innerText = coins;
+            document.getElementById('hp-val').innerText = Math.round(player.hp);
+            document.getElementById('max-hp-val').innerText = isStoryModeActive ? 200 : (maxHP + (SKINS[equippedSkin]?.hpBonus || 0));
+            document.getElementById('dmg-val').innerText = damageBonus;
+            document.getElementById('lives-val').innerText = isStoryModeActive ? "∞" : lives;
+        }
+
+        function triggerCampaignSuccessExecution() {
+            levelCleared = true;
+            portal = { x: 700, y: floorY - 90, width: 45, height: 90, glow: 0 };
+            
+            let prizeCoins = 200 + (level * 50);
+            let prizePts = 3;
+            coins += prizeCoins;
+            unspentPoints += prizePts;
+
+            lvlScreen.style.display = 'flex';
+            document.getElementById('level-prize-box').innerHTML = `
+                <h4 style="margin: 0; color: #ffd700; text-transform: uppercase;">🎁 ARENA PRIZE BOX REWARDS 🎁</h4>
+                <p style="font-size: 14px; margin: 5px 0;">Gold Coins Won: <b style="color:#00ffcc;">+${prizeCoins} Coins</b></p>
+                <p style="font-size: 14px; margin: 5px 0;">Stat Skill Points: <b style="color:#ffaa00;">+${prizePts} Points Unlocked</b></p>
+            `;
+            document.getElementById('points-left').innerText = unspentPoints;
+            document.getElementById('stat-hp-display').innerText = maxHP;
+            document.getElementById('stat-spd-display').innerText = baseSpeed.toFixed(1);
+            document.getElementById('stat-dmg-display').innerText = damageBonus;
+        }
+
+        function settleStoryModeVictory() {
+            gameActive = false;
+            let finalReward = 2500; // Premium flat payout rate limits
+            coins += finalReward;
+            saveProgress();
+            
+            govTitle.innerText = "🏆 MISSION SURVIVED 🏆";
+            document.getElementById('game-over-screen').querySelector('p').innerText = `Phenomenal execution! You survived the 10-minute biome test. Reward: +${finalReward} Coins!`;
+            govScreen.style.display = 'flex';
+        }
+
+        function checkPlayerDeath() {
+            if (player.hp <= 0) {
+                if(isStoryModeActive) {
+                    // Respawn penalty reduction configuration mechanics
+                    player.hp = 200;
+                    player.x = 80;
+                    storyGunLevel = Math.max(1, storyGunLevel - 1);
+                    spawnDamageText(player.x, 200, "💀 RESPAWNED - GUN DEGRADED!", '#ff3333');
+                    return;
+                }
+                lives--;
+                player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+                player.x = 100;
+                if (lives <= 0) {
+                    gameActive = false;
+                    govTitle.innerText = "GAME OVER 💀";
+                    govScreen.style.display = 'flex';
+                }
+            }
+        }
+
+        function resetGame() {
+            lives = 3; currentWave = 1; bossSpawned = false; levelCleared = false; portal = null;
+            govScreen.style.display = 'none';
+            if(!isStoryModeActive) { launchCampaignStage(level); } else { startStoryEventMode(); }
+        }
+
+        // --- ART CANVAS STANDARD RENDER ENGINE FUNCTIONS ---
+        function drawCrown(c, x, y, w) {
+            c.save();
+            c.fillStyle = '#ffd700';
+            c.shadowBlur = 8; c.shadowColor = '#ffd700';
+            c.beginPath();
+            c.moveTo(x, y + w*0.7);
+            c.lineTo(x + w, y + w*0.7);
+            c.lineTo(x + w*0.9, y + w*0.2);
+            c.lineTo(x + w*0.7, y + w*0.5);
+            c.lineTo(x + w*0.5, y + w*0.1); // Center Peak high crown point
+            c.lineTo(x + w*0.3, y + w*0.5);
+            c.lineTo(x + w*0.1, y + w*0.2);
+            c.closePath();
+            c.fill();
+            // Royal diamond inclusions dots drawing
+            c.fillStyle = '#ff0055';
+            c.fillRect(x + w*0.5 - 2, y + w*0.1 - 2, 4, 4);
+            c.fillRect(x + w*0.1 - 2, y + w*0.2 - 2, 4, 4);
+            c.fillRect(x + w*0.9 - 2, y + w*0.2 - 2, 4, 4);
+            c.restore();
+        }
+
+        function drawHumanBody(c, x, y, w, h, baseColor, isRight, flash) {
+            if(flash && Math.floor(Date.now()/50)%2===0) return;
+            c.save();
+            
+            // Draw active chair sitting layout pose state adjustments
+            if(activeEmoteTimer > 0 && equippedEmote === 'E_CHAIR') {
+                c.fillStyle = '#854d0e'; // Wooden stool design
+                c.fillRect(x - 5, y + h - 18, w + 10, 8);
+                c.fillRect(x, y + h - 10, 4, 10);
+                c.fillRect(x + w - 4, y + h - 10, 4, 10);
+                
+                c.fillStyle = baseColor;
+                c.fillRect(x, y + 8, w, h - 20); // Compressed sitting frame box block
+                c.fillStyle = '#f3f4f6';
+                c.beginPath(); c.arc(x + w/2, y + 4, 6, 0, Math.PI*2); c.fill();
+                c.restore();
+                return;
+            }
+
+            // Head render processing nodes
+            c.fillStyle = '#ffedd5';
+            let headX = isRight ? x + w - 8 : x + 8;
+            c.beginPath(); c.arc(x + w/2, y + 7, 7, 0, Math.PI*2); c.fill();
+            
+            // Core Body Torso block
+            c.fillStyle = baseColor;
+            c.fillRect(x, y + 14, w, h - 26);
+            
+            // Limbs translation positions logic
+            c.fillStyle = '#1f2937';
+            c.fillRect(x + 2, y + h - 12, 6, 12);
+            c.fillRect(x + w - 8, y + h - 12, 6, 12);
+            c.restore();
+        }
+
+        function drawRideVehicle(c, px, py, type) {
+            c.save();
+            c.shadowBlur = 6; c.shadowColor = '#ffffff';
+            if(type === 'BIKE') {
+                c.fillStyle = '#ff0055';
+                c.fillRect(px - 10, py + 24, 44, 14);
+                c.fillStyle = '#000';
+                c.beginPath(); c.arc(px - 6, py + 38, 7, 0, Math.PI*2); c.arc(px + 30, py + 38, 7, 0, Math.PI*2); c.fill();
+            } else if(type === 'CAR') {
+                c.fillStyle = '#f59e0b'; // Sports chassis frame styling
+                c.fillRect(px - 18, py + 20, 58, 16);
+                c.fillStyle = '#38bdf8'; c.fillRect(px + 6, py + 12, 16, 8); // Windshield box block
+                c.fillStyle = '#111';
+                c.beginPath(); c.arc(px - 10, py + 36, 8, 0, Math.PI*2); c.arc(px + 32, py + 36, 8, 0, Math.PI*2); c.fill();
+            } else if(type === 'HELI') {
+                c.fillStyle = '#4b5563';
+                c.fillRect(px - 20, py + 10, 60, 24);
+                c.fillStyle = '#111'; c.fillRect(px - 5, py + 6, 34, 4); // Blade rotor line vector
+            } else if(type === 'SHIP') {
+                c.fillStyle = '#a855f7';
+                c.beginPath(); c.moveTo(px - 25, py + 35); c.lineTo(px + 45, py + 35); c.lineTo(px + 10, py + 8); c.closePath(); c.fill();
+            } else if(type === 'JET') {
+                c.fillStyle = '#0f172a';
+                c.fillRect(px - 25, py + 15, 70, 18);
+                c.fillStyle = '#ef4444'; c.fillRect(px - 20, py + 8, 10, 8); // Delta wing structure components
+            } else if(type === 'TIGER') {
+                c.fillStyle = '#ea580c'; // Wild predator orange scheme bounds
+                c.fillRect(px - 15, py + 22, 50, 16);
+                c.fillStyle = '#000'; c.fillRect(px + 20, py + 18, 10, 6); // Striped jaws markers
+            }
+            c.restore();
+        }
+
+        function drawEnemy(c, e) {
+            c.save();
+            c.fillStyle = e.color;
+            c.shadowBlur = e.isBoss ? 15 : 6;
+            c.shadowColor = e.color;
+            
+            // Direct structural rendering matching dynamic thematic types variations
+            if(e.name.includes("Dragon")) {
+                // Dragon custom winged polygon shape layout matrix
+                c.beginPath();
+                c.moveTo(e.x, e.y + e.size);
+                c.lineTo(e.x + e.size, e.y + e.size);
+                c.lineTo(e.x + e.size*0.5, e.y);
+                c.lineTo(e.x - 10, e.y + e.size*0.3); // Extruded side wing tip vector
+                c.closePath(); c.fill();
+            } else if(e.name.includes("Dog")) {
+                // Quadruped rectangular chassis footprint frame representation
+                c.fillRect(e.x, e.y + e.size*0.3, e.size, e.size*0.7);
+                c.fillStyle = '#000'; c.fillRect(e.x + e.size*0.2, e.y, e.size*0.4, e.size*0.4); // Head node blocker
+            } else if(e.name.includes("Snake")) {
+                // Sinuous undulating chain stacks structure vector representation
+                c.fillRect(e.x, e.y + e.size*0.7, e.size, e.size*0.3);
+                c.fillRect(e.x + e.size*0.7, e.y, e.size*0.3, e.size*0.8);
+            } else if(e.name.includes("Dino") || e.name.includes("Tyrannosaurus")) {
+                // Massive towering vertical layout platform pillar block representation
+                c.fillRect(e.x, e.y, e.size*0.8, e.size);
+                c.fillRect(e.x + e.size*0.6, e.y + 8, e.size*0.5, e.size*0.3); // Maw inclusion extension plates
+            } else {
+                // Default fallback structural mechanical box matrix logic frame
+                c.fillRect(e.x, e.y, e.size, e.size);
+            }
+            
+            c.fillStyle = '#fff';
+            c.font = '9px sans-serif';
+            c.fillText(e.name, e.x - 5, e.y - 14);
+            c.restore();
+        }
+
+        // PRINCIPAL INTEGRATED MASTER GRAPHICS DRAW RUNNER LOOP
+        function draw() {
+            ctx.save();
+            if (shakeTime > 0) {
+                let dx = (Math.random() - 0.5) * shakeIntensity;
+                let dy = (Math.random() - 0.5) * shakeIntensity;
+                ctx.translate(dx, dy);
+            }
+
+            // Continuous dynamic environmental biome backgrounds alterations logic mapping
+            if(!isStoryModeActive) {
+                ctx.fillStyle = '#090a10'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                if(currentBiome === 'VILLAGE') ctx.fillStyle = '#0d131a';
+                else if(currentBiome === 'JUNGLE') ctx.fillStyle = '#061611';
+                else ctx.fillStyle = '#1c150c'; // Arid scorched desert canvas frame tint color
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Floor layout boundary painting vectors
+            ctx.fillStyle = '#141724'; ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
+            ctx.strokeStyle = isStoryModeActive ? '#ffaa00' : '#00ffcc';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(canvas.width, floorY); ctx.stroke();
+
+            // Render interactive atmospheric air-drop parachute graphic models elements
+            if(airDropLandingActive) {
+                let pColor = PARACHUTES[equippedParachute]?.color || '#ff3333';
+                ctx.save();
+                ctx.fillStyle = pColor;
+                ctx.beginPath();
+                ctx.arc(player.x + player.width/2, player.y - 18, 26, Math.PI, 0, false); // Parachute dome arc canopy
+                ctx.fill();
+                ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(player.x + player.width/2 - 24, player.y - 18); ctx.lineTo(player.x, player.y);
+                ctx.moveTo(player.x + player.width/2 + 24, player.y - 18); ctx.lineTo(player.x + player.width, player.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Draw Campaign Portal Entities
+            if (levelCleared && portal) {
+                ctx.fillStyle = '#d946ef'; ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
+                ctx.fillStyle = '#000'; ctx.fillRect(portal.x + 4, portal.y + 4, portal.width - 8, portal.height - 8);
+            }
+
+            // STORY MODE REALTIME ENVIRONMENT STATIC OBJECTS WORLD RENDERING
+            if(isStoryModeActive) {
+                // Stay safehouses structures blocks loops
+                ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                stayShelters.forEach(s => {
+                    ctx.fillRect(s.x, s.y, s.width, s.height);
+                    ctx.strokeStyle = '#3b82f6'; ctx.strokeRect(s.x, s.y, s.width, s.height);
+                    ctx.fillStyle = '#3b82f6'; ctx.font = '9px sans-serif'; ctx.fillText("STAY SHELTER REFUGE", s.x + 5, s.y + 15);
+                });
+
+                // Food collectibles units loops
+                foodItems.forEach(f => {
+                    if(f.used) return;
+                    ctx.fillStyle = (f.type === 'MEDKIT') ? '#ef4444' : (f.type === 'PIZZA') ? '#eab308' : '#22c55e';
+                    ctx.beginPath(); ctx.arc(f.x, f.y, f.radius, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#fff'; ctx.font = '8px Arial'; ctx.fillText(f.type[0], f.x - 3, f.y + 3);
+                });
+
+                // Guns chests loops
+                gunPickups.forEach(g => {
+                    if(g.picked) return;
+                    ctx.fillStyle = '#d946ef'; ctx.fillRect(g.x, g.y, g.size, g.size);
+                    ctx.strokeStyle = '#fff'; ctx.strokeRect(g.x-2, g.y-2, g.size+4, g.size+4);
+                });
+            }
+
+            // Draw player dash trailing shadows components
+            player.dashTrails.forEach(trail => {
+                ctx.fillStyle = trail.color;
+                ctx.globalAlpha = trail.life / 10;
+                ctx.fillRect(trail.x, trail.y, trail.width, trail.height);
+            });
+            ctx.globalAlpha = 1.0;
+
+            // DRAW MOUNTED VEHICLE BASE FIRST FOR CORRECT DEPTH SORTING LAYOUT ORDER
+            if(equippedRide !== 'NONE') {
+                drawRideVehicle(ctx, player.x, player.y, equippedRide);
+            }
+
+            // PAINT CHARACTER MANIFOLD COMPONENT MODULES
+            drawHumanBody(ctx, player.x, player.y, player.width, player.height, player.color, (player.facing > 0), (player.invincibleTimer > 0));
+
+            // RENDER ACTIVE EMOTE BUBBLE FLOATING SYSTEM TEXT LOGIC OVERHEAD
+            if(activeEmoteTimer > 0 && activeEmoteText !== "") {
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+                ctx.strokeStyle = '#d946ef';
+                ctx.lineWidth = 1.5;
+                ctx.font = 'bold 12px sans-serif';
+                let txtM = ctx.measureText(activeEmoteText).width;
+                
+                // Draw rounded text frame wrapper block caps box panels
+                ctx.fillRect(player.x + player.width/2 - txtM/2 - 8, player.y - 40, txtM + 16, 22);
+                ctx.strokeRect(player.x + player.width/2 - txtM/2 - 8, player.y - 40, txtM + 16, 22);
+                
+                ctx.fillStyle = '#fff';
+                ctx.fillText(activeEmoteText, player.x + player.width/2 - txtM/2, player.y - 25);
+                ctx.restore();
+            }
+
+            // Draw Crown for Royal King Emotes configurations mapping
+            if(activeEmoteTimer > 0 && equippedEmote === 'E_CHAIR') {
+                drawCrown(ctx, player.x + player.width/2 - 10, player.y - 14, 20);
+            }
+
+            // DRAW FLOATING COMPANION ORBIT PET NODES
+            ctx.fillStyle = pet.color;
+            ctx.beginPath(); ctx.arc(pet.x, pet.y, pet.radius, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.strokeRect(pet.x - pet.radius - 1, pet.y - pet.radius - 1, pet.radius*2 + 2, pet.radius*2 + 2);
+
+            // Draw All Active Game Entities
+            enemies.forEach(e => drawEnemy(ctx, e));
+            bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI*2); ctx.fill(); });
+            enemyBullets.forEach(eb => { ctx.fillStyle = eb.color; ctx.beginPath(); ctx.arc(eb.x, eb.y, eb.size, 0, Math.PI*2); ctx.fill(); });
+            particles.forEach(p => { ctx.fillStyle = p.color; ctx.globalAlpha = p.life/p.maxLife; ctx.fillRect(p.x, p.y, p.size, p.size); });
+            ctx.globalAlpha = 1.0;
+            damageTexts.forEach(dt => { ctx.fillStyle = dt.color; ctx.font = 'bold 12px Courier New'; ctx.fillText(dt.text, dt.x, dt.y); });
+
+            // DRAW REALTIME HUD OVERLAYS FOR STORY RUN TIME CHANNELS OVERRIDE COUNTERS
+            if(isStoryModeActive) {
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
+                let m = Math.floor(storyTimer / 60);
+                let s = Math.floor(storyTimer % 60);
+                ctx.fillText(`⏱️ CAMPAIGN CLOCK STATUS: ${m}m ${s}s`, 20, 70);
+                ctx.fillText(`🗺️ PATH VECTOR DISTANCE: ${Math.floor(storyProgressDistance)}m [BIOME: ${currentBiome}]`, 20, 90);
+                ctx.fillText(`🔫 STATIC POWER LEVEL: LVL ${storyGunLevel}`, 20, 110);
+            }
+
+            ctx.restore();
+        }
+
+        // PRINCIPAL DRIVER RUNNER TICK TICK CLOCK INTERVAL HANDLER REGISTER
+        function mainLoop() {
+            update();
+            draw();
+            requestAnimationFrame(mainLoop);
+        }
+
+        // --- SUPER EXPANDED WEB STORE MATRIX TAB CONTROLLERS MANAGEMENT LOGIC ---
+        let currentStoreTab = 'skins';
+        function switchStoreTab(tabName) {
+            currentStoreTab = tabName;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+            renderStoreGridContent();
+        }
+
+        function openStore() {
+            mainMenu.style.display = 'none';
+            storeScreen.style.display = 'flex';
+            switchStoreTab('skins');
+        }
+
+        function renderStoreGridContent() {
+            const grid = document.getElementById('store-items-container');
+            grid.innerHTML = '';
+
+            if (currentStoreTab === 'skins') {
+                Object.keys(SKINS).forEach(k => {
+                    let it = SKINS[k];
+                    let owned = inventory.skins.includes(k);
+                    let eq = equippedSkin === k;
+                    createStoreCardElement(grid, 'skin', k, it.name, it.cost, owned, eq);
+                });
+            } else if (currentStoreTab === 'weapons') {
+                Object.keys(WEAPONS).forEach(k => {
+                    let it = WEAPONS[k];
+                    let owned = inventory.weapons.includes(k);
+                    let eq = equippedWeapon === k;
+                    createStoreCardElement(grid, 'weapon', k, it.name, it.cost, owned, eq);
+                });
+            } else if (currentStoreTab === 'rides') {
+                Object.keys(RIDES).forEach(k => {
+                    let it = RIDES[k];
+                    let owned = inventory.rides.includes(k);
+                    let eq = equippedRide === k;
+                    createStoreCardElement(grid, 'ride', k, it.name, it.cost, owned, eq);
+                });
+            } else if (currentStoreTab === 'parachutes') {
+                Object.keys(PARACHUTES).forEach(k => {
+                    let it = PARACHUTES[k];
+                    let owned = inventory.parachutes.includes(k);
+                    let eq = equippedParachute === k;
+                    createStoreCardElement(grid, 'parachute', k, it.name, it.cost, owned, eq);
+                });
+            } else if (currentStoreTab === 'emotes') {
+                EMOTES_INVENTORY.forEach(it => {
+                    let owned = inventory.emotes.includes(it.id);
+                    let eq = equippedEmote === it.id;
+                    createStoreCardElement(grid, 'emote', it.id, it.name, it.cost, owned, eq);
+                });
+            }
+        }
+
+        function createStoreCardElement(parent, type, key, name, cost, owned, equipped) {
+            let card = document.createElement('div');
+            card.className = `store-card ${owned ? 'owned' : ''}`;
+            
+            card.innerHTML = `
+                <p style="font-weight:bold; color:#fff;">${name}</p>
+                <p style="color:#00ffcc;">${owned ? 'OWNED INVENTORY' : cost + ' Coins'}</p>
+                <button class="btn" style="padding:4px 10px; font-size:11px;" id="act-${key}">
+                    ${equipped ? 'EQUIPPED ACTIVE' : owned ? 'EQUIP LOADOUT' : 'BUY NOW'}
+                </button>
+            `;
+            
+            parent.appendChild(card);
+
+            card.querySelector(`#act-${key}`).onclick = () => {
+                if (!owned) {
+                    if (coins >= cost) {
+                        coins -= cost;
+                        if(type === 'skin') inventory.skins.push(key);
+                        if(type === 'weapon') inventory.weapons.push(key);
+                        if(type === 'ride') inventory.rides.push(key);
+                        if(type === 'parachute') inventory.parachutes.push(key);
+                        if(type === 'emote') inventory.emotes.push(key);
+                        saveProgress();
+                        renderStoreGridContent();
+                        document.getElementById('coins-val').innerText = coins;
+                    } else { alert("Insufficient Coins Balance! Fight more campaign rounds."); }
+                } else {
+                    if(type === 'skin') equippedSkin = key;
+                    if(type === 'weapon') equippedWeapon = key;
+                    if(type === 'ride') equippedRide = key;
+                    if(type === 'parachute') equippedParachute = key;
+                    if(type === 'emote') equippedEmote = key;
+                    saveProgress();
+                    renderStoreGridContent();
+                }
+            };
+        }
+
+        // STARTUP DRIVER TRIGGERS REGISTRATION PROCEDURES
+        loadProgress();
+        runEventCountdown();
+        
+        // Fire Loop triggers mapping listener integration setup
+        setInterval(() => {
+            if(gameActive && isMouseDown && fireCooldown <= 0) { fireWeapon(); }
+        }, 20);
+
+        // Run primary animation drawing matrix loop initialization thread sequence
+        requestAnimationFrame(mainLoop);
+    </script>
+</body>
+</html>
