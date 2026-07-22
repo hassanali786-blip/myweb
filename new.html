@@ -1,0 +1,998 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RPG Evolution - Hassan Arena 3D Ultimate</title>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { margin: 0; padding: 0; background-color: #030408; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; overflow: hidden; }
+        #game-container { position: relative; width: 800px; height: 500px; margin: 10px auto; border: 4px solid #00ffcc; border-radius: 8px; box-shadow: 0 0 25px rgba(0, 255, 204, 0.4); background: #000; }
+        @media (max-width: 850px) { #game-container { width: 100vw; height: 60vh; margin: 0 auto; border-width: 2px; border-radius: 0; } }
+        canvas { display: block; width: 100%; height: 100%; }
+        #top-hud { position: absolute; top: 0; left: 0; width: 100%; height: 40px; background: rgba(10, 14, 23, 0.9); display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 2px solid #1f2438; font-size: 13px; z-index: 10; }
+        .hud-item { margin-right: 12px; display: inline-block; }
+        .hud-item span { color: #00ffcc; font-weight: bold; }
+        .overlay-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 8, 12, 0.95); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+        .btn { background: linear-gradient(135deg, #00ffcc 0%, #00a3ff 100%); border: none; color: #000; padding: 10px 22px; font-size: 13px; font-weight: bold; border-radius: 4px; cursor: pointer; margin: 5px; transition: all 0.2s; text-transform: uppercase; }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 255, 204, 0.6); }
+        #store-screen { overflow-y: auto; justify-content: flex-start; padding-top: 15px; padding-bottom: 15px; }
+        .store-layout { display: flex; width: 95%; height: 320px; gap: 15px; align-items: center; }
+        .avatar-preview-box { width: 180px; height: 100%; background: #111422; border: 2px solid #00ffcc; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px; }
+        .avatar-preview-box canvas { width: 140px; height: 220px; background: #070913; border-radius: 6px; border: 1px solid #1f2438; }
+        .store-main-area { flex: 1; display: flex; flex-direction: column; height: 100%; }
+        .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; height: 260px; overflow-y: auto; padding: 5px; }
+        @media (max-width: 600px) { .store-layout { flex-direction: column; height: auto; } .avatar-preview-box { width: 100%; height: 180px; } .store-grid { grid-template-columns: repeat(2, 1fr); height: 200px; } }
+        .store-card { background: #111422; border: 1px solid #1f2438; border-radius: 4px; padding: 8px; text-align: center; }
+        .store-card.owned { border-color: #00ffcc; background: #0c1a24; }
+        .store-card p { margin: 4px 0; font-size: 11px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
+        .tab-btn { background: #222; border: 1px solid #444; color: #fff; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 11px;}
+        .tab-btn.active { background: #00ffcc; color: #000; font-weight: bold; }
+        .lvl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; width: 85%; max-height: 320px; overflow-y: auto; padding: 10px; margin: 10px 0; background: #0d101d; border: 1px solid #1f2438; border-radius: 8px; }
+        @media (max-width: 500px) { .lvl-grid { grid-template-columns: repeat(3, 1fr); } }
+        .lvl-node { background: #161a2b; border: 2px solid #3b4261; padding: 12px 0; text-align: center; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .lvl-node.unlocked { border-color: #00ffcc; color: #00ffcc; }
+        .lvl-node.locked { opacity: 0.35; cursor: not-allowed; }
+        #prize-stat-controls { display: flex; flex-direction: column; gap: 8px; width: 65%; margin: 10px 0; }
+        .stat-row { display: flex; justify-content: space-between; align-items: center; background: #111424; padding: 6px 12px; border-radius: 4px; }
+        #mobile-controls { position: fixed; bottom: 0; left: 0; width: 100vw; height: 160px; pointer-events: none; z-index: 99; display: none; }
+        .touch-zone { pointer-events: auto; position: absolute; }
+        #joystick-boundary { bottom: 20px; left: 20px; width: 100px; height: 100px; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
+        #joystick-knob { position: absolute; top: 32px; left: 32px; width: 36px; height: 36px; background: #00ffcc; border-radius: 50%; box-shadow: 0 0 10px #00ffcc; }
+        .action-circle-btn { bottom: 25px; width: 55px; height: 55px; background: rgba(0,255,204,0.25); border: 2px solid #00ffcc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; color: #fff; text-shadow: 0 0 4px #000; }
+        #btn-dash { right: 85px; bottom: 25px; }
+        #fire-btn { right: 15px; width: 65px; height: 65px; bottom: 20px; background: rgba(255, 51, 51, 0.35); border-color: #ff3333; }
+        #btn-emote-trigger { right: 155px; width: 50px; height: 50px; bottom: 28px; background: rgba(217, 70, 239, 0.35); border-color: #d946ef; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="top-hud">
+            <div>
+                <div class="hud-item">Level: <span id="level-val">1</span></div>
+                <div class="hud-item">Coins: <span id="coins-val">0</span></div>
+                <div class="hud-item">HP: <span id="hp-val">100</span>/<span id="max-hp-val">100</span></div>
+            </div>
+            <div>
+                <div class="hud-item">DMG: <span id="dmg-val">0</span></div>
+                <div class="hud-item">Lives: <span id="lives-val">3</span></div>
+                <button id="hud-pause-btn" style="background:#222; color:#fff; border:1px solid #444; padding:2px 8px; cursor:pointer;" onclick="togglePauseGame()">PAUSE</button>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <div id="main-menu" class="overlay-screen">
+            <h1 style="margin:0 0 5px 0; color:#00ffcc; font-size:32px; letter-spacing:2px; text-shadow: 0 0 10px #00ffcc;">RPG EVOLUTION 3D</h1>
+            <h3 style="margin:0 0 15px 0; color:#ffd700; font-style:italic;">HASSAN ARENA ULTIMATE (JUNGLE EVENT + 3D ENEMIES)</h3>
+            <button class="btn" onclick="goToLevelSelector()">Campaign Levels (1-100)</button>
+            <button class="btn" style="background:linear-gradient(135deg, #22c55e 0%, #15803d 100%); color:#fff;" onclick="startStoryEventMode()">Jungle Event Challenge (10-Min)</button>
+            <button class="btn" style="background:#555; color:#fff;" onclick="openStore()">Super Store (30 Clothes / 10 Jets)</button>
+            <div id="event-timer-bar" style="margin-top:10px; font-size:12px; color:#aaa;">Event Refresh Syncing...</div>
+        </div>
+
+        <div id="level-selector" class="overlay-screen" style="display:none;">
+            <h2 style="color:#00ffcc; margin: 0 0 5px 0;">CHOOSE LEVEL (1 - 100)</h2>
+            <div class="lvl-grid" id="lvl-nodes-container"></div>
+            <button class="btn" style="background:#333; color:#fff;" onclick="backToMain()">Back</button>
+        </div>
+
+        <div id="level-clear-screen" class="overlay-screen" style="display:none;">
+            <h2 style="color:#00ff66; margin:0 0 10px 0;">STAGE CLEAR & DOOR ENTERED!</h2>
+            <div id="level-prize-box" style="background:#111625; padding:15px; border-radius:6px; border:1px solid #00ffcc; text-align:center; margin-bottom:10px; width:70%;"></div>
+            
+            <div style="font-size:14px; margin-bottom:5px;">Unspent Upgrade Points: <b id="points-left" style="color:#ffaa00;">0</b></div>
+            
+            <div style="margin-bottom:12px; font-size:12px; color:#aaa;">
+                Upgrade Multiplier: 
+                <select id="stat-multiplier-select" style="background:#222; color:#00ffcc; border:1px solid #444;" onchange="updateStatMultiplierFactor(this.value)">
+                    <option value="1">1x Standard Effect</option>
+                    <option value="2">2x High Boost</option>
+                    <option value="4">4x Extreme Power</option>
+                </select>
+            </div>
+
+            <div id="prize-stat-controls">
+                <div class="stat-row">
+                    <span>Max Health Pool (<b id="stat-hp-display">0</b>)</span>
+                    <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('HP')">+</button>
+                </div>
+                <div class="stat-row">
+                    <span>Movement Velocity (<b id="stat-spd-display">0</b>)</span>
+                    <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('SPD')">+</button>
+                </div>
+                <div class="stat-row">
+                    <span>Bullet Damage (<b id="stat-dmg-display">0</b>)</span>
+                    <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('DMG')">+</button>
+                </div>
+            </div>
+            <button class="btn" style="background:#00ffcc; color:#000;" onclick="confirmUpgradesAndExit()">Save Progress & Exit</button>
+        </div>
+
+        <div id="store-screen" class="overlay-screen" style="display:none;">
+            <h2 style="color:#ffd700; margin:0 0 10px 0;">MEGA STORE (30 OUTFITS / 10 JETS)</h2>
+            
+            <div class="store-layout">
+                <div class="avatar-preview-box">
+                    <span style="font-size: 11px; color: #00ffcc; font-weight: bold; margin-bottom: 4px;">LIVE 3D AVATAR MODEL</span>
+                    <canvas id="avatarCanvas" width="140" height="200"></canvas>
+                </div>
+
+                <div class="store-main-area">
+                    <div class="tabs">
+                        <button class="tab-btn active" id="tab-btn-skins" onclick="switchStoreTab('skins')">30 Outfits</button>
+                        <button class="tab-btn" id="tab-btn-weapons" onclick="switchStoreTab('weapons')">3D Guns & Skins</button>
+                        <button class="tab-btn" id="tab-btn-rides" onclick="switchStoreTab('rides')">10 Hero Jets & Vehicles</button>
+                        <button class="tab-btn" id="tab-btn-parachutes" onclick="switchStoreTab('parachutes')">Parachutes</button>
+                        <button class="tab-btn" id="tab-btn-emotes" onclick="switchStoreTab('emotes')">Emotes (30)</button>
+                    </div>
+                    <div class="store-grid" id="store-items-container"></div>
+                </div>
+            </div>
+
+            <button class="btn" style="background:#333; color:#fff; margin-top:10px;" onclick="backToMain()">Back Menu</button>
+        </div>
+
+        <div id="game-over-screen" class="overlay-screen" style="display:none;">
+            <h1 id="game-over-title" style="color:#ff3333; font-size:36px; margin:0 0 10px 0;">GAME OVER</h1>
+            <p style="color:#aaa; margin:0 0 20px 0;">Jungle predators were too ferocious! Try again.</p>
+            <button class="btn" onclick="resetGame()">Respawn & Retry</button>
+            <button class="btn" style="background:#333; color:#fff;" onclick="backToMain()">Main Menu</button>
+        </div>
+
+        <div id="mobile-controls">
+            <div id="joystick-boundary" class="touch-zone">
+                <div id="joystick-knob"></div>
+            </div>
+            <div id="btn-emote-trigger" class="touch-zone action-circle-btn" onclick="playActiveEmoteFromMobile()">🎭 EMOTE</div>
+            <div id="btn-dash" class="touch-zone action-circle-btn">DASH</div>
+            <div id="fire-btn" class="touch-zone action-circle-btn">FIRE</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const avatarCanvas = document.getElementById('avatarCanvas');
+        const avatarCtx = avatarCanvas ? avatarCanvas.getContext('2d') : null;
+
+        const mainMenu = document.getElementById('main-menu');
+        const lvlScreen = document.getElementById('level-clear-screen');
+        const storeScreen = document.getElementById('store-screen');
+        const govScreen = document.getElementById('game-over-screen');
+        const govTitle = document.getElementById('game-over-title');
+        const lvlSelectorScreen = document.getElementById('level-selector');
+        const mobileControlsContainer = document.getElementById('mobile-controls');
+
+        let gameActive = false;
+        let isPaused = false;
+        let level = 1;
+        let maxUnlockedLevel = 1;
+        const TOTAL_LEVELS = 100;
+        let coins = 0;
+        let kills = 0;
+        let lives = 3;
+        const floorY = 440;
+        let gravity = 0.5;
+
+        let unspentPoints = 0;
+        let maxHP = 100;
+        let baseSpeed = 4.0;
+        let damageBonus = 0;
+        let statMultiplierFactor = 1;
+
+        let equippedSkin = 'CLOTH_1';
+        let equippedWeapon = 'BASIC_3D';
+        let equippedRide = 'NONE';
+        let equippedParachute = 'RED';
+        let equippedEmote = 'NONE';
+
+        // --- 30 CLOTH OUTFITS REGISTRY ---
+        const SKINS = {};
+        const outfitColors = [
+            '#66fcf1', '#00ffcc', '#a855f7', '#eab308', '#ef4444', '#3b82f6', '#10b981', '#ec4899', '#f97316', '#8b5cf6',
+            '#14b8a6', '#f43f5e', '#6366f1', '#84cc16', '#d946ef', '#06b6d4', '#e11d48', '#059669', '#d97706', '#4f46e5',
+            '#c084fc', '#38bdf8', '#4ade80', '#fbbf24', '#f472b6', '#a78bfa', '#2dd4bf', '#fb7185', '#60a5fa', '#ffd700'
+        ];
+        for(let i = 1; i <= 30; i++) {
+            SKINS[`CLOTH_${i}`] = {
+                name: `Hero Outfit #${i}`,
+                cost: (i - 1) * 200,
+                color: outfitColors[(i - 1) % outfitColors.length],
+                hpBonus: (i - 1) * 15
+            };
+        }
+
+        // --- 3D GUNS & SKINS MATRIX ---
+        const WEAPONS = {
+            'BASIC_3D': { name: '3D Assault Rifle', cost: 0, damage: 18, cooldown: 18, color: '#00ffcc', skinColor: '#334155', pierce: false },
+            'LASER_3D': { name: '3D Plasma Cannon', cost: 700, damage: 26, cooldown: 12, color: '#38bdf8', skinColor: '#0284c7', pierce: false },
+            'RAILGUN_3D': { name: '3D Volt Sniper', cost: 1800, damage: 65, cooldown: 32, color: '#f43f5e', skinColor: '#be123c', pierce: true },
+            'JUNGLE_3D': { name: '3D Venom Launcher', cost: 2500, damage: 85, cooldown: 25, color: '#22c55e', skinColor: '#15803d', pierce: true }
+        };
+
+        // --- 10 HERO JETS + VEHICLES REGISTRY ---
+        const RIDES = {
+            'NONE': { name: 'No Jet/Ride', cost: 0 },
+            'JET_1': { name: 'Stealth Raptor Jet', cost: 1200 },
+            'JET_2': { name: 'Phoenix Fighter Jet', cost: 1800 },
+            'JET_3': { name: 'Thunder Jet X', cost: 2500 },
+            'JET_4': { name: 'Valkyrie Jet', cost: 3200 },
+            'JET_5': { name: 'Apex Bomber Jet', cost: 4000 },
+            'JET_6': { name: 'Mech-Jet Zero', cost: 5000 },
+            'JET_7': { name: 'Dragon Jet 3D', cost: 6000 },
+            'JET_8': { name: 'Titan Supersonic', cost: 7500 },
+            'JET_9': { name: 'Phantom Jet Prime', cost: 9000 },
+            'JET_10': { name: 'Cosmic Overlord Jet', cost: 12000 },
+            'BIKE': { name: 'Cyber Bike', cost: 500 }
+        };
+
+        const PARACHUTES = {
+            'RED': { name: 'Crimson Drop', cost: 0, color: '#ff3333' },
+            'JUNGLE': { name: 'Jungle Camo', cost: 400, color: '#22c55e' },
+            'GOLD': { name: 'Royal Gold', cost: 1000, color: '#ffd700' }
+        };
+
+        const EMOTES_INVENTORY = [
+            { id: 'E_LOL', name: 'LOL Taunt Emote', cost: 1000, label: '😂 HAHAHA! LOSER! 😂' },
+            { id: 'E_CHAIR', name: 'Royal Golden Chair', cost: 2500, label: '🪑 Sitting Like a King 🪑' },
+            { id: 'E_DANCE', name: 'Jungle Breakdance', cost: 800, label: '💃 *3D Dynamic Dance* 💃' },
+            { id: 'E_FLEX', name: 'Muscle Flex', cost: 600, label: '💪 Pure Power Gains! 💪' },
+            { id: 'E_ROAR', name: 'Wild Animal Roar', cost: 1200, label: '🦁 ROARING IN JUNGLE! 🦁' }
+        ];
+        for(let e = 6; e <= 30; e++) {
+            EMOTES_INVENTORY.push({ id: `E_CUSTOM_${e}`, name: `3D Emote #${e}`, cost: e * 200, label: `🎭 Action Emote #${e} 🎭` });
+        }
+
+        let inventory = { skins: ['CLOTH_1'], weapons: ['BASIC_3D'], rides: ['NONE'], parachutes: ['RED'], emotes: [] };
+
+        let bullets = [];
+        let enemyBullets = [];
+        let enemies = [];
+        let particles = [];
+        let damageTexts = [];
+        let jungleFoliage = [];
+
+        let player = {
+            x: 100, y: 300, width: 26, height: 44,
+            vx: 0, vy: 0,
+            isJumping: false, facing: 1, color: '#66fcf1',
+            isDashing: false, dashTime: 0, dashCooldown: 0, dashSpeed: 14, dashDirection: 1,
+            dashTrails: [], invincibleTimer: 0, hp: 100
+        };
+
+        let pet = { x: 70, y: 280, radius: 7, color: '#ff00ff', angle: 0, floatSpeed: 0.08, floatAmplitude: 3, isFreeMoving: false, vx: 0, vy: 0, bounceTimer: 0 };
+
+        // --- NO POPUP CLEAN DOOR SYSTEM ---
+        let levelExitDoor = null;
+        let doorReached = false;
+        let levelCleared = false;
+        let currentWave = 1;
+        let bossSpawned = false;
+
+        let shakeTime = 0, shakeIntensity = 0;
+        function applyShake(t, i) { shakeTime = t; shakeIntensity = i; }
+
+        let freezeFrames = 0;
+        function triggerHitFreeze() { freezeFrames = 3; }
+
+        let keys = {};
+        let mouseX = 0, mouseY = 0;
+        let isMouseDown = false;
+        let fireCooldown = 0;
+
+        let joystickBoundary = document.getElementById('joystick-boundary');
+        let joystickKnob = document.getElementById('joystick-knob');
+        let joystickActive = false;
+        let joystickAngle = 0;
+        let joystickDistance = 0;
+        const maxJoystickDist = 40;
+
+        let isStoryModeActive = false;
+        let storyTimer = 600; 
+        let storyProgressDistance = 0;
+        let activeEmoteTimer = 0;
+        let activeEmoteText = "";
+
+        let airDropLandingActive = false;
+        let airDropHeight = 0;
+
+        function saveProgress() {
+            const packageData = { maxUnlockedLevel, coins, unspentPoints, maxHP, baseSpeed, damageBonus, inventory, equippedSkin, equippedWeapon, equippedRide, equippedParachute, equippedEmote };
+            localStorage.setItem('RPGEvo_3D_Save', JSON.stringify(packageData));
+        }
+
+        function loadProgress() {
+            const raw = localStorage.getItem('RPGEvo_3D_Save');
+            if(!raw) return;
+            try {
+                const d = JSON.parse(raw);
+                if(d.maxUnlockedLevel) maxUnlockedLevel = d.maxUnlockedLevel;
+                if(d.coins !== undefined) coins = d.coins;
+                if(d.unspentPoints !== undefined) unspentPoints = d.unspentPoints;
+                if(d.maxHP) maxHP = d.maxHP;
+                if(d.baseSpeed) baseSpeed = d.baseSpeed;
+                if(d.damageBonus !== undefined) damageBonus = d.damageBonus;
+                if(d.inventory) inventory = d.inventory;
+                if(d.equippedSkin) equippedSkin = d.equippedSkin;
+                if(d.equippedWeapon) equippedWeapon = d.equippedWeapon;
+                if(d.equippedRide) equippedRide = d.equippedRide;
+                if(d.equippedParachute) equippedParachute = d.equippedParachute;
+                if(d.equippedEmote) equippedEmote = d.equippedEmote;
+            } catch(e) { console.error("Save state error: ", e); }
+        }
+
+        function initJungleEnvironment() {
+            jungleFoliage = [];
+            for(let i=0; i<30; i++) {
+                jungleFoliage.push({
+                    x: Math.random() * 1200,
+                    y: floorY - 60 - Math.random() * 180,
+                    size: 30 + Math.random() * 40,
+                    type: Math.floor(Math.random() * 3)
+                });
+            }
+        }
+
+        function backToMain() {
+            isStoryModeActive = false;
+            gameActive = false;
+            storeScreen.style.display = 'none';
+            lvlSelectorScreen.style.display = 'none';
+            govScreen.style.display = 'none';
+            mainMenu.style.display = 'flex';
+        }
+
+        function togglePauseGame() {
+            isPaused = !isPaused;
+            document.getElementById('hud-pause-btn').innerText = isPaused ? "RESUME" : "PAUSE";
+        }
+
+        function goToLevelSelector() {
+            mainMenu.style.display = 'none';
+            lvlSelectorScreen.style.display = 'flex';
+            const container = document.getElementById('lvl-nodes-container');
+            container.innerHTML = '';
+            for(let i=1; i<=TOTAL_LEVELS; i++) {
+                let node = document.createElement('div');
+                node.className = `lvl-node ${i <= maxUnlockedLevel ? 'unlocked' : 'locked'}`;
+                node.innerText = `${i}`;
+                if(i <= maxUnlockedLevel) {
+                    node.onclick = () => launchCampaignStage(i);
+                }
+                container.appendChild(node);
+            }
+        }
+
+        function updateStatMultiplierFactor(val) { statMultiplierFactor = parseInt(val) || 1; }
+
+        function allocateStatPoint(type) {
+            if(unspentPoints <= 0) return;
+            unspentPoints--;
+            let effect = statMultiplierFactor;
+            if(type === 'HP') maxHP += 15 * effect;
+            else if(type === 'SPD') baseSpeed += 0.4 * effect;
+            else if(type === 'DMG') damageBonus += 4 * effect;
+            
+            document.getElementById('points-left').innerText = unspentPoints;
+            document.getElementById('stat-hp-display').innerText = maxHP;
+            document.getElementById('stat-spd-display').innerText = baseSpeed.toFixed(1);
+            document.getElementById('stat-dmg-display').innerText = damageBonus;
+        }
+
+        function confirmUpgradesAndExit() {
+            saveProgress();
+            lvlScreen.style.display = 'none';
+            goToLevelSelector();
+        }
+
+        function triggerAirDropInitialization() {
+            airDropLandingActive = true;
+            airDropHeight = 40; 
+            player.y = airDropHeight;
+            player.vx = 0; player.vy = 1.2;
+            player.invincibleTimer = 90;
+        }
+
+        function launchCampaignStage(selectedLevel) {
+            level = selectedLevel;
+            isStoryModeActive = false;
+            lvlSelectorScreen.style.display = 'none';
+            mainMenu.style.display = 'none';
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                mobileControlsContainer.style.display = 'block';
+            }
+
+            currentWave = 1; bossSpawned = false; levelCleared = false; doorReached = false; levelExitDoor = null;
+            bullets = []; enemyBullets = []; enemies = []; particles = []; damageTexts = [];
+            
+            initJungleEnvironment();
+            player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+            player.x = 100;
+            player.color = SKINS[equippedSkin]?.color || '#66fcf1';
+
+            triggerAirDropInitialization();
+            spawnJungleAnimalEnemies();
+            gameActive = true;
+        }
+
+        function startStoryEventMode() {
+            isStoryModeActive = true;
+            level = 99;
+            mainMenu.style.display = 'none';
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) mobileControlsContainer.style.display = 'block';
+
+            storyTimer = 600; storyProgressDistance = 0;
+            player.hp = 250; player.x = 80;
+            player.color = SKINS[equippedSkin]?.color || '#66fcf1';
+
+            bullets = []; enemyBullets = []; enemies = []; particles = []; damageTexts = [];
+            initJungleEnvironment();
+            triggerAirDropInitialization();
+            spawnJungleAnimalEnemies();
+            gameActive = true;
+        }
+
+        // --- STAGE-WISE 3D ANIMAL ENEMIES SPAWNER ---
+        function spawnJungleAnimalEnemies() {
+            enemies = [];
+            let count = 3 + Math.floor(level / 2);
+            
+            const animalTypes = [
+                { name: 'Jungle Lion', color: '#eab308', size: 36, animalClass: 'LION' },
+                { name: 'Wild Bear', color: '#78350f', size: 40, animalClass: 'BEAR' },
+                { name: 'Jungle Elephant', color: '#64748b', size: 48, animalClass: 'ELEPHANT' },
+                { name: 'Wild Wolf', color: '#94a3b8', size: 32, animalClass: 'WOLF' },
+                { name: 'Venom Cobra', color: '#10b981', size: 28, animalClass: 'SNAKE' },
+                { name: 'Armored Rhino', color: '#475569', size: 44, animalClass: 'RHINO' },
+                { name: 'Jungle Crocodile', color: '#15803d', size: 34, animalClass: 'CROC' },
+                { name: 'Rex Dinosaur', color: '#dc2626', size: 50, animalClass: 'DINO' }
+            ];
+
+            let stageAnimal = animalTypes[(level - 1) % animalTypes.length];
+
+            for(let i = 0; i < count; i++) {
+                enemies.push({
+                    x: 480 + (i * 90),
+                    y: floorY - stageAnimal.size,
+                    size: stageAnimal.size,
+                    hp: 35 + (level * 15),
+                    maxHp: 35 + (level * 15),
+                    speed: 1.1 + (level * 0.02),
+                    color: stageAnimal.color,
+                    name: `${stageAnimal.name} (Stage ${level})`,
+                    animalClass: stageAnimal.animalClass,
+                    shootRate: 0.01 + (level * 0.001),
+                    shootCooldown: 40,
+                    isBoss: false
+                });
+            }
+        }
+
+        function spawnJungleBoss() {
+            bossSpawned = true;
+            let bSize = 60;
+            let bossHp = 300 + (level * 120);
+
+            enemies.push({
+                x: 680,
+                y: floorY - bSize,
+                size: bSize,
+                hp: bossHp,
+                maxHp: bossHp,
+                speed: 1.3,
+                color: '#b91c1c',
+                name: `3D JUNGLE KING GOD (LVL ${level})`,
+                animalClass: 'DINO',
+                shootRate: 0.035,
+                shootCooldown: 25,
+                isBoss: true
+            });
+            spawnDamageText(500, 180, `⚠️ 3D JUNGLE BOSS DETECTED ⚠️`, '#ff3333');
+        }
+
+        function fireWeapon() {
+            if (airDropLandingActive) return;
+            let wCfg = WEAPONS[equippedWeapon] || WEAPONS['BASIC_3D'];
+            fireCooldown = wCfg.cooldown;
+
+            let baseDmg = wCfg.damage + damageBonus;
+            let angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
+            if(window.innerWidth < 850) {
+                angle = player.facing > 0 ? 0 : Math.PI;
+                if(enemies.length > 0) angle = Math.atan2((enemies[0].y + enemies[0].size/2) - (player.y + player.height/2), (enemies[0].x + enemies[0].size/2) - (player.x + player.width/2));
+            }
+
+            bullets.push({
+                x: player.x + player.width/2 + Math.cos(angle)*16,
+                y: player.y + player.height/2 + Math.sin(angle)*16,
+                vx: Math.cos(angle) * 10,
+                vy: Math.sin(angle) * 10,
+                size: wCfg.pierce ? 6 : 4,
+                color: wCfg.color,
+                damage: baseDmg,
+                pierces: wCfg.pierce,
+                hitEnemies: []
+            });
+            applyShake(1, 2);
+        }
+
+        function createExplosion(x, y, color, amt) {
+            for(let i=0; i<amt; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6,
+                    size: 2 + Math.random()*4, color: color, life: 25 + Math.random()*15, maxLife: 40
+                });
+            }
+        }
+
+        function spawnDamageText(x, y, txt, color) {
+            damageTexts.push({ x: x, y: y, text: txt, color: color, vx: (Math.random()-0.5)*2, vy: -1.5, life: 35 });
+        }
+
+        function playActiveEmoteFromMobile() {
+            if(equippedEmote === 'NONE') {
+                spawnDamageText(player.x, player.y - 30, "No Emote Equipped In Store!", '#ffaa00');
+                return;
+            }
+            let findNode = EMOTES_INVENTORY.find(e => e.id === equippedEmote);
+            if(findNode) {
+                activeEmoteText = findNode.label;
+                activeEmoteTimer = 110;
+                spawnDamageText(player.x, player.y - 25, "🎭 EMOTE ACTIVATED", '#d946ef');
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if(e.code === 'KeyE') playActiveEmoteFromMobile();
+            if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash();
+        });
+        window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+            isMouseDown = true;
+        });
+        window.addEventListener('mouseup', () => { isMouseDown = false; });
+
+        document.getElementById('btn-dash')?.addEventListener('touchstart', (e) => { e.preventDefault(); triggerDash(); });
+        document.getElementById('fire-btn')?.addEventListener('touchstart', (e) => { e.preventDefault(); isMouseDown = true; fireWeapon(); });
+        document.getElementById('fire-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); isMouseDown = false; });
+
+        function handleJoystickMove(touch) {
+            const rect = joystickBoundary.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const dx = touch.clientX - centerX; const dy = touch.clientY - centerY;
+            joystickDistance = Math.min(Math.hypot(dx, dy), maxJoystickDist);
+            joystickAngle = Math.atan2(dy, dx);
+            const knobX = Math.cos(joystickAngle) * joystickDistance;
+            const knobY = Math.sin(joystickAngle) * joystickDistance;
+            joystickKnob.style.transform = `translate(${knobX}px, ${knobY}px)`;
+            joystickActive = true;
+        }
+
+        function resetJoystick() {
+            joystickKnob.style.transform = 'translate(0, 0)';
+            joystickActive = false; joystickDistance = 0;
+            keys['KeyA'] = false; keys['KeyD'] = false; keys['Space'] = false;
+        }
+
+        joystickBoundary?.addEventListener('touchstart', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
+        joystickBoundary?.addEventListener('touchmove', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
+        joystickBoundary?.addEventListener('touchend', (e) => { e.preventDefault(); resetJoystick(); });
+
+        function triggerDash() {
+            if (player.dashCooldown > 0 || player.isDashing || isPaused || airDropLandingActive) return;
+            player.isDashing = true; player.dashTime = 10; player.dashCooldown = 45;
+            player.dashDirection = (keys['KeyA'] || keys['ArrowLeft']) ? -1 : (keys['KeyD'] || keys['ArrowRight']) ? 1 : player.facing;
+            applyShake(4, 5);
+        }
+
+        function update() {
+            if (!gameActive || isPaused) return;
+
+            if (freezeFrames > 0) { freezeFrames--; return; }
+            if (player.invincibleTimer > 0) player.invincibleTimer--;
+            if (shakeTime > 0) shakeTime--;
+            if (fireCooldown > 0) fireCooldown--;
+            if (activeEmoteTimer > 0) activeEmoteTimer--;
+
+            if(airDropLandingActive) {
+                player.y += player.vy;
+                if(player.y + player.height >= floorY) {
+                    player.y = floorY - player.height;
+                    player.vy = 0; airDropLandingActive = false;
+                    spawnDamageText(player.x, player.y - 10, "🪂 SAFE LANDING START!", '#00ffcc');
+                }
+                return;
+            }
+
+            if (joystickActive && joystickDistance > 12) {
+                const cosA = Math.cos(joystickAngle); const sinA = Math.sin(joystickAngle);
+                if (sinA < -0.65 && !player.isJumping) keys['Space'] = true;
+                if (cosA < -0.35) { keys['KeyA'] = true; keys['KeyD'] = false; }
+                else if (cosA > 0.35) { keys['KeyD'] = true; keys['KeyA'] = false; }
+                else { keys['KeyA'] = false; keys['KeyD'] = false; }
+            }
+
+            if (player.isDashing) {
+                player.vx = player.dashSpeed * player.dashDirection; player.vy = 0; player.dashTime--;
+                player.dashTrails.push({ x: player.x, y: player.y, width: player.width, height: player.height, life: 8, color: player.color });
+                if (player.dashTime <= 0) player.isDashing = false;
+            } else {
+                let rideMult = equippedRide.startsWith('JET_') ? 2.0 : (equippedRide === 'BIKE' ? 1.4 : 1.0);
+                let currentWalkSpeed = baseSpeed * rideMult;
+
+                if (keys['KeyA'] || keys['ArrowLeft']) { player.vx = -currentWalkSpeed; player.facing = -1; }
+                else if (keys['KeyD'] || keys['ArrowRight']) { player.vx = currentWalkSpeed; player.facing = 1; }
+                else player.vx = 0;
+
+                if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && !player.isJumping) {
+                    player.vy = -12.5; player.isJumping = true; keys['Space'] = false;
+                }
+                player.vy += gravity;
+            }
+
+            player.x += player.vx; player.y += player.vy;
+
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            if (player.y + player.height >= floorY) {
+                player.y = floorY - player.height; player.vy = 0; player.isJumping = false;
+            }
+
+            player.dashTrails.forEach((trail, idx) => {
+                trail.life--;
+                if (trail.life <= 0) player.dashTrails.splice(idx, 1);
+            });
+
+            bullets.forEach((bullet, bIdx) => {
+                bullet.x += bullet.vx; bullet.y += bullet.vy;
+                if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) bullets.splice(bIdx, 1);
+            });
+
+            enemyBullets.forEach((eb, ebIdx) => {
+                eb.x += eb.vx; eb.y += eb.vy;
+                if (eb.x > player.x && eb.x < player.x + player.width && eb.y > player.y && eb.y < player.y + player.height) {
+                    enemyBullets.splice(ebIdx, 1);
+                    if (!player.isDashing && player.invincibleTimer === 0) {
+                        player.hp -= 12;
+                        createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff3333', 10);
+                        applyShake(6, 12);
+                        spawnDamageText(player.x, player.y - 10, `-12 HP`, "#ff3333");
+                        triggerHitFreeze();
+                        checkPlayerDeath();
+                    }
+                }
+                if (eb.x < 0 || eb.x > canvas.width || eb.y < 0 || eb.y > canvas.height) enemyBullets.splice(ebIdx, 1);
+            });
+
+            enemies.forEach((enemy, eIdx) => {
+                if (enemy.x > player.x) enemy.x -= enemy.speed; else enemy.x += enemy.speed;
+
+                enemy.shootCooldown--;
+                if (enemy.shootCooldown <= 0 && Math.random() < enemy.shootRate) {
+                    const angle = Math.atan2((player.y + player.height/2) - (enemy.y + enemy.size/2), (player.x + player.width/2) - (enemy.x + enemy.size/2));
+                    enemyBullets.push({
+                        x: enemy.x + enemy.size / 2, y: enemy.y + enemy.size / 2,
+                        vx: Math.cos(angle) * 5.5, vy: Math.sin(angle) * 5.5,
+                        size: 5, color: '#ff3300'
+                    });
+                    enemy.shootCooldown = 60;
+                }
+
+                bullets.forEach((b, bIdx) => {
+                    if (b.x > enemy.x && b.x < enemy.x + enemy.size && b.y > enemy.y && b.y < enemy.y + enemy.size) {
+                        if (b.pierces && b.hitEnemies.includes(enemy)) return;
+                        if (!b.pierces) bullets.splice(bIdx, 1); else b.hitEnemies.push(enemy);
+
+                        enemy.hp -= b.damage;
+                        spawnDamageText(enemy.x + enemy.size/2, enemy.y - 10, `-${b.damage.toFixed(0)}`, b.color);
+                        createExplosion(b.x, b.y, enemy.color, 4);
+
+                        if (enemy.hp <= 0) {
+                            createExplosion(enemy.x + enemy.size/2, enemy.y + enemy.size/2, enemy.color, 20);
+                            enemies.splice(eIdx, 1);
+                            kills++;
+                            coins += 30 + Math.floor(level * 2);
+
+                            if (enemies.length === 0) {
+                                if (currentWave < 2) { currentWave++; spawnJungleAnimalEnemies(); } 
+                                else if (!bossSpawned) spawnJungleBoss(); 
+                                else spawnCleanLevelDoor();
+                            }
+                        }
+                    }
+                });
+            });
+
+            // --- NO POPUP CLEAN DOOR ENTRY DETECTOR ---
+            if (levelCleared && levelExitDoor && !doorReached) {
+                if (player.x + player.width > levelExitDoor.x && player.x < levelExitDoor.x + levelExitDoor.width &&
+                    player.y + player.height > levelExitDoor.y) {
+                    doorReached = true;
+                    if (level === maxUnlockedLevel && maxUnlockedLevel < TOTAL_LEVELS) maxUnlockedLevel++;
+                    saveProgress();
+                    triggerDoorEnteredPopupUI();
+                }
+            }
+
+            damageTexts.forEach((dt, idx) => { dt.y += dt.vy; dt.life--; if (dt.life <= 0) damageTexts.splice(idx, 1); });
+            particles.forEach((p, idx) => { p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) particles.splice(idx, 1); });
+
+            document.getElementById('level-val').innerText = isStoryModeActive ? "EVENT" : level;
+            document.getElementById('coins-val').innerText = coins;
+            document.getElementById('hp-val').innerText = Math.round(player.hp);
+            document.getElementById('max-hp-val').innerText = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+            document.getElementById('dmg-val').innerText = damageBonus;
+            document.getElementById('lives-val').innerText = lives;
+        }
+
+        // SPAWN DOOR CLEANLY WITHOUT POPUPS
+        function spawnCleanLevelDoor() {
+            levelCleared = true;
+            levelExitDoor = { x: 700, y: floorY - 95, width: 50, height: 95 };
+            spawnDamageText(player.x, player.y - 30, "🚪 CLEAR! ENTER THE 3D DOOR TO FINISH", '#00ffcc');
+        }
+
+        // TRIGGER POPUP ONLY AFTER STEPPING INSIDE THE DOOR
+        function triggerDoorEnteredPopupUI() {
+            let prizeCoins = 300 + (level * 30);
+            let prizePts = 3;
+            coins += prizeCoins; unspentPoints += prizePts;
+
+            lvlScreen.style.display = 'flex';
+            document.getElementById('level-prize-box').innerHTML = `
+                <h4 style="margin: 0; color: #ffd700; text-transform: uppercase;">🎁 STAGE ${level} COMPLETED 🎁</h4>
+                <p style="font-size: 14px; margin: 5px 0;">Coins Reward: <b style="color:#00ffcc;">+${prizeCoins} Coins</b></p>
+                <p style="font-size: 14px; margin: 5px 0;">Stat Upgrade Points: <b style="color:#ffaa00;">+${prizePts} Points</b></p>
+            `;
+            document.getElementById('points-left').innerText = unspentPoints;
+            document.getElementById('stat-hp-display').innerText = maxHP;
+            document.getElementById('stat-spd-display').innerText = baseSpeed.toFixed(1);
+            document.getElementById('stat-dmg-display').innerText = damageBonus;
+        }
+
+        function checkPlayerDeath() {
+            if (player.hp <= 0) {
+                lives--;
+                player.hp = maxHP + (SKINS[equippedSkin]?.hpBonus || 0);
+                player.x = 100;
+                if (lives <= 0) {
+                    gameActive = false;
+                    govTitle.innerText = "GAME OVER 💀";
+                    govScreen.style.display = 'flex';
+                }
+            }
+        }
+
+        function resetGame() {
+            lives = 3; currentWave = 1; bossSpawned = false; levelCleared = false; doorReached = false; levelExitDoor = null;
+            govScreen.style.display = 'none';
+            launchCampaignStage(level);
+        }
+
+        // --- 3D GRAPHICS & SHADOW RENDERERS ---
+        function draw3DHumanBody(c, x, y, w, h, baseColor, isRight, flash) {
+            if(flash && Math.floor(Date.now()/50)%2===0) return;
+            c.save();
+            
+            let emoteSquat = (activeEmoteTimer > 0) ? Math.sin(Date.now()/100) * 4 : 0;
+            y += emoteSquat;
+
+            // 3D Drop Shadow
+            c.fillStyle = 'rgba(0,0,0,0.35)';
+            c.beginPath(); c.ellipse(x + w/2, floorY - 2, w, 6, 0, 0, Math.PI*2); c.fill();
+
+            // 3D Head
+            c.fillStyle = '#ffedd5';
+            c.beginPath(); c.arc(x + w/2, y + 8, 8, 0, Math.PI*2); c.fill();
+            c.fillStyle = '#334155'; c.fillRect(x + w/2 - 4, y, 8, 4); // Helmet/Hair
+
+            // 3D Torso / Outfit Mesh
+            let grad = c.createLinearGradient(x, y + 14, x + w, y + h - 14);
+            grad.addColorStop(0, baseColor);
+            grad.addColorStop(1, '#0f172a');
+            c.fillStyle = grad;
+            c.fillRect(x, y + 14, w, h - 26);
+
+            // 3D Shoulder Plates
+            c.fillStyle = baseColor;
+            c.fillRect(x - 3, y + 14, 4, 10);
+            c.fillRect(x + w, y + 14, 4, 10);
+
+            // 3D Legs
+            c.fillStyle = '#1e293b';
+            c.fillRect(x + 2, y + h - 12, 7, 12);
+            c.fillRect(x + w - 9, y + h - 12, 7, 12);
+
+            // 3D Weapon
+            let wColor = WEAPONS[equippedWeapon]?.skinColor || '#334155';
+            c.fillStyle = wColor;
+            if(isRight) c.fillRect(x + w - 2, y + 20, 16, 6); else c.fillRect(x - 14, y + 20, 16, 6);
+
+            c.restore();
+        }
+
+        function draw3DAnimalEnemy(c, e) {
+            c.save();
+            // 3D Shadow
+            c.fillStyle = 'rgba(0,0,0,0.4)';
+            c.beginPath(); c.ellipse(e.x + e.size/2, floorY - 2, e.size*0.7, 8, 0, 0, Math.PI*2); c.fill();
+
+            let grad = c.createLinearGradient(e.x, e.y, e.x + e.size, e.y + e.size);
+            grad.addColorStop(0, e.color);
+            grad.addColorStop(1, '#000000');
+            c.fillStyle = grad;
+
+            if(e.animalClass === 'LION') {
+                c.fillRect(e.x, e.y + e.size*0.2, e.size, e.size*0.8);
+                c.fillStyle = '#78350f'; c.beginPath(); c.arc(e.x + e.size*0.2, e.y + e.size*0.3, e.size*0.35, 0, Math.PI*2); c.fill(); // Mane
+            } else if(e.animalClass === 'BEAR') {
+                c.fillRect(e.x, e.y, e.size, e.size);
+            } else if(e.animalClass === 'SNAKE') {
+                c.fillRect(e.x, e.y + e.size*0.7, e.size, e.size*0.3);
+                c.fillRect(e.x + e.size*0.7, e.y + e.size*0.1, e.size*0.3, e.size*0.8);
+            } else {
+                c.fillRect(e.x, e.y, e.size, e.size);
+            }
+
+            c.fillStyle = '#fff'; c.font = 'bold 9px sans-serif';
+            c.fillText(e.name, e.x - 8, e.y - 12);
+            c.restore();
+        }
+
+        function draw3DJet(c, px, py, jetKey) {
+            c.save();
+            c.fillStyle = '#0284c7'; c.shadowBlur = 10; c.shadowColor = '#38bdf8';
+            c.fillRect(px - 30, py + 12, 80, 20);
+            c.fillStyle = '#ef4444'; c.beginPath(); c.moveTo(px - 25, py + 12); c.lineTo(px - 40, py - 5); c.lineTo(px - 10, py + 12); c.fill();
+            c.restore();
+        }
+
+        // --- MASTER JUNGLE ENVIRONMENT & GAME DRAW ---
+        function draw() {
+            ctx.save();
+            if (shakeTime > 0) ctx.translate((Math.random() - 0.5) * shakeIntensity, (Math.random() - 0.5) * shakeIntensity);
+
+            // 3D Jungle Background Gradient
+            let bgGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            bgGrad.addColorStop(0, '#022c22'); bgGrad.addColorStop(1, '#064e3b');
+            ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Jungle Foliage & Trees
+            jungleFoliage.forEach(f => {
+                ctx.fillStyle = '#065f46';
+                ctx.beginPath(); ctx.arc(f.x, f.y, f.size, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#022c22'; ctx.fillRect(f.x - 6, f.y + f.size - 10, 12, 50);
+            });
+
+            // 3D Jungle Floor Ground
+            ctx.fillStyle = '#14532d'; ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
+            ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(canvas.width, floorY); ctx.stroke();
+
+            if(airDropLandingActive) {
+                let pColor = PARACHUTES[equippedParachute]?.color || '#ff3333';
+                ctx.fillStyle = pColor; ctx.beginPath(); ctx.arc(player.x + player.width/2, player.y - 18, 26, Math.PI, 0, false); ctx.fill();
+            }
+
+            // 3D CLEAN EXIT DOOR
+            if (levelCleared && levelExitDoor) {
+                ctx.fillStyle = '#00ffcc'; ctx.fillRect(levelExitDoor.x, levelExitDoor.y, levelExitDoor.width, levelExitDoor.height);
+                ctx.fillStyle = '#070913'; ctx.fillRect(levelExitDoor.x + 5, levelExitDoor.y + 5, levelExitDoor.width - 10, levelExitDoor.height - 10);
+                ctx.fillStyle = '#00ffcc'; ctx.font = 'bold 11px sans-serif'; ctx.fillText("3D DOOR", levelExitDoor.x + 2, levelExitDoor.y - 10);
+            }
+
+            if(equippedRide.startsWith('JET_')) draw3DJet(ctx, player.x, player.y, equippedRide);
+
+            draw3DHumanBody(ctx, player.x, player.y, player.width, player.height, player.color, (player.facing > 0), (player.invincibleTimer > 0));
+
+            if(activeEmoteTimer > 0 && activeEmoteText !== "") {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.85)'; ctx.strokeStyle = '#d946ef'; ctx.lineWidth = 1.5; ctx.font = 'bold 12px sans-serif';
+                let txtM = ctx.measureText(activeEmoteText).width;
+                ctx.fillRect(player.x + player.width/2 - txtM/2 - 8, player.y - 42, txtM + 16, 22);
+                ctx.strokeRect(player.x + player.width/2 - txtM/2 - 8, player.y - 42, txtM + 16, 22);
+                ctx.fillStyle = '#fff'; ctx.fillText(activeEmoteText, player.x + player.width/2 - txtM/2, player.y - 27);
+            }
+
+            enemies.forEach(e => draw3DAnimalEnemy(ctx, e));
+            bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI*2); ctx.fill(); });
+            enemyBullets.forEach(eb => { ctx.fillStyle = eb.color; ctx.beginPath(); ctx.arc(eb.x, eb.y, eb.size, 0, Math.PI*2); ctx.fill(); });
+            particles.forEach(p => { ctx.fillStyle = p.color; ctx.globalAlpha = p.life/p.maxLife; ctx.fillRect(p.x, p.y, p.size, p.size); });
+            ctx.globalAlpha = 1.0;
+            damageTexts.forEach(dt => { ctx.fillStyle = dt.color; ctx.font = 'bold 12px Courier New'; ctx.fillText(dt.text, dt.x, dt.y); });
+
+            ctx.restore();
+        }
+
+        // --- AVATAR PREVIEW IN STORE ---
+        function drawAvatarPreview() {
+            if(!avatarCtx || storeScreen.style.display === 'none') return;
+            avatarCtx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+            draw3DHumanBody(avatarCtx, 58, 90, 26, 44, SKINS[equippedSkin]?.color || '#66fcf1', true, false);
+            if(equippedRide.startsWith('JET_')) draw3DJet(avatarCtx, 58, 90, equippedRide);
+        }
+
+        function mainLoop() {
+            update(); draw(); drawAvatarPreview();
+            requestAnimationFrame(mainLoop);
+        }
+
+        let currentStoreTab = 'skins';
+        function switchStoreTab(tabName) {
+            currentStoreTab = tabName;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+            renderStoreGridContent();
+        }
+
+        function openStore() {
+            mainMenu.style.display = 'none'; storeScreen.style.display = 'flex';
+            switchStoreTab('skins');
+        }
+
+        function renderStoreGridContent() {
+            const grid = document.getElementById('store-items-container');
+            grid.innerHTML = '';
+
+            if (currentStoreTab === 'skins') {
+                Object.keys(SKINS).forEach(k => createStoreCardElement(grid, 'skin', k, SKINS[k].name, SKINS[k].cost, inventory.skins.includes(k), equippedSkin === k));
+            } else if (currentStoreTab === 'weapons') {
+                Object.keys(WEAPONS).forEach(k => createStoreCardElement(grid, 'weapon', k, WEAPONS[k].name, WEAPONS[k].cost, inventory.weapons.includes(k), equippedWeapon === k));
+            } else if (currentStoreTab === 'rides') {
+                Object.keys(RIDES).forEach(k => createStoreCardElement(grid, 'ride', k, RIDES[k].name, RIDES[k].cost, inventory.rides.includes(k), equippedRide === k));
+            } else if (currentStoreTab === 'parachutes') {
+                Object.keys(PARACHUTES).forEach(k => createStoreCardElement(grid, 'parachute', k, PARACHUTES[k].name, PARACHUTES[k].cost, inventory.parachutes.includes(k), equippedParachute === k));
+            } else if (currentStoreTab === 'emotes') {
+                EMOTES_INVENTORY.forEach(it => createStoreCardElement(grid, 'emote', it.id, it.name, it.cost, inventory.emotes.includes(it.id), equippedEmote === it.id));
+            }
+        }
+
+        function createStoreCardElement(parent, type, key, name, cost, owned, equipped) {
+            let card = document.createElement('div'); card.className = `store-card ${owned ? 'owned' : ''}`;
+            card.innerHTML = `<p style="font-weight:bold; color:#fff;">${name}</p><p style="color:#00ffcc;">${owned ? 'OWNED' : cost + ' Coins'}</p><button class="btn" style="padding:4px 8px; font-size:10px;" id="act-${key}">${equipped ? 'EQUIPPED' : owned ? 'EQUIP' : 'BUY'}</button>`;
+            parent.appendChild(card);
+
+            card.querySelector(`#act-${key}`).onclick = () => {
+                if (!owned) {
+                    if (coins >= cost) {
+                        coins -= cost;
+                        if(type === 'skin') inventory.skins.push(key);
+                        if(type === 'weapon') inventory.weapons.push(key);
+                        if(type === 'ride') inventory.rides.push(key);
+                        if(type === 'parachute') inventory.parachutes.push(key);
+                        if(type === 'emote') inventory.emotes.push(key);
+                        saveProgress(); renderStoreGridContent(); document.getElementById('coins-val').innerText = coins;
+                    } else alert("Insufficient Coins Balance!");
+                } else {
+                    if(type === 'skin') equippedSkin = key;
+                    if(type === 'weapon') equippedWeapon = key;
+                    if(type === 'ride') equippedRide = key;
+                    if(type === 'parachute') equippedParachute = key;
+                    if(type === 'emote') equippedEmote = key;
+                    saveProgress(); renderStoreGridContent();
+                }
+            };
+        }
+
+        loadProgress();
+        setInterval(() => { if(gameActive && isMouseDown && fireCooldown <= 0) fireWeapon(); }, 20);
+        requestAnimationFrame(mainLoop);
+    </script>
+</body>
+</html>
