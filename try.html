@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RPG Evolution - Hassan Arena Ultimate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RPG Evolution - Hassan Arena Ultimate (100 Levels + Store Avatar)</title>
     <style>
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
         body {
             margin: 0;
             padding: 0;
@@ -24,6 +28,15 @@
             box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
             background: #000;
         }
+        @media (max-width: 850px) {
+            #game-container {
+                width: 100vw;
+                height: 60vh;
+                margin: 0 auto;
+                border-width: 2px;
+                border-radius: 0;
+            }
+        }
         canvas {
             display: block;
             width: 100%;
@@ -40,13 +53,12 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-sizing: border-box;
             padding: 0 15px;
             border-bottom: 2px solid #1f2438;
             font-size: 13px;
             z-index: 10;
         }
-        .hud-item { margin-right: 15px; display: inline-block; }
+        .hud-item { margin-right: 12px; display: inline-block; }
         .hud-item span { color: #00ffcc; font-weight: bold; }
         
         /* Menu Screens styling */
@@ -68,11 +80,11 @@
             border: none;
             color: #000;
             padding: 10px 24px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: bold;
             border-radius: 4px;
             cursor: pointer;
-            margin: 8px;
+            margin: 6px;
             transition: all 0.2s;
             text-transform: uppercase;
         }
@@ -81,44 +93,109 @@
             box-shadow: 0 0 15px rgba(0, 255, 204, 0.6);
         }
         
-        /* Flexible Multi-row Shopping Layout */
-        #store-screen { overflow-y: auto; justify-content: flex-start; padding-top: 50px; box-sizing: border-box; }
-        .store-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 90%; max-height: 320px; overflow-y: auto; padding: 5px; }
-        .store-card { background: #111422; border: 1px solid #1f2438; border-radius: 4px; padding: 10px; text-align: center; }
+        /* Flexible Multi-row Shopping Layout with Live Avatar Box */
+        #store-screen { 
+            overflow-y: auto; 
+            justify-content: flex-start; 
+            padding-top: 15px; 
+            padding-bottom: 15px;
+        }
+        .store-layout {
+            display: flex;
+            width: 95%;
+            height: 320px;
+            gap: 15px;
+            align-items: center;
+        }
+        .avatar-preview-box {
+            width: 180px;
+            height: 100%;
+            background: #111422;
+            border: 2px solid #00ffcc;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+        }
+        .avatar-preview-box canvas {
+            width: 140px;
+            height: 220px;
+            background: #070913;
+            border-radius: 6px;
+            border: 1px solid #1f2438;
+        }
+        .store-main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .store-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 8px; 
+            width: 100%; 
+            height: 260px;
+            overflow-y: auto; 
+            padding: 5px; 
+        }
+        @media (max-width: 600px) {
+            .store-layout { flex-direction: column; height: auto; }
+            .avatar-preview-box { width: 100%; height: 180px; }
+            .store-grid { grid-template-columns: repeat(2, 1fr); height: 200px; }
+        }
+        .store-card { background: #111422; border: 1px solid #1f2438; border-radius: 4px; padding: 8px; text-align: center; }
         .store-card.owned { border-color: #00ffcc; background: #0c1a24; }
-        .store-card p { margin: 5px 0; font-size: 12px; }
-        .tabs { display: flex; gap: 5px; margin-bottom: 10px; }
-        .tab-btn { background: #222; border: 1px solid #444; color: #fff; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 12px;}
+        .store-card p { margin: 4px 0; font-size: 11px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
+        .tab-btn { background: #222; border: 1px solid #444; color: #fff; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 11px;}
         .tab-btn.active { background: #00ffcc; color: #000; font-weight: bold; }
 
-        /* Level Selector Layout */
-        .lvl-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; width: 80%; margin: 15px 0; }
-        .lvl-node { background: #161a2b; border: 2px solid #3b4261; padding: 15px 0; text-align: center; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .lvl-node.unlocked { border-color: #00ffcc; color: #00ffcc; cursor: pointer; }
-        .lvl-node.locked { opacity: 0.4; cursor: not-allowed; }
+        /* 100 Level Selector Layout with Smooth Scroll */
+        .lvl-grid { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 8px; 
+            width: 85%; 
+            max-height: 320px; 
+            overflow-y: auto; 
+            padding: 10px;
+            margin: 10px 0;
+            background: #0d101d;
+            border: 1px solid #1f2438;
+            border-radius: 8px;
+        }
+        @media (max-width: 500px) {
+            .lvl-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        .lvl-node { background: #161a2b; border: 2px solid #3b4261; padding: 12px 0; text-align: center; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .lvl-node.unlocked { border-color: #00ffcc; color: #00ffcc; }
+        .lvl-node.locked { opacity: 0.35; cursor: not-allowed; }
 
         /* Custom Stat Prize Selector styling */
-        #prize-stat-controls { display: flex; flex-direction: column; gap: 8px; width: 60%; margin: 10px 0; }
+        #prize-stat-controls { display: flex; flex-direction: column; gap: 8px; width: 65%; margin: 10px 0; }
         .stat-row { display: flex; justify-content: space-between; align-items: center; background: #111424; padding: 6px 12px; border-radius: 4px; }
 
         /* Mobile Controller Layout Overlay */
         #mobile-controls {
-            position: absolute;
-            bottom: 10px;
+            position: fixed;
+            bottom: 0;
             left: 0;
-            width: 100%;
-            height: 120px;
+            width: 100vw;
+            height: 160px;
             pointer-events: none;
-            z-index: 15;
-            display: none; /* Auto toggled via script if touch is used */
+            z-index: 99;
+            display: none;
         }
         .touch-zone { pointer-events: auto; position: absolute; }
-        #joystick-boundary { bottom: 10px; left: 20px; width: 90px; height: 90px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
-        #joystick-knob { position: absolute; top: 27px; left: 27px; width: 36px; height: 36px; background: #00ffcc; border-radius: 50%; box-shadow: 0 0 10px #00ffcc; }
-        .action-circle-btn { bottom: 20px; width: 55px; height: 55px; background: rgba(0,255,204,0.2); border: 2px solid #00ffcc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: #fff; text-shadow: 0 0 4px #000; }
-        #btn-dash { right: 90px; }
-        #fire-btn { right: 20px; width: 62px; height: 62px; bottom: 16px; background: rgba(255, 51, 51, 0.25); border-color: #ff3333; }
-        #btn-emote-trigger { right: 160px; width: 50px; height: 50px; bottom: 22px; background: rgba(217, 70, 239, 0.25); border-color: #d946ef; }
+        #joystick-boundary { bottom: 20px; left: 20px; width: 100px; height: 100px; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
+        #joystick-knob { position: absolute; top: 32px; left: 32px; width: 36px; height: 36px; background: #00ffcc; border-radius: 50%; box-shadow: 0 0 10px #00ffcc; }
+        .action-circle-btn { bottom: 25px; width: 55px; height: 55px; background: rgba(0,255,204,0.25); border: 2px solid #00ffcc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; color: #fff; text-shadow: 0 0 4px #000; }
+        #btn-dash { right: 85px; bottom: 25px; }
+        #fire-btn { right: 15px; width: 65px; height: 65px; bottom: 20px; background: rgba(255, 51, 51, 0.35); border-color: #ff3333; }
+        #btn-emote-trigger { right: 155px; width: 50px; height: 50px; bottom: 28px; background: rgba(217, 70, 239, 0.35); border-color: #d946ef; }
     </style>
 </head>
 <body>
@@ -132,7 +209,7 @@
                 <div class="hud-item">HP: <span id="hp-val">100</span>/<span id="max-hp-val">100</span></div>
             </div>
             <div>
-                <div class="hud-item">Bonus DMG: <span id="dmg-val">0</span></div>
+                <div class="hud-item">DMG: <span id="dmg-val">0</span></div>
                 <div class="hud-item">Lives: <span id="lives-val">3</span></div>
                 <button id="hud-pause-btn" style="background:#222; color:#fff; border:1px solid #444; padding:2px 8px; cursor:pointer;" onclick="togglePauseGame()">PAUSE</button>
             </div>
@@ -141,33 +218,32 @@
         <!-- Canvas Rendering Target -->
         <canvas id="gameCanvas" width="800" height="500"></canvas>
 
-        <!-- Dynamic Screen Overlay: Main Dashboard Menu -->
+        <!-- Main Dashboard Menu -->
         <div id="main-menu" class="overlay-screen">
             <h1 style="margin:0 0 5px 0; color:#00ffcc; font-size:32px; letter-spacing:2px;">RPG EVOLUTION</h1>
-            <h3 style="margin:0 0 20px 0; color:#ffd700; font-style:italic;">HASSAN ARENA PRO EDITION</h3>
-            <button class="btn" onclick="goToLevelSelector()">Campaign Levels</button>
+            <h3 style="margin:0 0 15px 0; color:#ffd700; font-style:italic;">HASSAN ARENA ULTIMATE (100 LEVELS)</h3>
+            <button class="btn" onclick="goToLevelSelector()">Campaign Levels (1-100)</button>
             <button class="btn" style="background:linear-gradient(135deg, #d946ef 0%, #c084fc 100%);" onclick="startStoryEventMode()">10-Min Story Event Challenge</button>
-            <button class="btn" style="background:#555; color:#fff;" onclick="openStore()">Super Store & Emotes</button>
-            <div id="event-timer-bar" style="margin-top:15px; font-size:12px; color:#aaa;">Event Refresh Syncing...</div>
+            <button class="btn" style="background:#555; color:#fff;" onclick="openStore()">Super Store & Avatar</button>
+            <div id="event-timer-bar" style="margin-top:10px; font-size:12px; color:#aaa;">Event Refresh Syncing...</div>
         </div>
 
-        <!-- Dynamic Screen Overlay: Level Node Selector -->
+        <!-- Dynamic Screen Overlay: Level Node Selector (100 Levels) -->
         <div id="level-selector" class="overlay-screen" style="display:none;">
-            <h2 style="color:#00ffcc; margin-top:0;">CHOOSE CHALLENGE LEVEL</h2>
+            <h2 style="color:#00ffcc; margin: 0 0 5px 0;">CHOOSE LEVEL (1 - 100)</h2>
             <div class="lvl-grid" id="lvl-nodes-container"></div>
             <button class="btn" style="background:#333; color:#fff;" onclick="backToMain()">Back</button>
         </div>
 
-        <!-- Dynamic Screen Overlay: Customizable Upgrade Stat Prize Screen -->
+        <!-- Dynamic Screen Overlay: Stat Prize Screen -->
         <div id="level-clear-screen" class="overlay-screen" style="display:none;">
             <h2 style="color:#00ff66; margin:0 0 10px 0;">STAGE COMPLETED!</h2>
             <div id="level-prize-box" style="background:#111625; padding:15px; border-radius:6px; border:1px solid #00ffcc; text-align:center; margin-bottom:10px; width:70%;"></div>
             
             <div style="font-size:14px; margin-bottom:5px;">Unspent Upgrade Points: <b id="points-left" style="color:#ffaa00;">0</b></div>
             
-            <!-- Customizable Point Effect Factor Controller -->
             <div style="margin-bottom:12px; font-size:12px; color:#aaa;">
-                Upgrade Strength Multiplier: 
+                Upgrade Multiplier: 
                 <select id="stat-multiplier-select" style="background:#222; color:#00ffcc; border:1px solid #444;" onchange="updateStatMultiplierFactor(this.value)">
                     <option value="1">1x Standard Effect</option>
                     <option value="2">2x High Boost</option>
@@ -181,34 +257,46 @@
                     <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('HP')">+</button>
                 </div>
                 <div class="stat-row">
-                    <span>Base Movement Velocity (<b id="stat-spd-display">0</b>)</span>
+                    <span>Movement Velocity (<b id="stat-spd-display">0</b>)</span>
                     <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('SPD')">+</button>
                 </div>
                 <div class="stat-row">
-                    <span>Weapon Bullet Damage (<b id="stat-dmg-display">0</b>)</span>
+                    <span>Bullet Damage (<b id="stat-dmg-display">0</b>)</span>
                     <button class="btn" style="padding:4px 12px; margin:0; font-size:12px;" onclick="allocateStatPoint('DMG')">+</button>
                 </div>
             </div>
             <button class="btn" style="background:#00ffcc; color:#000;" onclick="confirmUpgradesAndExit()">Save Progress & Exit</button>
         </div>
 
-        <!-- Dynamic Screen Overlay: Expanded Super Store -->
+        <!-- Dynamic Screen Overlay: Expanded Super Store with Avatar Model Box -->
         <div id="store-screen" class="overlay-screen" style="display:none;">
-            <h2 style="color:#ffd700; margin:5px 0 10px 0;">MEGA EVOLUTION SUPER STORE</h2>
-            <div class="tabs">
-                <button class="tab-btn active" id="tab-btn-skins" onclick="switchStoreTab('skins')">Skins</button>
-                <button class="tab-btn" id="tab-btn-weapons" onclick="switchStoreTab('weapons')">Weapons</button>
-                <button class="tab-btn" id="tab-btn-rides" onclick="switchStoreTab('rides')">Rides/Vehicles</button>
-                <button class="tab-btn" id="tab-btn-parachutes" onclick="switchStoreTab('parachutes')">Parachutes</button>
-                <button class="tab-btn" id="tab-btn-emotes" onclick="switchStoreTab('emotes')">Emotes (30)</button>
+            <h2 style="color:#ffd700; margin:0 0 10px 0;">MEGA EVOLUTION STORE & AVATAR</h2>
+            
+            <div class="store-layout">
+                <!-- Live Avatar Preview Canvas Frame -->
+                <div class="avatar-preview-box">
+                    <span style="font-size: 11px; color: #00ffcc; font-weight: bold; margin-bottom: 4px;">LIVE AVATAR MODEL</span>
+                    <canvas id="avatarCanvas" width="140" height="200"></canvas>
+                </div>
+
+                <div class="store-main-area">
+                    <div class="tabs">
+                        <button class="tab-btn active" id="tab-btn-skins" onclick="switchStoreTab('skins')">Skins</button>
+                        <button class="tab-btn" id="tab-btn-weapons" onclick="switchStoreTab('weapons')">Weapons</button>
+                        <button class="tab-btn" id="tab-btn-rides" onclick="switchStoreTab('rides')">Rides</button>
+                        <button class="tab-btn" id="tab-btn-parachutes" onclick="switchStoreTab('parachutes')">Parachutes</button>
+                        <button class="tab-btn" id="tab-btn-emotes" onclick="switchStoreTab('emotes')">Emotes (30)</button>
+                    </div>
+                    <div class="store-grid" id="store-items-container"></div>
+                </div>
             </div>
-            <div class="store-grid" id="store-items-container"></div>
+
             <button class="btn" style="background:#333; color:#fff; margin-top:10px;" onclick="backToMain()">Back Menu</button>
         </div>
 
-        <!-- Dynamic Screen Overlay: Game Over Screen -->
+        <!-- Game Over Screen -->
         <div id="game-over-screen" class="overlay-screen" style="display:none;">
-            <h1 id="game-over-title" style="color:#ff3333; font-size:40px; margin:0 0 10px 0;">GAME OVER</h1>
+            <h1 id="game-over-title" style="color:#ff3333; font-size:36px; margin:0 0 10px 0;">GAME OVER</h1>
             <p style="color:#aaa; margin:0 0 20px 0;">Challenge was too severe! Don't lose hope.</p>
             <button class="btn" onclick="resetGame()">Respawn & Retry</button>
             <button class="btn" style="background:#333; color:#fff;" onclick="backToMain()">Main Menu</button>
@@ -216,11 +304,9 @@
 
         <!-- Mobile Touch Controller Overlay Components -->
         <div id="mobile-controls">
-            <!-- Left Side Interactive Dynamic D-Pad Joystick -->
             <div id="joystick-boundary" class="touch-zone">
                 <div id="joystick-knob"></div>
             </div>
-            <!-- Right Action Matrix buttons -->
             <div id="btn-emote-trigger" class="touch-zone action-circle-btn" onclick="playActiveEmoteFromMobile()">🎭 EMOTE</div>
             <div id="btn-dash" class="touch-zone action-circle-btn">DASH</div>
             <div id="fire-btn" class="touch-zone action-circle-btn">FIRE</div>
@@ -228,9 +314,13 @@
     </div>
 
     <script>
-        // GLOBAL STATE VARIABLE REGISTRY
+        // GLOBAL STATE REGISTRY
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // Avatar Preview Canvas Handles
+        const avatarCanvas = document.getElementById('avatarCanvas');
+        const avatarCtx = avatarCanvas ? avatarCanvas.getContext('2d') : null;
 
         // Layout screens DOM handles
         const mainMenu = document.getElementById('main-menu');
@@ -246,7 +336,7 @@
         let isPaused = false;
         let level = 1;
         let maxUnlockedLevel = 1;
-        const TOTAL_LEVELS = 10;
+        const TOTAL_LEVELS = 100; // EXPANDED TO 100 LEVELS
         let coins = 0;
         let kills = 0;
         let lives = 3;
@@ -282,60 +372,60 @@
         };
 
         const RIDES = {
-            'NONE': { name: 'No Vehicle Ride', cost: 0 },
+            'NONE': { name: 'No Ride', cost: 0 },
             'BIKE': { name: 'Cyber Motorbike', cost: 400 },
             'CAR': { name: 'Super Sports Car', cost: 1500 },
-            'SHIP': { name: 'Galactic Spaceship', cost: 2500 },
-            'JET': { name: 'VTOL Stealth Fighter Fighter', cost: 3500 },
-            'HELI': { name: 'Attack Helicopter Helicopter', cost: 2000 },
-            'TIGER': { name: 'Saber Wild Tiger Animal', cost: 1800 }
+            'SHIP': { name: 'Spaceship', cost: 2500 },
+            'JET': { name: 'Stealth Fighter', cost: 3500 },
+            'HELI': { name: 'Attack Helicopter', cost: 2000 },
+            'TIGER': { name: 'Saber Tiger', cost: 1800 }
         };
 
         const PARACHUTES = {
-            'RED': { name: 'Crimson Drop Parachute', cost: 0, color: '#ff3333' },
-            'NEON': { name: 'Neon Toxic Parachute', cost: 300, color: '#39ff14' },
-            'GOLD': { name: 'Royal Gold Parachute', cost: 1000, color: '#ffd700' },
-            'PINK': { name: 'Magical Blossom Parachute', cost: 500, color: '#ff66cc' },
-            'CYAN': { name: 'Glacial Ice Parachute', cost: 400, color: '#00ffff' }
+            'RED': { name: 'Crimson Drop', cost: 0, color: '#ff3333' },
+            'NEON': { name: 'Neon Toxic', cost: 300, color: '#39ff14' },
+            'GOLD': { name: 'Royal Gold', cost: 1000, color: '#ffd700' },
+            'PINK': { name: 'Magical Blossom', cost: 500, color: '#ff66cc' },
+            'CYAN': { name: 'Glacial Ice', cost: 400, color: '#00ffff' }
         };
 
         // Complete 30 Items Emotes Array Registry
         const EMOTES_INVENTORY = [
-            { id: 'E_LOL', name: 'LOL Taunt Emote (Super Toxic)', cost: 5000, label: '😂 HAHAHA! LOSER! 😂' },
-            { id: 'E_CHAIR', name: 'Royal Golden Chair Relax', cost: 8000, label: '🪑 Sitting Like a King 🪑' },
-            { id: 'E_WAVE', name: 'Simple Friendly Wave', cost: 100, label: '👋 Hello There! 👋' },
-            { id: 'E_DANCE', name: 'Victory Breakdance Step', cost: 800, label: '💃 *Impeccable Footwork Dance* 💃' },
-            { id: 'E_FLEX', name: 'Heavy Alpha Muscle Flex', cost: 600, label: '💪 Pure Power Gains! 💪' },
-            { id: 'E_CRY', name: 'Salty Baby Cry Outpour', cost: 400, label: '😭 Boohoo! Go Cry! 😭' },
-            { id: 'E_CLAP', name: 'Sarcastic Slow Applause', cost: 200, label: '👏 Wow... Spectacular Failure 👏' },
-            { id: 'E_HEART', name: 'Kawaii Love Hearts Sign', cost: 500, label: '💖 Much Love 💖' },
-            { id: 'E_SALUTE', name: 'Military Vanguard Salute', cost: 350, label: '🫡 I Respect You Comrade 🫡' },
-            { id: 'E_THUMB', name: 'Direct Approval Thumbs Up', cost: 150, label: '👍 Good Job! 👍' },
-            { id: 'E_RAGE', name: 'Enraged Super Saiyan Scream', cost: 1000, label: '🤬 UNLEASHING RAGE TRUCKS! 🤬' },
-            { id: 'E_DAB', name: 'Classic Retro Style Dab', cost: 700, label: '🙅‍♂️ Absolute Style Dab! 🙅‍♂️' },
-            { id: 'E_FACEPALM', name: 'Ultimate Disbelief Facepalm', cost: 300, label: '🤦‍♂️ Unbelievable Blunder... 🤦‍♂️' },
-            { id: 'E_PEACE', name: 'Classic Anime Peace Sign', cost: 250, label: '✌️ Peace Out! Victory! ✌️' },
-            { id: 'E_SHRUG', name: 'Clueless Confused Shrug', cost: 200, label: '🤷‍♂️ Who Knows? IDK! 🤷‍♂️' },
-            { id: 'E_SLEEP', name: 'Boring Match Snore Sleep', cost: 450, label: '😴 Wake Me Up Later... Zzz 😴' },
-            { id: 'E_FIRE', name: 'On Flame Match Burner', cost: 1100, label: '🔥 ABSOLUTELY ON FIRE! 🔥' },
-            { id: 'E_CROWN', name: 'Arena Taj Summoning Crown', cost: 2500, label: '👑 Claiming My Throne 👑' },
-            { id: 'E_SHOCK', name: 'Absolute Stunned Mindblown', cost: 350, label: '😱 OMG! WHAT JUST HAPPENED?! 😱' },
-            { id: 'E_MONEY', name: 'Wealth Rain Rainmaker Cash', cost: 4000, label: '💸 Making It Rain Cash! 💸' },
-            { id: 'E_GHOST', name: 'Spooky Haunting Scare Ghost', cost: 600, label: '👻 Boo! Scared Ya? 👻' },
-            { id: 'E_CLOWN', name: 'Circus Clown Target Mark', cost: 1500, label: '🤡 You Are The Whole Circus 🤡' },
-            { id: 'E_WINK', name: 'Flirty Smooth Eyes Wink', cost: 200, label: '😉 All Calculated Smoothly 😉' },
-            { id: 'E_GG', name: 'Sportsmanlike Good Game Text', cost: 100, label: '🎮 GG WP! Well Played! 🎮' },
-            { id: 'E_BOO', name: 'Disapproving Crowd Thumbs Down', cost: 300, label: '👎 BOO! GET OFF STAGE! 👎' },
-            { id: 'E_ANGEL', name: 'Pure Holy Saint Halo Aura', cost: 900, label: '😇 Completely Innocent Angel 😇' },
-            { id: 'E_DEVIL', name: 'Sinister Mischievous Evil Smile', cost: 950, label: '😈 Pure Villain Energy Active 😈' },
-            { id: 'E_100', name: 'Flawless Score Keep Perfect', cost: 1200, label: '💯 Keeping It 100% Real 💯' },
-            { id: 'E_SPIN', name: 'Tornado Whirlwind Body Spin', cost: 1300, label: '🌀 Spinning Into Matrix! 🌀' },
-            { id: 'E_BOAST', name: 'Invincible Flex Champion Pose', cost: 3500, label: '🏆 UNDEFEATED ARENA GOD! 🏆' }
+            { id: 'E_LOL', name: 'LOL Taunt Emote', cost: 5000, label: '😂 HAHAHA! LOSER! 😂' },
+            { id: 'E_CHAIR', name: 'Royal Golden Chair', cost: 8000, label: '🪑 Sitting Like a King 🪑' },
+            { id: 'E_WAVE', name: 'Friendly Wave', cost: 100, label: '👋 Hello There! 👋' },
+            { id: 'E_DANCE', name: 'Victory Breakdance', cost: 800, label: '💃 *Impeccable Footwork Dance* 💃' },
+            { id: 'E_FLEX', name: 'Muscle Flex', cost: 600, label: '💪 Pure Power Gains! 💪' },
+            { id: 'E_CRY', name: 'Baby Cry Outpour', cost: 400, label: '😭 Boohoo! Go Cry! 😭' },
+            { id: 'E_CLAP', name: 'Slow Applause', cost: 200, label: '👏 Spectacular Failure 👏' },
+            { id: 'E_HEART', name: 'Kawaii Love Hearts', cost: 500, label: '💖 Much Love 💖' },
+            { id: 'E_SALUTE', name: 'Vanguard Salute', cost: 350, label: '🫡 Respect Comrade 🫡' },
+            { id: 'E_THUMB', name: 'Thumbs Up', cost: 150, label: '👍 Good Job! 👍' },
+            { id: 'E_RAGE', name: 'Super Saiyan Scream', cost: 1000, label: '🤬 UNLEASHING RAGE! 🤬' },
+            { id: 'E_DAB', name: 'Retro Style Dab', cost: 700, label: '🙅‍♂️ Absolute Style Dab! 🙅‍♂️' },
+            { id: 'E_FACEPALM', name: 'Facepalm', cost: 300, label: '🤦‍♂️ Unbelievable Blunder... 🤦‍♂️' },
+            { id: 'E_PEACE', name: 'Anime Peace Sign', cost: 250, label: '✌️ Peace Out! Victory! ✌️' },
+            { id: 'E_SHRUG', name: 'Confused Shrug', cost: 200, label: '🤷‍♂️ Who Knows? IDK! 🤷‍♂️' },
+            { id: 'E_SLEEP', name: 'Boring Match Snore', cost: 450, label: '😴 Wake Me Up Later... Zzz 😴' },
+            { id: 'E_FIRE', name: 'On Flame Match', cost: 1100, label: '🔥 ABSOLUTELY ON FIRE! 🔥' },
+            { id: 'E_CROWN', name: 'Summoning Crown', cost: 2500, label: '👑 Claiming My Throne 👑' },
+            { id: 'E_SHOCK', name: 'Mindblown Shock', cost: 350, label: '😱 OMG! WHAT JUST HAPPENED?! 😱' },
+            { id: 'E_MONEY', name: 'Wealth Rain Cash', cost: 4000, label: '💸 Making It Rain Cash! 💸' },
+            { id: 'E_GHOST', name: 'Spooky Ghost', cost: 600, label: '👻 Boo! Scared Ya? 👻' },
+            { id: 'E_CLOWN', name: 'Circus Clown', cost: 1500, label: '🤡 You Are The Whole Circus 🤡' },
+            { id: 'E_WINK', name: 'Smooth Eyes Wink', cost: 200, label: '😉 All Calculated Smoothly 😉' },
+            { id: 'E_GG', name: 'Good Game Text', cost: 100, label: '🎮 GG WP! Well Played! 🎮' },
+            { id: 'E_BOO', name: 'Thumbs Down', cost: 300, label: '👎 BOO! GET OFF STAGE! 👎' },
+            { id: 'E_ANGEL', name: 'Holy Saint Halo', cost: 900, label: '😇 Completely Innocent Angel 😇' },
+            { id: 'E_DEVIL', name: 'Mischievous Evil', cost: 950, label: '😈 Pure Villain Energy 😈' },
+            { id: 'E_100', name: 'Perfect 100', cost: 1200, label: '💯 Keeping It 100% Real 💯' },
+            { id: 'E_SPIN', name: 'Whirlwind Spin', cost: 1300, label: '🌀 Spinning Into Matrix! 🌀' },
+            { id: 'E_BOAST', name: 'Arena God Pose', cost: 3500, label: '🏆 UNDEFEATED ARENA GOD! 🏆' }
         ];
 
         let inventory = { skins: ['DEFAULT'], weapons: ['BASIC'], rides: ['NONE'], parachutes: ['RED'], emotes: [] };
 
-        // Real-time Physics Engine Processing Arrays
+        // Entities Data Registers
         let players = []; 
         let bullets = [];
         let enemyBullets = [];
@@ -343,14 +433,13 @@
         let particles = [];
         let damageTexts = [];
 
-        // Global Interactive Entities Data Structures
         let player = {
             x: 100, y: 300, width: 24, height: 42,
             vx: 0, vy: 0,
             isJumping: false, facing: 1, color: '#66fcf1',
             isDashing: false, dashTime: 0, dashCooldown: 0, dashSpeed: 14, dashDirection: 1,
             dashTrails: [], invincibleTimer: 0,
-            hp: 100, hasShield: false, shieldStrength: 0, hasRegen: false, regenTimer: 0
+            hp: 100
         };
 
         let pet = { x: 70, y: 280, radius: 7, color: '#ff00ff', angle: 0, floatSpeed: 0.08, floatAmplitude: 3, isFreeMoving: false, vx: 0, vy: 0, bounceTimer: 0 };
@@ -360,14 +449,12 @@
         let currentWave = 1;
         let bossSpawned = false;
 
-        // Visual Screen Camera Shaking Handles
         let shakeTime = 0, shakeIntensity = 0;
         function applyShake(t, i) { shakeTime = t; shakeIntensity = i; }
 
         let freezeFrames = 0;
         function triggerHitFreeze() { freezeFrames = 4; }
 
-        // Core Input Management Buffers
         let keys = {};
         let mouseX = 0, mouseY = 0;
         let isMouseDown = false;
@@ -381,11 +468,11 @@
         let joystickDistance = 0;
         const maxJoystickDist = 40;
 
-        // Custom 10-Min Story Mode Persistent Framework Registers
+        // Custom 10-Min Story Mode Registers
         let isStoryModeActive = false;
-        let storyTimer = 600; // 10 Minutes running stopwatch countdown
+        let storyTimer = 600; 
         let storyProgressDistance = 0;
-        let currentBiome = 'VILLAGE'; // VILLAGE -> JUNGLE -> DESERT cycle transitions
+        let currentBiome = 'VILLAGE';
         let storyGunLevel = 1;
         let foodItems = [];
         let gunPickups = [];
@@ -393,14 +480,13 @@
         let activeEmoteTimer = 0;
         let activeEmoteText = "";
 
-        // Interactive Parachute Dropping Flight state configuration logic
         let airDropLandingActive = false;
-        let airDropHeight = 0; // Starts high up, slides slowly to floor level target
+        let airDropHeight = 0;
 
-        // PERSISTENCE LOCALSTORAGE API SYNC CHANNELS
+        // PERSISTENCE LOCALSTORAGE API
         function saveProgress() {
-            const package = { maxUnlockedLevel, coins, unspentPoints, maxHP, baseSpeed, damageBonus, inventory, equippedSkin, equippedWeapon, equippedRide, equippedParachute, equippedEmote };
-            localStorage.setItem('RPGEvo_HassanArena_Save', JSON.stringify(package));
+            const packageData = { maxUnlockedLevel, coins, unspentPoints, maxHP, baseSpeed, damageBonus, inventory, equippedSkin, equippedWeapon, equippedRide, equippedParachute, equippedEmote };
+            localStorage.setItem('RPGEvo_HassanArena_Save', JSON.stringify(packageData));
         }
 
         function loadProgress() {
@@ -420,24 +506,23 @@
                 if(d.equippedRide) equippedRide = d.equippedRide;
                 if(d.equippedParachute) equippedParachute = d.equippedParachute;
                 if(d.equippedEmote) equippedEmote = d.equippedEmote;
-            } catch(e) { console.error("Save state decryption issue: ", e); }
+            } catch(e) { console.error("Save state error: ", e); }
         }
 
-        // TIMER INTERVAL MANAGEMENT SYSTEM (12-Hour Sync System Simulation)
         function runEventCountdown() {
             setInterval(() => {
                 const now = new Date();
                 const target = new Date();
                 target.setHours(target.getHours() + (12 - (target.getHours() % 12)), 0, 0, 0);
-                letdiff = target - now;
-                let hrs = Math.floor(letdiff / 3600000);
-                let mins = Math.floor((letdiff % 3600000) / 60000);
-                let secs = Math.floor((letdiff % 60000) / 1000);
+                let diff = target - now;
+                let hrs = Math.floor(diff / 3600000);
+                let mins = Math.floor((diff % 3600000) / 60000);
+                let secs = Math.floor((diff % 60000) / 1000);
                 document.getElementById('event-timer-bar').innerText = `Challenge Reset In: ${hrs}h ${mins}m ${secs}s`;
             }, 1000);
         }
 
-        // CORE SYSTEM STATE NAVIGATION HANDLERS
+        // CORE NAVIGATION HANDLERS
         function backToMain() {
             isStoryModeActive = false;
             gameActive = false;
@@ -460,7 +545,7 @@
             for(let i=1; i<=TOTAL_LEVELS; i++) {
                 let node = document.createElement('div');
                 node.className = `lvl-node ${i <= maxUnlockedLevel ? 'unlocked' : 'locked'}`;
-                node.innerText = `Lvl ${i}`;
+                node.innerText = `${i}`;
                 if(i <= maxUnlockedLevel) {
                     node.onclick = () => launchCampaignStage(i);
                 }
@@ -495,24 +580,24 @@
             goToLevelSelector();
         }
 
-        // AIR-DROP SEQUENCER ANIMATION MAPPING
         function triggerAirDropInitialization() {
             airDropLandingActive = true;
-            airDropHeight = 50; // High atmospheric visual coordinate
+            airDropHeight = 50; 
             player.y = airDropHeight;
-            player.vx = 0; player.vy = 1.2; // Smooth glided rate velocity
+            player.vx = 0; player.vy = 1.2;
             player.invincibleTimer = 90;
         }
 
-        // STAGE INITIALIZATION ROUTINES
+        // STAGE INITIALIZATION
         function launchCampaignStage(selectedLevel) {
             level = selectedLevel;
             isStoryModeActive = false;
             lvlSelectorScreen.style.display = 'none';
             mainMenu.style.display = 'none';
-            if (window.innerWidth < 900) mobileControlsContainer.style.display = 'block';
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                mobileControlsContainer.style.display = 'block';
+            }
 
-            // Reset Level configurations
             currentWave = 1;
             bossSpawned = false;
             levelCleared = false;
@@ -530,15 +615,17 @@
 
         function startStoryEventMode() {
             isStoryModeActive = true;
-            level = 99; // Flag identifier code
+            level = 99;
             mainMenu.style.display = 'none';
-            if (window.innerWidth < 900) mobileControlsContainer.style.display = 'block';
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                mobileControlsContainer.style.display = 'block';
+            }
 
             storyTimer = 600; 
             storyProgressDistance = 0;
             currentBiome = 'VILLAGE';
             storyGunLevel = 1;
-            player.hp = 200; // Strict demand requirement parameter bound
+            player.hp = 200;
             player.x = 80;
             player.color = SKINS[equippedSkin]?.color || '#66fcf1';
 
@@ -546,38 +633,31 @@
             foodItems = []; gunPickups = []; stayShelters = [];
             activeEmoteTimer = 0;
 
-            // Generate procedurally array nodes for continuous path scrolling
             generateStoryEnvironmentalNodes();
             triggerAirDropInitialization();
             gameActive = true;
         }
 
         function generateStoryEnvironmentalNodes() {
-            // Seed objects across linear space coordinates
             for (let i = 1; i <= 20; i++) {
                 let distAnchor = i * 400;
-                // Scatter food types drops
                 let fType = (i % 3 === 0) ? 'MEDKIT' : (i % 2 === 0) ? 'PIZZA' : 'APPLE';
                 foodItems.push({ x: distAnchor + Math.random()*150, y: floorY - 20, type: fType, radius: 10, used: false });
 
-                // Scatter upgrades gun parts chests
                 if (i % 4 === 0) {
                     gunPickups.push({ x: distAnchor + 50, y: floorY - 25, size: 16, picked: false });
                 }
-
-                // Inject shelter bases checkpoints
                 if (i % 6 === 0) {
                     stayShelters.push({ x: distAnchor - 100, y: floorY - 80, width: 90, height: 80 });
                 }
             }
-            // Spawn initial localized guards
             spawnStoryBiomeEnemies();
         }
 
         function spawnStoryBiomeEnemies() {
             enemies = [];
             let count = 4;
-            let typeName = (currentBiome === 'VILLAGE') ? 'Bandit Slasher' : (currentBiome === 'JUNGLE') ? 'Wild Alien Dog' : 'Mutant Desert Scorpion';
+            let typeName = (currentBiome === 'VILLAGE') ? 'Bandit Slasher' : (currentBiome === 'JUNGLE') ? 'Wild Alien Dog' : 'Mutant Scorpion';
             let colorCode = (currentBiome === 'VILLAGE') ? '#fca5a5' : (currentBiome === 'JUNGLE') ? '#4ade80' : '#fbbf24';
 
             for(let i=0; i<count; i++) {
@@ -589,30 +669,31 @@
             }
         }
 
-        // CAMPAIGN ENEMY GENERATION MODULE
+        // DYNAMIC 100 LEVEL ENEMY / BOSS SCALING MODULE
         function spawnCampaignWave() {
             enemies = [];
-            let count = 2 + level;
+            let count = 2 + Math.floor(level / 3);
             let enemyName = "Minion Mech";
             let enemyColor = '#f87171';
             
-            // Dynamic thematic alignment based on requested explicit progression structures
-            if(level === 1) { enemyName = "Baby Fire Dragon"; enemyColor = "#ef4444"; }
-            else if(level === 2) { enemyName = "Rabid Cyber Dog"; enemyColor = "#b45309"; }
-            else if(level === 3) { enemyName = "Venomous Neon Snake"; enemyColor = "#10b981"; }
-            else if(level === 4) { enemyName = "Armored Stegosaurus Dino"; enemyColor = "#06b6d4"; }
+            let cycle = level % 5;
+            if(cycle === 1) { enemyName = "Baby Fire Dragon"; enemyColor = "#ef4444"; }
+            else if(cycle === 2) { enemyName = "Rabid Cyber Dog"; enemyColor = "#b45309"; }
+            else if(cycle === 3) { enemyName = "Venomous Snake"; enemyColor = "#10b981"; }
+            else if(cycle === 4) { enemyName = "Armored Stegosaurus"; enemyColor = "#06b6d4"; }
+            else { enemyName = "Shadow Assassin"; enemyColor = "#a855f7"; }
 
             for(let i=0; i<count; i++) {
                 enemies.push({
-                    x: 500 + (i * 90),
+                    x: 500 + (i * 80),
                     y: floorY - 28,
                     size: 28,
-                    hp: 30 + (level * 10),
-                    maxHp: 30 + (level * 10),
-                    speed: 1.0 + (level * 0.15),
+                    hp: 30 + (level * 12),
+                    maxHp: 30 + (level * 12),
+                    speed: 1.0 + (level * 0.03),
                     color: enemyColor,
-                    name: enemyName,
-                    shootRate: 0.008 + (level * 0.002),
+                    name: `${enemyName} L${level}`,
+                    shootRate: 0.008 + (level * 0.001),
                     shootCooldown: 30 + Math.random()*40,
                     isBoss: false
                 });
@@ -623,13 +704,15 @@
             bossSpawned = true;
             let bossName = "Alpha Omega Mech";
             let bossColor = '#ff0055';
-            let bossHp = 200 + (level * 80);
+            let bossHp = 200 + (level * 95);
             let bSize = 55;
 
-            if(level === 1) { bossName = "Ancient Red Dragon Alpha"; bossColor = "#b91c1c"; }
-            else if(level === 2) { bossName = "Cerberus Guard Dog Hound"; bossColor = "#78350f"; }
-            else if(level === 3) { bossName = "Basilisk King Snake Monster"; bossColor = "#047857"; }
-            else if(level === 4) { bossName = "Tyrannosaurus Rex Dinosaur God"; bossColor = "#0e7490"; }
+            let cycle = level % 5;
+            if(cycle === 1) { bossName = "Ancient Red Dragon Alpha"; bossColor = "#b91c1c"; }
+            else if(cycle === 2) { bossName = "Cerberus Hound God"; bossColor = "#78350f"; }
+            else if(cycle === 3) { bossName = "Basilisk King Snake"; bossColor = "#047857"; }
+            else if(cycle === 4) { bossName = "Tyrannosaurus Dinosaur God"; bossColor = "#0e7490"; }
+            else { bossName = "Void Shadow Overlord"; bossColor = "#6b21a8"; }
 
             enemies.push({
                 x: 700,
@@ -637,31 +720,28 @@
                 size: bSize,
                 hp: bossHp,
                 maxHp: bossHp,
-                speed: 1.2,
+                speed: 1.2 + (level * 0.01),
                 color: bossColor,
-                name: `BOSS: ${bossName}`,
-                shootRate: 0.03,
+                name: `BOSS Lvl ${level}: ${bossName}`,
+                shootRate: 0.03 + (level * 0.001),
                 shootCooldown: 20,
                 isBoss: true
             });
-            spawnDamageText(600, 200, "⚠️ BOSS DETECTED IN SECTOR ⚠️", '#ff3333');
+            spawnDamageText(600, 200, `⚠️ BOSS DETECTED (LVL ${level}) ⚠️`, '#ff3333');
         }
 
-        // GLOBAL WEAPON FIRING MATRIX
         function fireWeapon() {
-            if (airDropLandingActive) return; // Prevent input freeze during descent
+            if (airDropLandingActive) return;
             let wCfg = WEAPONS[equippedWeapon] || WEAPONS['BASIC'];
             fireCooldown = wCfg.cooldown;
 
             let baseDmg = wCfg.damage + damageBonus;
             if(isStoryModeActive) {
-                baseDmg = 12 + (storyGunLevel * 6); // Mode isolation override variable scaling
+                baseDmg = 12 + (storyGunLevel * 6);
             }
 
-            // Target vector math
             let angle = Math.atan2(mouseY - (player.y + player.height/2), mouseX - (player.x + player.width/2));
-            if(window.innerWidth < 900) {
-                // If mobile auto trace closest foe vector targets
+            if(window.innerWidth < 850) {
                 angle = player.facing > 0 ? 0 : Math.PI;
                 if(enemies.length > 0) {
                     angle = Math.atan2((enemies[0].y + enemies[0].size/2) - (player.y + player.height/2), (enemies[0].x + enemies[0].size/2) - (player.x + player.width/2));
@@ -682,7 +762,6 @@
             applyShake(1, 2);
         }
 
-        // DYNAMIC PARTICLES EXPLOSION DISPATCHER
         function createExplosion(x, y, color, amt) {
             for(let i=0; i<amt; i++) {
                 particles.push({
@@ -701,7 +780,6 @@
             damageTexts.push({ x: x, y: y, text: txt, color: color, vx: (Math.random()-0.5)*2, vy: -1.5, life: 35 });
         }
 
-        // TRIGGER EMOTE EVENT ACTIONS VIA HOTKEYS/TOUCH
         function playActiveEmoteFromMobile() {
             if(equippedEmote === 'NONE') {
                 spawnDamageText(player.x, player.y - 30, "No Emote Equipped In Super Store!", '#ffaa00');
@@ -710,12 +788,11 @@
             let findNode = EMOTES_INVENTORY.find(e => e.id === equippedEmote);
             if(findNode) {
                 activeEmoteText = findNode.label;
-                activeEmoteTimer = 100; // Render ticks persistence limit boundaries
+                activeEmoteTimer = 100;
                 spawnDamageText(player.x, player.y - 25, "🎭 EMOTE ACTIVATED", '#d946ef');
             }
         }
 
-        // INPUT REGISTERING LISTENERS (KEYBOARD + INTERACTIVE MOUSE CLICK)
         window.addEventListener('keydown', (e) => {
             keys[e.code] = true;
             if(e.code === 'KeyE') { playActiveEmoteFromMobile(); }
@@ -747,14 +824,7 @@
         });
         window.addEventListener('mouseup', () => { isMouseDown = false; });
 
-        // MOBILE CONTROL OVERLAYS PHYSICAL MAPPINGS INTERFACES
-        const mapMobileBtn = (id, keyVal) => {
-            const element = document.getElementById(id);
-            if (!element) return;
-            element.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyVal] = true; });
-            element.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyVal] = false; });
-        };
-
+        // MOBILE CONTROLS
         document.getElementById('btn-dash')?.addEventListener('touchstart', (e) => { e.preventDefault(); triggerDash(); });
         document.getElementById('fire-btn')?.addEventListener('touchstart', (e) => { e.preventDefault(); isMouseDown = true; fireWeapon(); });
         document.getElementById('fire-btn')?.addEventListener('touchend', (e) => { e.preventDefault(); isMouseDown = false; });
@@ -783,9 +853,9 @@
             keys['KeyA'] = false; keys['KeyD'] = false; keys['Space'] = false;
         }
 
-        joystickBoundary.addEventListener('touchstart', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
-        joystickBoundary.addEventListener('touchmove', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
-        joystickBoundary.addEventListener('touchend', (e) => { e.preventDefault(); resetJoystick(); });
+        joystickBoundary?.addEventListener('touchstart', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
+        joystickBoundary?.addEventListener('touchmove', (e) => { e.preventDefault(); handleJoystickMove(e.targetTouches[0]); });
+        joystickBoundary?.addEventListener('touchend', (e) => { e.preventDefault(); resetJoystick(); });
 
         function triggerDash() {
             if (player.dashCooldown > 0 || player.isDashing || isPaused || airDropLandingActive) return;
@@ -796,7 +866,7 @@
             applyShake(4, 5);
         }
 
-        // ENGINE COMPUTATIONS TICK ENGINE LOOP
+        // GAME UPDATE ENGINE
         function update() {
             if (!gameActive || isPaused) return;
 
@@ -806,7 +876,6 @@
             if (fireCooldown > 0) fireCooldown--;
             if (activeEmoteTimer > 0) activeEmoteTimer--;
 
-            // AIR-DROP ACTIVE PARACHUTE RENDER LOGIC
             if(airDropLandingActive) {
                 player.y += player.vy;
                 if(player.y + player.height >= floorY) {
@@ -815,20 +884,16 @@
                     airDropLandingActive = false;
                     spawnDamageText(player.x, player.y - 10, "🪂 SAFE LANDING START!", '#00ffcc');
                 }
-                return; // Suppress control frames during parachuting operations
+                return;
             }
 
-            // Joystick Vector Input Mappings Integration
             if (joystickActive && joystickDistance > 12) {
                 const cosA = Math.cos(joystickAngle);
                 const sinA = Math.sin(joystickAngle);
 
-                // ADVANCED UP DRAG DETECTOR JUMP INTEGRATION
                 if (sinA < -0.65 && !player.isJumping) {
                     keys['Space'] = true;
                 }
-
-                // Horizontal translation mapping thresholds
                 if (cosA < -0.35) {
                     keys['KeyA'] = true; keys['KeyD'] = false;
                 } else if (cosA > 0.35) {
@@ -838,7 +903,6 @@
                 }
             }
 
-            // Core Player Translation Updates
             if (player.isDashing) {
                 player.vx = player.dashSpeed * player.dashDirection;
                 player.vy = 0;
@@ -870,7 +934,7 @@
                 if ((keys['Space'] || keys['KeyW'] || keys['ArrowUp']) && !player.isJumping) {
                     player.vy = -12.5;
                     player.isJumping = true;
-                    keys['Space'] = false; // Consume structural touch frame input
+                    keys['Space'] = false;
                 }
                 player.vy += gravity;
             }
@@ -878,18 +942,15 @@
             player.x += player.vx;
             player.y += player.vy;
 
-            // Enforce hard layout screen constraints
             if(!isStoryModeActive) {
                 if (player.x < 0) player.x = 0;
                 if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
             } else {
-                // STORY MODE RUNNER SCROLL ENGINE MAP TRANSLATION LOGIC
                 if(player.x > 450 && player.vx > 0) {
                     let diffShift = player.x - 450;
                     player.x = 450;
                     storyProgressDistance += diffShift;
 
-                    // Scroll dynamic objects array positions leftward
                     foodItems.forEach(f => f.x -= diffShift);
                     gunPickups.forEach(g => g.x -= diffShift);
                     stayShelters.forEach(s => s.x -= diffShift);
@@ -910,7 +971,7 @@
                 if (trail.life <= 0) player.dashTrails.splice(idx, 1);
             });
 
-            // COMPUTE PET FOLLOW MATHEMATICS ENGINE
+            // PET UPDATES
             pet.angle += pet.floatSpeed;
             if (!pet.isFreeMoving) {
                 let targetX = player.x + (player.facing > 0 ? -32 : 42);
@@ -925,7 +986,6 @@
                 if (pet.bounceTimer <= 0) pet.isFreeMoving = false;
             }
 
-            // DYNAMIC UPDATE LOOP FOR BULLETS MATRIX
             bullets.forEach((bullet, bIdx) => {
                 bullet.x += bullet.vx; bullet.y += bullet.vy;
                 if (bullet.x < 0 || bullet.x > canvas.width || bullet.y < 0 || bullet.y > canvas.height) {
@@ -954,24 +1014,20 @@
                 }
             });
 
-            // DYNAMIC STORY EVENT MODE MODE INTERACTIONS UTILITIES
             if(isStoryModeActive) {
-                storyTimer -= 0.0166; // Subtraction equivalent conversion matching ticks rate
+                storyTimer -= 0.0166;
                 if(storyTimer <= 0) {
                     settleStoryModeVictory();
                     return;
                 }
 
-                // Cyclic tracking updates for biome environmental maps shifts
-                if(storyProgressDistance > 5000 && currentBiome === 'VILLAGE') { currentBiome = 'JUNGLE'; spawnStoryBiomeEnemies(); spawnDamageText(400,150,"🌴 ENTERED DENSE JUNGLE BIOME 🌴",'#4ade80'); }
-                if(storyProgressDistance > 10000 && currentBiome === 'JUNGLE') { currentBiome = 'DESERT'; spawnStoryBiomeEnemies(); spawnDamageText(400,150,"🏜️ ENTERED ARID DESERT BIOME 🏜️",'#fbbf24'); }
+                if(storyProgressDistance > 5000 && currentBiome === 'VILLAGE') { currentBiome = 'JUNGLE'; spawnStoryBiomeEnemies(); spawnDamageText(400,150,"🌴 ENTERED JUNGLE BIOME 🌴",'#4ade80'); }
+                if(storyProgressDistance > 10000 && currentBiome === 'JUNGLE') { currentBiome = 'DESERT'; spawnStoryBiomeEnemies(); spawnDamageText(400,150,"🏜️ ENTERED DESERT BIOME 🏜️",'#fbbf24'); }
 
-                // Repopulate endless enemy waves dynamically if cleared out completely
                 if(enemies.length === 0 && Math.random() < 0.02) {
                     spawnStoryBiomeEnemies();
                 }
 
-                // Compute interactive food components collision
                 foodItems.forEach(f => {
                     if(!f.used && Math.hypot(player.x + player.width/2 - f.x, player.y + player.height/2 - f.y) < 25) {
                         f.used = true;
@@ -980,13 +1036,12 @@
                         if(f.type === 'PIZZA') healingAmt = 35;
                         if(f.type === 'MEDKIT') healingAmt = 75;
 
-                        player.hp = Math.min(200, player.hp + healingAmt); // Enforce max caps limits
+                        player.hp = Math.min(200, player.hp + healingAmt);
                         spawnDamageText(player.x, player.y - 15, `🍉 Ate ${f.type} (+${healingAmt} HP)`, labelColor);
                         createExplosion(f.x, f.y, '#4ade80', 6);
                     }
                 });
 
-                // Compute interactive weapon pickups parts adjustments
                 gunPickups.forEach(g => {
                     if(!g.picked && Math.hypot(player.x + player.width/2 - g.x, player.y + player.height/2 - g.y) < 25) {
                         g.picked = true;
@@ -997,7 +1052,6 @@
                 });
             }
 
-            // SYSTEM CALCULATIONS COMPUTE ENEMY MATRIX TARGETS
             enemies.forEach((enemy, eIdx) => {
                 if (enemy.x > player.x) { enemy.x -= enemy.speed; } else { enemy.x += enemy.speed; }
 
@@ -1012,7 +1066,6 @@
                     enemy.shootCooldown = 70;
                 }
 
-                // Player physical body contact collision
                 if (enemy.x < player.x + player.width && enemy.x + enemy.size > player.x &&
                     enemy.y < player.y + player.height && enemy.y + enemy.size > player.y) {
                     
@@ -1027,7 +1080,6 @@
                     }
                 }
 
-                // Projectile impacts validation
                 bullets.forEach((b, bIdx) => {
                     if (b.x > enemy.x && b.x < enemy.x + enemy.size && b.y > enemy.y && b.y < enemy.y + enemy.size) {
                         if (b.pierces && b.hitEnemies.includes(enemy)) return;
@@ -1043,21 +1095,20 @@
                             kills++;
                             
                             if(!isStoryModeActive) {
-                                coins += 25; // Continuous revenue injection stream
+                                coins += 25 + Math.floor(level * 1.5);
                                 if (enemies.length === 0) {
                                     if (currentWave < 2) { currentWave++; spawnCampaignWave(); } 
                                     else if (!bossSpawned) { spawnCampaignLevelBoss(); } 
                                     else { triggerCampaignSuccessExecution(); }
                                 }
                             } else {
-                                coins += 40; // Augmented event coins multiplier payouts
+                                coins += 40;
                             }
                         }
                     }
                 });
             });
 
-            // SYSTEM LEVEL PORTAL COLLISION ROUTINES
             if (levelCleared && portal) {
                 portal.glow += 0.05;
                 if (player.x + player.width > portal.x && player.x < portal.x + portal.width && player.y + player.height > portal.y) {
@@ -1070,12 +1121,10 @@
                 }
             }
 
-            // Render array updates cleanup counters
             damageTexts.forEach((dt, idx) => { dt.y += dt.vy; dt.life--; if (dt.life <= 0) damageTexts.splice(idx, 1); });
             particles.forEach((p, idx) => { p.x += p.vx; p.y += p.vy; p.life--; if (p.life <= 0) particles.splice(idx, 1); });
 
-            // Update DOM hud labels registers
-            document.getElementById('level-val').innerText = isStoryModeActive ? "STORY EVENT" : level;
+            document.getElementById('level-val').innerText = isStoryModeActive ? "EVENT" : level;
             document.getElementById('coins-val').innerText = coins;
             document.getElementById('hp-val').innerText = Math.round(player.hp);
             document.getElementById('max-hp-val').innerText = isStoryModeActive ? 200 : (maxHP + (SKINS[equippedSkin]?.hpBonus || 0));
@@ -1087,14 +1136,14 @@
             levelCleared = true;
             portal = { x: 700, y: floorY - 90, width: 45, height: 90, glow: 0 };
             
-            let prizeCoins = 200 + (level * 50);
+            let prizeCoins = 200 + (level * 20);
             let prizePts = 3;
             coins += prizeCoins;
             unspentPoints += prizePts;
 
             lvlScreen.style.display = 'flex';
             document.getElementById('level-prize-box').innerHTML = `
-                <h4 style="margin: 0; color: #ffd700; text-transform: uppercase;">🎁 ARENA PRIZE BOX REWARDS 🎁</h4>
+                <h4 style="margin: 0; color: #ffd700; text-transform: uppercase;">🎁 LEVEL ${level} REWARDS 🎁</h4>
                 <p style="font-size: 14px; margin: 5px 0;">Gold Coins Won: <b style="color:#00ffcc;">+${prizeCoins} Coins</b></p>
                 <p style="font-size: 14px; margin: 5px 0;">Stat Skill Points: <b style="color:#ffaa00;">+${prizePts} Points Unlocked</b></p>
             `;
@@ -1106,7 +1155,7 @@
 
         function settleStoryModeVictory() {
             gameActive = false;
-            let finalReward = 2500; // Premium flat payout rate limits
+            let finalReward = 2500;
             coins += finalReward;
             saveProgress();
             
@@ -1118,7 +1167,6 @@
         function checkPlayerDeath() {
             if (player.hp <= 0) {
                 if(isStoryModeActive) {
-                    // Respawn penalty reduction configuration mechanics
                     player.hp = 200;
                     player.x = 80;
                     storyGunLevel = Math.max(1, storyGunLevel - 1);
@@ -1152,12 +1200,11 @@
             c.lineTo(x + w, y + w*0.7);
             c.lineTo(x + w*0.9, y + w*0.2);
             c.lineTo(x + w*0.7, y + w*0.5);
-            c.lineTo(x + w*0.5, y + w*0.1); // Center Peak high crown point
+            c.lineTo(x + w*0.5, y + w*0.1);
             c.lineTo(x + w*0.3, y + w*0.5);
             c.lineTo(x + w*0.1, y + w*0.2);
             c.closePath();
             c.fill();
-            // Royal diamond inclusions dots drawing
             c.fillStyle = '#ff0055';
             c.fillRect(x + w*0.5 - 2, y + w*0.1 - 2, 4, 4);
             c.fillRect(x + w*0.1 - 2, y + w*0.2 - 2, 4, 4);
@@ -1169,31 +1216,26 @@
             if(flash && Math.floor(Date.now()/50)%2===0) return;
             c.save();
             
-            // Draw active chair sitting layout pose state adjustments
             if(activeEmoteTimer > 0 && equippedEmote === 'E_CHAIR') {
-                c.fillStyle = '#854d0e'; // Wooden stool design
+                c.fillStyle = '#854d0e';
                 c.fillRect(x - 5, y + h - 18, w + 10, 8);
                 c.fillRect(x, y + h - 10, 4, 10);
                 c.fillRect(x + w - 4, y + h - 10, 4, 10);
                 
                 c.fillStyle = baseColor;
-                c.fillRect(x, y + 8, w, h - 20); // Compressed sitting frame box block
+                c.fillRect(x, y + 8, w, h - 20);
                 c.fillStyle = '#f3f4f6';
                 c.beginPath(); c.arc(x + w/2, y + 4, 6, 0, Math.PI*2); c.fill();
                 c.restore();
                 return;
             }
 
-            // Head render processing nodes
             c.fillStyle = '#ffedd5';
-            let headX = isRight ? x + w - 8 : x + 8;
             c.beginPath(); c.arc(x + w/2, y + 7, 7, 0, Math.PI*2); c.fill();
             
-            // Core Body Torso block
             c.fillStyle = baseColor;
             c.fillRect(x, y + 14, w, h - 26);
             
-            // Limbs translation positions logic
             c.fillStyle = '#1f2937';
             c.fillRect(x + 2, y + h - 12, 6, 12);
             c.fillRect(x + w - 8, y + h - 12, 6, 12);
@@ -1209,26 +1251,26 @@
                 c.fillStyle = '#000';
                 c.beginPath(); c.arc(px - 6, py + 38, 7, 0, Math.PI*2); c.arc(px + 30, py + 38, 7, 0, Math.PI*2); c.fill();
             } else if(type === 'CAR') {
-                c.fillStyle = '#f59e0b'; // Sports chassis frame styling
+                c.fillStyle = '#f59e0b';
                 c.fillRect(px - 18, py + 20, 58, 16);
-                c.fillStyle = '#38bdf8'; c.fillRect(px + 6, py + 12, 16, 8); // Windshield box block
+                c.fillStyle = '#38bdf8'; c.fillRect(px + 6, py + 12, 16, 8);
                 c.fillStyle = '#111';
                 c.beginPath(); c.arc(px - 10, py + 36, 8, 0, Math.PI*2); c.arc(px + 32, py + 36, 8, 0, Math.PI*2); c.fill();
             } else if(type === 'HELI') {
                 c.fillStyle = '#4b5563';
                 c.fillRect(px - 20, py + 10, 60, 24);
-                c.fillStyle = '#111'; c.fillRect(px - 5, py + 6, 34, 4); // Blade rotor line vector
+                c.fillStyle = '#111'; c.fillRect(px - 5, py + 6, 34, 4);
             } else if(type === 'SHIP') {
                 c.fillStyle = '#a855f7';
                 c.beginPath(); c.moveTo(px - 25, py + 35); c.lineTo(px + 45, py + 35); c.lineTo(px + 10, py + 8); c.closePath(); c.fill();
             } else if(type === 'JET') {
                 c.fillStyle = '#0f172a';
                 c.fillRect(px - 25, py + 15, 70, 18);
-                c.fillStyle = '#ef4444'; c.fillRect(px - 20, py + 8, 10, 8); // Delta wing structure components
+                c.fillStyle = '#ef4444'; c.fillRect(px - 20, py + 8, 10, 8);
             } else if(type === 'TIGER') {
-                c.fillStyle = '#ea580c'; // Wild predator orange scheme bounds
+                c.fillStyle = '#ea580c';
                 c.fillRect(px - 15, py + 22, 50, 16);
-                c.fillStyle = '#000'; c.fillRect(px + 20, py + 18, 10, 6); // Striped jaws markers
+                c.fillStyle = '#000'; c.fillRect(px + 20, py + 18, 10, 6);
             }
             c.restore();
         }
@@ -1239,29 +1281,23 @@
             c.shadowBlur = e.isBoss ? 15 : 6;
             c.shadowColor = e.color;
             
-            // Direct structural rendering matching dynamic thematic types variations
             if(e.name.includes("Dragon")) {
-                // Dragon custom winged polygon shape layout matrix
                 c.beginPath();
                 c.moveTo(e.x, e.y + e.size);
                 c.lineTo(e.x + e.size, e.y + e.size);
                 c.lineTo(e.x + e.size*0.5, e.y);
-                c.lineTo(e.x - 10, e.y + e.size*0.3); // Extruded side wing tip vector
+                c.lineTo(e.x - 10, e.y + e.size*0.3);
                 c.closePath(); c.fill();
             } else if(e.name.includes("Dog")) {
-                // Quadruped rectangular chassis footprint frame representation
                 c.fillRect(e.x, e.y + e.size*0.3, e.size, e.size*0.7);
-                c.fillStyle = '#000'; c.fillRect(e.x + e.size*0.2, e.y, e.size*0.4, e.size*0.4); // Head node blocker
+                c.fillStyle = '#000'; c.fillRect(e.x + e.size*0.2, e.y, e.size*0.4, e.size*0.4);
             } else if(e.name.includes("Snake")) {
-                // Sinuous undulating chain stacks structure vector representation
                 c.fillRect(e.x, e.y + e.size*0.7, e.size, e.size*0.3);
                 c.fillRect(e.x + e.size*0.7, e.y, e.size*0.3, e.size*0.8);
             } else if(e.name.includes("Dino") || e.name.includes("Tyrannosaurus")) {
-                // Massive towering vertical layout platform pillar block representation
                 c.fillRect(e.x, e.y, e.size*0.8, e.size);
-                c.fillRect(e.x + e.size*0.6, e.y + 8, e.size*0.5, e.size*0.3); // Maw inclusion extension plates
+                c.fillRect(e.x + e.size*0.6, e.y + 8, e.size*0.5, e.size*0.3);
             } else {
-                // Default fallback structural mechanical box matrix logic frame
                 c.fillRect(e.x, e.y, e.size, e.size);
             }
             
@@ -1280,29 +1316,26 @@
                 ctx.translate(dx, dy);
             }
 
-            // Continuous dynamic environmental biome backgrounds alterations logic mapping
             if(!isStoryModeActive) {
                 ctx.fillStyle = '#090a10'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             } else {
                 if(currentBiome === 'VILLAGE') ctx.fillStyle = '#0d131a';
                 else if(currentBiome === 'JUNGLE') ctx.fillStyle = '#061611';
-                else ctx.fillStyle = '#1c150c'; // Arid scorched desert canvas frame tint color
+                else ctx.fillStyle = '#1c150c';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
 
-            // Floor layout boundary painting vectors
             ctx.fillStyle = '#141724'; ctx.fillRect(0, floorY, canvas.width, canvas.height - floorY);
             ctx.strokeStyle = isStoryModeActive ? '#ffaa00' : '#00ffcc';
             ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(0, floorY); ctx.lineTo(canvas.width, floorY); ctx.stroke();
 
-            // Render interactive atmospheric air-drop parachute graphic models elements
             if(airDropLandingActive) {
                 let pColor = PARACHUTES[equippedParachute]?.color || '#ff3333';
                 ctx.save();
                 ctx.fillStyle = pColor;
                 ctx.beginPath();
-                ctx.arc(player.x + player.width/2, player.y - 18, 26, Math.PI, 0, false); // Parachute dome arc canopy
+                ctx.arc(player.x + player.width/2, player.y - 18, 26, Math.PI, 0, false);
                 ctx.fill();
                 ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -1312,15 +1345,12 @@
                 ctx.restore();
             }
 
-            // Draw Campaign Portal Entities
             if (levelCleared && portal) {
                 ctx.fillStyle = '#d946ef'; ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
                 ctx.fillStyle = '#000'; ctx.fillRect(portal.x + 4, portal.y + 4, portal.width - 8, portal.height - 8);
             }
 
-            // STORY MODE REALTIME ENVIRONMENT STATIC OBJECTS WORLD RENDERING
             if(isStoryModeActive) {
-                // Stay safehouses structures blocks loops
                 ctx.fillStyle = 'rgba(255,255,255,0.06)';
                 stayShelters.forEach(s => {
                     ctx.fillRect(s.x, s.y, s.width, s.height);
@@ -1328,7 +1358,6 @@
                     ctx.fillStyle = '#3b82f6'; ctx.font = '9px sans-serif'; ctx.fillText("STAY SHELTER REFUGE", s.x + 5, s.y + 15);
                 });
 
-                // Food collectibles units loops
                 foodItems.forEach(f => {
                     if(f.used) return;
                     ctx.fillStyle = (f.type === 'MEDKIT') ? '#ef4444' : (f.type === 'PIZZA') ? '#eab308' : '#22c55e';
@@ -1336,7 +1365,6 @@
                     ctx.fillStyle = '#fff'; ctx.font = '8px Arial'; ctx.fillText(f.type[0], f.x - 3, f.y + 3);
                 });
 
-                // Guns chests loops
                 gunPickups.forEach(g => {
                     if(g.picked) return;
                     ctx.fillStyle = '#d946ef'; ctx.fillRect(g.x, g.y, g.size, g.size);
@@ -1344,7 +1372,6 @@
                 });
             }
 
-            // Draw player dash trailing shadows components
             player.dashTrails.forEach(trail => {
                 ctx.fillStyle = trail.color;
                 ctx.globalAlpha = trail.life / 10;
@@ -1352,15 +1379,12 @@
             });
             ctx.globalAlpha = 1.0;
 
-            // DRAW MOUNTED VEHICLE BASE FIRST FOR CORRECT DEPTH SORTING LAYOUT ORDER
             if(equippedRide !== 'NONE') {
                 drawRideVehicle(ctx, player.x, player.y, equippedRide);
             }
 
-            // PAINT CHARACTER MANIFOLD COMPONENT MODULES
             drawHumanBody(ctx, player.x, player.y, player.width, player.height, player.color, (player.facing > 0), (player.invincibleTimer > 0));
 
-            // RENDER ACTIVE EMOTE BUBBLE FLOATING SYSTEM TEXT LOGIC OVERHEAD
             if(activeEmoteTimer > 0 && activeEmoteText !== "") {
                 ctx.save();
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
@@ -1369,7 +1393,6 @@
                 ctx.font = 'bold 12px sans-serif';
                 let txtM = ctx.measureText(activeEmoteText).width;
                 
-                // Draw rounded text frame wrapper block caps box panels
                 ctx.fillRect(player.x + player.width/2 - txtM/2 - 8, player.y - 40, txtM + 16, 22);
                 ctx.strokeRect(player.x + player.width/2 - txtM/2 - 8, player.y - 40, txtM + 16, 22);
                 
@@ -1378,17 +1401,14 @@
                 ctx.restore();
             }
 
-            // Draw Crown for Royal King Emotes configurations mapping
             if(activeEmoteTimer > 0 && equippedEmote === 'E_CHAIR') {
                 drawCrown(ctx, player.x + player.width/2 - 10, player.y - 14, 20);
             }
 
-            // DRAW FLOATING COMPANION ORBIT PET NODES
             ctx.fillStyle = pet.color;
             ctx.beginPath(); ctx.arc(pet.x, pet.y, pet.radius, 0, Math.PI*2); ctx.fill();
             ctx.strokeStyle = '#fff'; ctx.strokeRect(pet.x - pet.radius - 1, pet.y - pet.radius - 1, pet.radius*2 + 2, pet.radius*2 + 2);
 
-            // Draw All Active Game Entities
             enemies.forEach(e => drawEnemy(ctx, e));
             bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI*2); ctx.fill(); });
             enemyBullets.forEach(eb => { ctx.fillStyle = eb.color; ctx.beginPath(); ctx.arc(eb.x, eb.y, eb.size, 0, Math.PI*2); ctx.fill(); });
@@ -1396,27 +1416,87 @@
             ctx.globalAlpha = 1.0;
             damageTexts.forEach(dt => { ctx.fillStyle = dt.color; ctx.font = 'bold 12px Courier New'; ctx.fillText(dt.text, dt.x, dt.y); });
 
-            // DRAW REALTIME HUD OVERLAYS FOR STORY RUN TIME CHANNELS OVERRIDE COUNTERS
             if(isStoryModeActive) {
                 ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
                 let m = Math.floor(storyTimer / 60);
                 let s = Math.floor(storyTimer % 60);
-                ctx.fillText(`⏱️ CAMPAIGN CLOCK STATUS: ${m}m ${s}s`, 20, 70);
-                ctx.fillText(`🗺️ PATH VECTOR DISTANCE: ${Math.floor(storyProgressDistance)}m [BIOME: ${currentBiome}]`, 20, 90);
-                ctx.fillText(`🔫 STATIC POWER LEVEL: LVL ${storyGunLevel}`, 20, 110);
+                ctx.fillText(`⏱️ CLOCK: ${m}m ${s}s`, 20, 70);
+                ctx.fillText(`🗺️ DISTANCE: ${Math.floor(storyProgressDistance)}m [BIOME: ${currentBiome}]`, 20, 90);
+                ctx.fillText(`🔫 GUN LVL: ${storyGunLevel}`, 20, 110);
             }
 
             ctx.restore();
         }
 
-        // PRINCIPAL DRIVER RUNNER TICK TICK CLOCK INTERVAL HANDLER REGISTER
+        // --- DEDICATED LIVE AVATAR PREVIEW RENDERER (STORE SYSTEM) ---
+        function drawAvatarPreview() {
+            if(!avatarCtx || storeScreen.style.display === 'none') return;
+
+            avatarCtx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
+            
+            // Draw pedestal base
+            avatarCtx.fillStyle = '#1e293b';
+            avatarCtx.fillRect(10, 160, 120, 12);
+            avatarCtx.strokeStyle = '#00ffcc';
+            avatarCtx.strokeRect(10, 160, 120, 12);
+
+            let skinColor = SKINS[equippedSkin]?.color || '#66fcf1';
+            let avX = 58;
+            let avY = 100;
+            let avW = 24;
+            let avH = 42;
+
+            // Draw parachute behind avatar if selected tab or equipped
+            if(equippedParachute && equippedParachute !== 'NONE') {
+                let pColor = PARACHUTES[equippedParachute]?.color || '#ff3333';
+                avatarCtx.fillStyle = pColor;
+                avatarCtx.beginPath();
+                avatarCtx.arc(avX + avW/2, avY - 25, 28, Math.PI, 0, false);
+                avatarCtx.fill();
+                avatarCtx.strokeStyle = '#888';
+                avatarCtx.beginPath();
+                avatarCtx.moveTo(avX + avW/2 - 26, avY - 25); avatarCtx.lineTo(avX, avY);
+                avatarCtx.moveTo(avX + avW/2 + 26, avY - 25); avatarCtx.lineTo(avX + avW, avY);
+                avatarCtx.stroke();
+            }
+
+            // Draw Ride/Vehicle under Avatar
+            if(equippedRide !== 'NONE') {
+                drawRideVehicle(avatarCtx, avX, avY + 10, equippedRide);
+            }
+
+            // Draw Avatar Body
+            drawHumanBody(avatarCtx, avX, avY, avW, avH, skinColor, true, false);
+
+            // Draw Equipped Emote preview overhead
+            if(equippedEmote && equippedEmote !== 'NONE') {
+                let eNode = EMOTES_INVENTORY.find(e => e.id === equippedEmote);
+                if(eNode) {
+                    avatarCtx.fillStyle = 'rgba(0,0,0,0.8)';
+                    avatarCtx.strokeStyle = '#d946ef';
+                    avatarCtx.fillRect(10, 20, 120, 22);
+                    avatarCtx.strokeRect(10, 20, 120, 22);
+                    avatarCtx.fillStyle = '#fff';
+                    avatarCtx.font = 'bold 9px sans-serif';
+                    avatarCtx.fillText(eNode.label.substring(0, 18), 14, 34);
+                }
+            }
+
+            // Weapon indicator
+            let wColor = WEAPONS[equippedWeapon]?.color || '#00ffcc';
+            avatarCtx.fillStyle = wColor;
+            avatarCtx.fillRect(avX + avW, avY + 18, 12, 4);
+        }
+
+        // MAIN LOOP
         function mainLoop() {
             update();
             draw();
+            drawAvatarPreview();
             requestAnimationFrame(mainLoop);
         }
 
-        // --- SUPER EXPANDED WEB STORE MATRIX TAB CONTROLLERS MANAGEMENT LOGIC ---
+        // --- WEB STORE MATRIX CONTROLLERS ---
         let currentStoreTab = 'skins';
         function switchStoreTab(tabName) {
             currentStoreTab = tabName;
@@ -1478,9 +1558,9 @@
             
             card.innerHTML = `
                 <p style="font-weight:bold; color:#fff;">${name}</p>
-                <p style="color:#00ffcc;">${owned ? 'OWNED INVENTORY' : cost + ' Coins'}</p>
-                <button class="btn" style="padding:4px 10px; font-size:11px;" id="act-${key}">
-                    ${equipped ? 'EQUIPPED ACTIVE' : owned ? 'EQUIP LOADOUT' : 'BUY NOW'}
+                <p style="color:#00ffcc;">${owned ? 'OWNED' : cost + ' Coins'}</p>
+                <button class="btn" style="padding:4px 8px; font-size:10px;" id="act-${key}">
+                    ${equipped ? 'EQUIPPED' : owned ? 'EQUIP' : 'BUY'}
                 </button>
             `;
             
@@ -1498,7 +1578,7 @@
                         saveProgress();
                         renderStoreGridContent();
                         document.getElementById('coins-val').innerText = coins;
-                    } else { alert("Insufficient Coins Balance! Fight more campaign rounds."); }
+                    } else { alert("Insufficient Coins Balance!"); }
                 } else {
                     if(type === 'skin') equippedSkin = key;
                     if(type === 'weapon') equippedWeapon = key;
@@ -1511,16 +1591,14 @@
             };
         }
 
-        // STARTUP DRIVER TRIGGERS REGISTRATION PROCEDURES
+        // STARTUP INIT
         loadProgress();
         runEventCountdown();
         
-        // Fire Loop triggers mapping listener integration setup
         setInterval(() => {
             if(gameActive && isMouseDown && fireCooldown <= 0) { fireWeapon(); }
         }, 20);
 
-        // Run primary animation drawing matrix loop initialization thread sequence
         requestAnimationFrame(mainLoop);
     </script>
 </body>
