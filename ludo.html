@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hassan Ludo Game</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #fff; text-align: center; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        .game-card { position: relative; width: 100%; max-width: 480px; padding: 10px; }
+        
+        /* Title & Top Controls */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; }
+        .title { font-size: 1.4rem; font-weight: bold; color: #f59e0b; text-shadow: 0 0 10px rgba(245,158,11,0.5); }
+        .btn { padding: 6px 12px; font-size: 0.85rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-danger { background: #ef4444; }
+        .btn-warning { background: #f59e0b; }
+
+        /* Ludo Board Grid Setup */
+        #board-container { width: 100%; aspect-ratio: 1/1; position: relative; background: #1e293b; border-radius: 12px; overflow: hidden; border: 3px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.7); }
+        .grid { display: grid; grid-template-columns: repeat(15, 1fr); grid-template-rows: repeat(15, 1fr); width: 100%; height: 100%; }
+        .cell { border: 0.5px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; position: relative; font-size: 10px; }
+
+        /* Homes Arena Styling */
+        .home { grid-row-span: 6; grid-column-span: 6; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 8px; }
+        .red-home { background: #dc2626; grid-area: 1 / 1 / 7 / 7; }
+        .green-home { background: #16a34a; grid-area: 1 / 10 / 7 / 16; }
+        .yellow-home { background: #eab308; grid-area: 10 / 10 / 16 / 16; }
+        .blue-home { background: #2563eb; grid-area: 10 / 1 / 16 / 7; }
+
+        .home-inner { width: 70%; height: 70%; background: #0f172a; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 8px; }
+        .home-box { background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        /* Center / Paths */
+        .center-home { grid-area: 7 / 7 / 10 / 10; background: #334155; border: 2px solid #64748b; border-radius: 6px; }
+        .path-red { background: #fca5a5; }
+        .path-green { background: #86efac; }
+        .path-yellow { background: #fde047; }
+        .path-blue { background: #93c5fd; }
+        .safe-star { color: #f59e0b; font-size: 12px; }
+
+        /* Tokens (Gotis) */
+        .token { width: 75%; height: 75%; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; transition: all 0.2s ease; position: absolute; }
+        .token.red { background: #ef4444; }
+        .token.green { background: #22c55e; }
+        .token.yellow { background: #eab308; }
+        .token.blue { background: #3b82f6; }
+        .token.active { animation: pulse 0.8s infinite alternate; z-index: 20; border-color: #f59e0b; }
+
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.25); } }
+
+        /* Dice Section */
+        .controls-area { display: flex; justify-content: space-around; align-items: center; margin-top: 12px; background: #1e293b; padding: 10px; border-radius: 10px; }
+        .turn-card { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .turn-indicator { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; }
+        
+        .dice { width: 50px; height: 50px; background: #fff; color: #000; border-radius: 10px; font-size: 1.8rem; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 2px solid #cbd5e1; }
+        .dice.disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Popups / Modals */
+        .popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; z-index: 100; padding: 20px; }
+        .popup h2 { font-size: 1.8rem; color: #f59e0b; margin-bottom: 10px; }
+        .popup p { font-size: 1rem; color: #94a3b8; margin-bottom: 20px; }
+        .player-options { display: flex; gap: 10px; margin-bottom: 20px; }
+        .opt-btn { padding: 12px 20px; font-size: 1.1rem; background: #334155; border: 2px solid #475569; color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .opt-btn.selected { background: #f59e0b; border-color: #f59e0b; color: #000; }
+
+        .winner-badge { background: #1e293b; border: 1px solid #334155; padding: 8px 16px; border-radius: 6px; margin: 5px; font-weight: bold; width: 80%; }
+    </style>
+</head>
+<body>
+
+<div class="game-card">
+    <div class="header">
+        <div class="title">Hassan Ludo Game</div>
+        <div>
+            <button class="btn btn-warning" onclick="togglePause()">Pause</button>
+            <button class="btn btn-danger" onclick="resetToLobby()">Lobby</button>
+        </div>
+    </div>
+
+    <!-- Board Arena -->
+    <div id="board-container">
+        <div class="grid" id="board-grid"></div>
+
+        <!-- Lobby / Welcome Modal -->
+        <div id="lobbyModal" class="popup">
+            <h2>Hassan Ludo Game</h2>
+            <p>Select Total Players to Start Arena Match</p>
+            <div class="player-options">
+                <button class="opt-btn" onclick="selectPlayers(2)">2 Players</button>
+                <button class="opt-btn" onclick="selectPlayers(3)">3 Players</button>
+                <button class="opt-btn selected" onclick="selectPlayers(4)">4 Players</button>
+            </div>
+            <button class="btn" style="padding: 12px 30px; font-size: 1.1rem;" onclick="startGame()">Start Match</button>
+        </div>
+
+        <!-- Pause Modal -->
+        <div id="pauseModal" class="popup" style="display: none;">
+            <h2>Game Paused</h2>
+            <button class="btn" style="margin-top: 15px;" onclick="togglePause()">Resume</button>
+        </div>
+
+        <!-- Winner Popup Modal -->
+        <div id="winnerModal" class="popup" style="display: none;">
+            <h2 id="winnerText">Victory Announcement!</h2>
+            <div id="winnerList" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+            <button id="nextOrLobbyBtn" class="btn" style="margin-top: 20px;" onclick="closeWinnerModal()">Continue</button>
+        </div>
+    </div>
+
+    <!-- Dice Control Section -->
+    <div class="controls-area">
+        <div class="turn-card">
+            <div id="turnIndicator" class="turn-indicator" style="background:#ef4444;"></div>
+            <span id="turnText">Red's Turn</span>
+        </div>
+        <div id="diceBtn" class="dice" onclick="rollDice()">🎲</div>
+    </div>
+</div>
+
+<script>
+    // Audio Synth Engine (Web Audio API for pure HTML5 offline sounds)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'roll') {
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'move') {
+            osc.frequency.setValueAtTime(400, now);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now); osc.stop(now + 0.05);
+        } else if (type === 'cut') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.exponentialRampToValueAtTime(60, now + 0.25);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+            osc.start(now); osc.stop(now + 0.25);
+        } else if (type === 'win') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.4);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
+        }
+    }
+
+    // State Variables
+    let totalPlayers = 4;
+    let activePlayerIndex = 0;
+    const playerColors = ['red', 'green', 'yellow', 'blue'];
+    let enabledPlayers = [];
+    let diceValue = 0;
+    let diceRolled = false;
+    let isPaused = false;
+    let winnersArr = [];
+
+    // Path maps for 15x15 board tracking
+    const commonPath = [
+        [6,1], [6,2], [6,3], [6,4], [6,5],
+        [5,6], [4,6], [3,6], [2,6], [1,6], [0,6],
+        [0,7],
+        [0,8], [1,8], [2,8], [3,8], [4,8], [5,8],
+        [6,9], [6,10], [6,11], [6,12], [6,13], [6,14],
+        [7,14],
+        [8,14], [8,13], [8,12], [8,11], [8,10], [8,9],
+        [9,8], [10,8], [11,8], [12,8], [13,8], [14,8],
+        [14,7],
+        [14,6], [13,6], [12,6], [11,6], [10,6], [9,6],
+        [8,5], [8,4], [8,3], [8,2], [8,1], [8,0],
+        [7,0], [6,0]
+    ];
+
+    const safeCoordinates = ["6,1", "2,8", "8,13", "12,6", "6,2", "1,6", "8,12", "13,8"];
+
+    const homePaths = {
+        red: [[7,1], [7,2], [7,3], [7,4], [7,5], [7,6]],
+        green: [[1,7], [2,7], [3,7], [4,7], [5,7], [6,7]],
+        yellow: [[7,13], [7,12], [7,11], [7,10], [7,9], [7,8]],
+        blue: [[13,7], [12,7], [11,7], [10,7], [9,7], [8,7]]
+    };
+
+    const startOffsets = { red: 0, green: 13, yellow: 26, blue: 39 };
+
+    let tokens = { red: [], green: [], yellow: [], blue: [] };
+
+    function selectPlayers(count) {
+        totalPlayers = count;
+        document.querySelectorAll('.opt-btn').forEach((btn, idx) => {
+            btn.classList.toggle('selected', (count === 2 && idx === 0) || (count === 3 && idx === 1) || (count === 4 && idx === 2));
+        });
+    }
+
+    function initBoardUI() {
+        const grid = document.getElementById('board-grid');
+        grid.innerHTML = '';
+        
+        // 15x15 rendering setup
+        for (let r = 0; r < 15; r++) {
+            for (let c = 0; c < 15; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = `cell-${r}-${c}`;
+                
+                // Colors for home stretches
+                if (r === 7 && c >= 1 && c <= 5) cell.classList.add('path-red');
+                if (c === 7 && r >= 1 && r <= 5) cell.classList.add('path-green');
+                if (r === 7 && c >= 9 && c <= 13) cell.classList.add('path-yellow');
+                if (c === 7 && r >= 9 && r <= 13) cell.classList.add('path-blue');
+
+                if (safeCoordinates.includes(`${r},${c}`)) {
+                    cell.innerHTML = '<span class="safe-star">★</span>';
+                }
+                grid.appendChild(cell);
+            }
+        }
+
+        // Homes setup
+        grid.innerHTML += `
+            <div class="home red-home"><div class="home-inner" id="red-home-box"></div></div>
+            <div class="home green-home"><div class="home-inner" id="green-home-box"></div></div>
+            <div class="home yellow-home"><div class="home-inner" id="yellow-home-box"></div></div>
+            <div class="home blue-home"><div class="home-inner" id="blue-home-box"></div></div>
+            <div class="home center-home"></div>
+        `;
+    }
+
+    function startGame() {
+        document.getElementById('lobbyModal').style.display = 'none';
+        initBoardUI();
+        
+        if (totalPlayers === 2) enabledPlayers = ['red', 'yellow'];
+        else if (totalPlayers === 3) enabledPlayers = ['red', 'green', 'yellow'];
+        else enabledPlayers = ['red', 'green', 'yellow', 'blue'];
+
+        // Disable unselected home displays
+        ['red', 'green', 'yellow', 'blue'].forEach(col => {
+            const el = document.querySelector(`.${col}-home`);
+            if (el) el.style.opacity = enabledPlayers.includes(col) ? '1' : '0.2';
+        });
+
+        // Tokens Setup
+        tokens = { red: [], green: [], yellow: [], blue: [] };
+        enabledPlayers.forEach(color => {
+            const homeBox = document.getElementById(`${color}-home-box`);
+            homeBox.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'home-box';
+                slot.id = `${color}-slot-${i}`;
+                homeBox.appendChild(slot);
+
+                tokens[color].push({ id: i, pos: -1, step: -1, finished: false });
+            }
+        });
+
+        activePlayerIndex = 0;
+        winnersArr = [];
+        diceRolled = false;
+        updateTurnUI();
+        renderTokens();
+    }
+
+    function updateTurnUI() {
+        const color = enabledPlayers[activePlayerIndex];
+        const ind = document.getElementById('turnIndicator');
+        const txt = document.getElementById('turnText');
+        ind.style.background = color === 'red' ? '#ef4444' : color === 'green' ? '#22c55e' : color === 'yellow' ? '#eab308' : '#3b82f6';
+        txt.innerText = `${color.toUpperCase()}'s Turn`;
+        document.getElementById('diceBtn').classList.remove('disabled');
+        document.getElementById('diceBtn').innerText = '🎲';
+    }
+
+    function rollDice() {
+        if (diceRolled || isPaused) return;
+        playSound('roll');
+        
+        diceValue = Math.floor(Math.random() * 6) + 1;
+        document.getElementById('diceBtn').innerText = diceValue;
+        diceRolled = true;
+
+        const color = enabledPlayers[activePlayerIndex];
+        const movable = tokens[color].filter(t => canMoveToken(t, diceValue));
+
+        if (movable.length === 0) {
+            setTimeout(nextTurn, 800);
+        } else if (movable.length === 1 && diceValue !== 6 && movable[0].step !== -1) {
+            setTimeout(() => moveToken(color, movable[0].id), 400);
+        } else {
+            highlightTokens(color, movable);
+        }
+    }
+
+    function canMoveToken(token, roll) {
+        if (token.finished) return false;
+        if (token.step === -1) return roll === 6;
+        if (token.step + roll > 56) return false;
+        return true;
+    }
+
+    function highlightTokens(color, list) {
+        list.forEach(t => {
+            const el = document.getElementById(`token-${color}-${t.id}`);
+            if (el) el.classList.add('active');
+        });
+    }
+
+    function clearHighlights() {
+        document.querySelectorAll('.token').forEach(el => el.classList.remove('active'));
+    }
+
+    function moveToken(color, tokenId) {
+        if (!diceRolled) return;
+        const token = tokens[color][tokenId];
+        if (!canMoveToken(token, diceValue)) return;
+
+        clearHighlights();
+        playSound('move');
+
+        let extraTurn = false;
+
+        if (token.step === -1 && diceValue === 6) {
+            token.step = 0;
+            extraTurn = true;
+        } else {
+            token.step += diceValue;
+            if (diceValue === 6) extraTurn = true;
+        }
+
+        // Calculate location
+        if (token.step >= 0 && token.step <= 50) {
+            let pathIdx = (startOffsets[color] + token.step) % 52;
+            token.pos = commonPath[pathIdx];
+        } else if (token.step > 50 && token.step < 56) {
+            token.pos = homePaths[color][token.step - 51];
+        } else if (token.step === 56) {
+            token.finished = true;
+            token.pos = [7, 7];
+            extraTurn = true; // Safe home gives extra turn
+            playSound('win');
+        }
+
+        // Kill check
+        if (token.step >= 0 && token.step <= 50 && !safeCoordinates.includes(`${token.pos[0]},${token.pos[1]}`)) {
+            enabledPlayers.forEach(otherColor => {
+                if (otherColor !== color) {
+                    tokens[otherColor].forEach(otherToken => {
+                        if (otherToken.step >= 0 && otherToken.step <= 50 && otherToken.pos[0] === token.pos[0] && otherToken.pos[1] === token.pos[1]) {
+                            otherToken.step = -1;
+                            otherToken.pos = -1;
+                            extraTurn = true; // Cut gives extra turn
+                            playSound('cut');
+                        }
+                    });
+                }
+            });
+        }
+
+        renderTokens();
+        checkWinCondition(color);
+
+        diceRolled = false;
+        if (extraTurn) {
+            document.getElementById('diceBtn').classList.remove('disabled');
+        } else {
+            nextTurn();
+        }
+    }
+
+    function checkWinCondition(color) {
+        const allFinished = tokens[color].every(t => t.finished);
+        if (allFinished && !winnersArr.includes(color)) {
+            winnersArr.push(color);
+            showWinnerModal(color);
+        }
+    }
+
+    function showWinnerModal(color) {
+        playSound('win');
+        const modal = document.getElementById('winnerModal');
+        const winnerList = document.getElementById('winnerList');
+        const nextBtn = document.getElementById('nextOrLobbyBtn');
+
+        winnerList.innerHTML = '';
+        winnersArr.forEach((c, idx) => {
+            winnerList.innerHTML += `<div class="winner-badge">🏆 Rank ${idx + 1}: ${c.toUpperCase()}</div>`;
+        });
+
+        if (winnersArr.length >= enabledPlayers.length - 1) {
+            document.getElementById('winnerText').innerText = "Game Completed!";
+            nextBtn.innerText = "Return to Lobby";
+            nextBtn.onclick = resetToLobby;
+        } else {
+            document.getElementById('winnerText').innerText = `${color.toUpperCase()} Reached Home!`;
+            nextBtn.innerText = "Continue Game";
+            nextBtn.onclick = closeWinnerModal;
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeWinnerModal() {
+        document.getElementById('winnerModal').style.display = 'none';
+        nextTurn();
+    }
+
+    function nextTurn() {
+        clearHighlights();
+        diceRolled = false;
+        do {
+            activePlayerIndex = (activePlayerIndex + 1) % enabledPlayers.length;
+        } while (winnersArr.includes(enabledPlayers[activePlayerIndex]) && winnersArr.length < enabledPlayers.length);
+
+        updateTurnUI();
+    }
+
+    function renderTokens() {
+        document.querySelectorAll('.token').forEach(el => el.remove());
+
+        enabledPlayers.forEach(color => {
+            tokens[color].forEach(token => {
+                const tokenEl = document.createElement('div');
+                tokenEl.className = `token ${color}`;
+                tokenEl.id = `token-${color}-${token.id}`;
+                tokenEl.onclick = () => moveToken(color, token.id);
+
+                if (token.step === -1) {
+                    const slot = document.getElementById(`${color}-slot-${token.id}`);
+                    if (slot) slot.appendChild(tokenEl);
+                } else {
+                    const cell = document.getElementById(`cell-${token.pos[0]}-${token.pos[1]}`);
+                    if (cell) cell.appendChild(tokenEl);
+                }
+            });
+        });
+    }
+
+    function togglePause() {
+        isPaused = !isPaused;
+        document.getElementById('pauseModal').style.display = isPaused ? 'flex' : 'none';
+    }
+
+    function resetToLobby() {
+        document.getElementById('pauseModal').style.display = 'none';
+        document.getElementById('winnerModal').style.display = 'none';
+        document.getElementById('lobbyModal').style.display = 'flex';
+    }
+
+    initBoardUI();
+</script>
+</body>
+</html>
