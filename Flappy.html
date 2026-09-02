@@ -1,0 +1,119 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Pro</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #222; color: #fff; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .game-card { position: relative; width: 320px; }
+        canvas { background: #70c5ce; border: 3px solid #fff; border-radius: 8px; display: block; margin: 10px auto; }
+        .controls { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 5px; }
+        .btn { padding: 8px 15px; font-size: 0.9rem; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .jump-btn { width: 100%; padding: 15px; font-size: 1.2rem; background: #4CAF50; color: white; border: none; border-radius: 8px; margin-top: 10px; font-weight: bold; }
+        .popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="game-card">
+    <div class="controls">
+        <div>Score: <span id="score">0</span></div>
+        <div>
+            <button class="btn" onclick="togglePause()">Pause</button>
+            <button class="btn" onclick="resetGame()">Reset</button>
+        </div>
+    </div>
+
+    <canvas id="canvas" width="320" height="420"></canvas>
+    <button class="jump-btn" onclick="jump()">JUMP</button>
+
+    <div id="startModal" class="popup">
+        <h2 style="color: #ff9800;">Flappy Bird</h2>
+        <p style="margin: 10px 0;">Tap screen or press Jump</p>
+        <button class="btn" onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="pauseModal" class="popup" style="display: none;">
+        <h2>Paused</h2>
+        <button class="btn" onclick="togglePause()" style="margin-top: 10px;">Resume</button>
+    </div>
+
+    <div id="gameOverModal" class="popup" style="display: none;">
+        <h2 style="color: #f44336;">Game Over</h2>
+        <p>Score: <span id="finalScore">0</span></p>
+        <button class="btn" onclick="resetGame()" style="margin-top: 10px;">Try Again</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let birdY = 200, velocity = 0, gravity = 0.4, pipes = [], score = 0;
+    let isPaused = false, isRunning = false, loopId = null;
+
+    function startGame() {
+        document.getElementById('startModal').style.display = 'none';
+        resetGame();
+    }
+
+    function jump() {
+        if (isRunning && !isPaused) velocity = -6;
+    }
+
+    document.addEventListener('keydown', (e) => { if (e.code === 'Space') jump(); });
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); jump(); });
+
+    function resetGame() {
+        birdY = 200; velocity = 0; pipes = []; score = 0;
+        document.getElementById('score').innerText = score;
+        document.getElementById('gameOverModal').style.display = 'none';
+        document.getElementById('pauseModal').style.display = 'none';
+        isPaused = false; isRunning = true;
+        if (loopId) cancelAnimationFrame(loopId);
+        loop();
+    }
+
+    function togglePause() {
+        if (!isRunning) return;
+        isPaused = !isPaused;
+        document.getElementById('pauseModal').style.display = isPaused ? 'flex' : 'none';
+        if (!isPaused) loop();
+    }
+
+    function loop() {
+        if (isPaused || !isRunning) return;
+
+        velocity += gravity; birdY += velocity;
+        if (pipes.length === 0 || pipes[pipes.length - 1].x < 180) {
+            let top = Math.random() * 160 + 40;
+            pipes.push({x: 320, top: top, bottom: top + 100, passed: false});
+        }
+
+        ctx.fillStyle = '#70c5ce'; ctx.fillRect(0, 0, 320, 420);
+        ctx.fillStyle = 'yellow'; ctx.beginPath(); ctx.arc(60, birdY, 10, 0, Math.PI * 2); ctx.fill();
+
+        pipes.forEach((p) => {
+            p.x -= 2;
+            ctx.fillStyle = 'green';
+            ctx.fillRect(p.x, 0, 35, p.top);
+            ctx.fillRect(p.x, p.bottom, 35, 420 - p.bottom);
+
+            if (60 > p.x && 60 < p.x + 35 && (birdY < p.top || birdY > p.bottom)) gameOver();
+            if (p.x + 35 < 60 && !p.passed) { p.passed = true; score++; document.getElementById('score').innerText = score; }
+        });
+
+        if (birdY > 420 || birdY < 0) gameOver();
+        if (isRunning && !isPaused) loopId = requestAnimationFrame(loop);
+    }
+
+    function gameOver() {
+        isRunning = false;
+        document.getElementById('finalScore').innerText = score;
+        document.getElementById('gameOverModal').style.display = 'flex';
+    }
+</script>
+</body>
+</html>
