@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I'm So Sorry, Fatima 🥺</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Floating Sad/Heart Elements */
+        .floating-icon {
+            position: absolute;
+            font-size: 22px;
+            animation: float 7s infinite ease-in-out;
+            opacity: 0.5;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+            50% { opacity: 0.3; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Main Card Container */
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 35px 25px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            max-width: 420px;
+            width: 90%;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Music Controls Button */
+        .music-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            font-size: 1.2rem;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .music-btn:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        .avatar {
+            font-size: 3.8rem;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite alternate;
+        }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.08); }
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #ff7675;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(255, 118, 117, 0.4);
+        }
+
+        .name {
+            color: #fd79a8;
+            font-size: 2.3rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            font-size: 1rem;
+            color: #dfe6e9;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 18px;
+            border-radius: 15px;
+            border-left: 4px solid #ff7675;
+            text-align: left;
+        }
+
+        /* Buttons Section */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 13px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #ff7675, #d63031);
+            color: white;
+            box-shadow: 0 5px 15px rgba(214, 48, 49, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(214, 48, 49, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: #dfe6e9;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Modal Popup */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: #2c3e50;
+            padding: 25px;
+            border-radius: 20px;
+            max-width: 320px;
+            width: 85%;
+            text-align: center;
+            border: 1px solid #ff7675;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Soft Hindi Instrumental Apology Melody -->
+    <audio id="bgSong" loop preload="auto">
+        <source src="https://cdn.pixabay.com/download/audio/2022/10/14/audio_993f3c1a8a.mp3?filename=sad-emotional-piano-124008.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Floating Background Icons -->
+    <div class="floating-icon" style="left: 10%; animation-delay: 0s;">💔</div>
+    <div class="floating-icon" style="left: 30%; animation-delay: 2.5s;">🥺</div>
+    <div class="floating-icon" style="left: 65%; animation-delay: 4s;">🌸</div>
+    <div class="floating-icon" style="left: 85%; animation-delay: 1s;">✨</div>
+
+    <!-- Main Card Body -->
+    <div class="card">
+        <!-- Music ON/OFF Button -->
+        <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Turn Music On/Off">🎵</button>
+
+        <div class="avatar">🥺👉👈</div>
+        <h1>I'm So Sorry,</h1>
+        <span class="name">Fatima!</span>
+
+        <div class="message">
+            Mera irada tumhara dil dukhane ka bilkul nahi tha. Agar meri kisi baat se tumhein bura laga ho toh main dil se sorry bolta hoon... 😞<br><br>
+            Aapki dosti mere liye bohot maayne rakhti hai, please narazgi khatam kar do! ✨🌸
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="forgiveMe()">Maaf Kar Diya 💖</button>
+            <button class="btn btn-secondary" onclick="stillAngry()">Abhi Bi Naraz Hoon 😤</button>
+        </div>
+    </div>
+
+    <!-- Forgiveness Popup Modal -->
+    <div class="modal" id="forgiveModal">
+        <div class="modal-content">
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">🎉✨</div>
+            <h2 style="color: #fd79a8; margin-bottom: 10px;">Thank You!</h2>
+            <p style="font-size: 0.95rem; color: #dfe6e9; margin-bottom: 20px;">
+                Shukriya Fatima! Aapki smile aur dosti wapis laut aayi! Always stay happy! 😊🌸
+            </p>
+            <button class="btn btn-primary" style="padding: 10px 20px; font-size: 0.9rem;" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const song = document.getElementById('bgSong');
+        const musicBtn = document.getElementById('musicBtn');
+        let isPlaying = false;
+
+        // Music ON/OFF Function
+        function toggleMusic() {
+            if (isPlaying) {
+                song.pause();
+                musicBtn.innerText = '🔇';
+            } else {
+                song.play().then(() => {
+                    musicBtn.innerText = '🎵';
+                }).catch(() => {
+                    alert("Please click anywhere on the screen first to allow audio playback!");
+                });
+            }
+            isPlaying = !isPlaying;
+        }
+
+        // Auto play audio on first user touch/click
+        document.body.addEventListener('click', function startAudio() {
+            if (!isPlaying) {
+                song.play().then(() => {
+                    isPlaying = true;
+                    musicBtn.innerText = '🎵';
+                }).catch(() => {});
+            }
+            document.body.removeEventListener('click', startAudio);
+        }, { once: true });
+
+        function forgiveMe() {
+            document.getElementById('forgiveModal').style.display = 'flex';
+        }
+
+        function stillAngry() {
+            alert("Aww, please itna naraz mat ho! Main dobara sorry bolta hoon 🥺❤️");
+        }
+
+        function closeModal() {
+            document.getElementById('forgiveModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
