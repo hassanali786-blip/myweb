@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Ali!</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1c20, #0f1016);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            color: #ffffff;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 350px;
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .badge {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        .name {
+            background: linear-gradient(45deg, #ffd700, #ffa500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 40px;
+            font-weight: 800;
+            display: block;
+            margin-top: 5px;
+        }
+
+        p {
+            color: #b3b3b3;
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 25px 0;
+        }
+
+        .wish-box {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #ffd700;
+            padding: 15px;
+            border-radius: 0 12px 12px 0;
+            text-align: left;
+            font-style: italic;
+            color: #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .footer {
+            font-size: 14px;
+            color: #888;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <span class="badge">Celebration Time 🎉</span>
+        <h1>Happy Birthday</h1>
+        <span class="name">ALI! 🎂</span>
+        
+        <p>Wishing you a year filled with success, happiness, and unforgettable moments.</p>
+
+        <div class="wish-box">
+            "Dosti ka rishta hamesha qaim rahe, Allah tumhein har khushi se nawaze!"
+        </div>
+
+        <div class="footer">
+            Have a blast today, brother! ✨
+        </div>
+    </div>
+
+</body>
+</html>
