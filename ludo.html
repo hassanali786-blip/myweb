@@ -1,81 +1,176 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hassan Ludo Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hassan Ludo Game - OP Edition</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #fff; text-align: center; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: radial-gradient(circle at center, #1e1b4b, #0f172a); 
+            color: #fff; 
+            text-align: center; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden; 
+            padding: 5px;
+        }
 
-        .game-card { position: relative; width: 100%; max-width: 480px; padding: 10px; }
+        .game-card { 
+            position: relative; 
+            width: 100%; 
+            max-width: 450px; 
+            height: 100vh;
+            max-height: 720px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
         
         /* Title & Top Controls */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; }
-        .title { font-size: 1.4rem; font-weight: bold; color: #f59e0b; text-shadow: 0 0 10px rgba(245,158,11,0.5); }
-        .btn { padding: 6px 12px; font-size: 0.85rem; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .btn:active { transform: scale(0.95); }
-        .btn-danger { background: #ef4444; }
-        .btn-warning { background: #f59e0b; }
+        .header { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 40px; }
+        .title { 
+            font-size: 1.2rem; 
+            font-weight: 900; 
+            background: linear-gradient(45deg, #f59e0b, #ef4444);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 15px rgba(245,158,11,0.4); 
+            letter-spacing: 0.5px;
+        }
+        .header-btns { display: flex; gap: 6px; }
+        .btn { padding: 6px 12px; font-size: 0.8rem; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s; box-shadow: 0 4px 10px rgba(59,130,246,0.3); }
+        .btn:active { transform: scale(0.92); }
+        .btn-danger { background: #ef4444; box-shadow: 0 4px 10px rgba(239,68,68,0.3); }
+        .btn-warning { background: #f59e0b; box-shadow: 0 4px 10px rgba(245,158,11,0.3); }
 
         /* Ludo Board Grid Setup */
-        #board-container { width: 100%; aspect-ratio: 1/1; position: relative; background: #1e293b; border-radius: 12px; overflow: hidden; border: 3px solid #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.7); }
+        #board-container { 
+            width: 100%; 
+            aspect-ratio: 1/1; 
+            position: relative; 
+            background: #0f172a; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            border: 2px solid #334155; 
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5); 
+        }
         .grid { display: grid; grid-template-columns: repeat(15, 1fr); grid-template-rows: repeat(15, 1fr); width: 100%; height: 100%; }
-        .cell { border: 0.5px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; position: relative; font-size: 10px; }
+        .cell { border: 0.5px solid rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; position: relative; font-size: 10px; }
 
         /* Homes Arena Styling */
-        .home { grid-row-span: 6; grid-column-span: 6; display: flex; align-items: center; justify-content: center; position: relative; border-radius: 8px; }
-        .red-home { background: #dc2626; grid-area: 1 / 1 / 7 / 7; }
-        .green-home { background: #16a34a; grid-area: 1 / 10 / 7 / 16; }
-        .yellow-home { background: #eab308; grid-area: 10 / 10 / 16 / 16; }
-        .blue-home { background: #2563eb; grid-area: 10 / 1 / 16 / 7; }
+        .home { grid-row-span: 6; grid-column-span: 6; display: flex; align-items: center; justify-content: center; position: relative; }
+        .red-home { background: linear-gradient(135deg, #dc2626, #991b1b); grid-area: 1 / 1 / 7 / 7; }
+        .green-home { background: linear-gradient(135deg, #16a34a, #166534); grid-area: 1 / 10 / 7 / 16; }
+        .yellow-home { background: linear-gradient(135deg, #eab308, #ca8a04); grid-area: 10 / 10 / 16 / 16; }
+        .blue-home { background: linear-gradient(135deg, #2563eb, #1d4ed8); grid-area: 10 / 1 / 16 / 7; }
 
-        .home-inner { width: 70%; height: 70%; background: #0f172a; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 8px; }
-        .home-box { background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .home-inner { width: 72%; height: 72%; background: #0f172a; border-radius: 12px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 8px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+        .home-box { background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
 
         /* Center / Paths */
-        .center-home { grid-area: 7 / 7 / 10 / 10; background: #334155; border: 2px solid #64748b; border-radius: 6px; }
-        .path-red { background: #fca5a5; }
-        .path-green { background: #86efac; }
-        .path-yellow { background: #fde047; }
-        .path-blue { background: #93c5fd; }
-        .safe-star { color: #f59e0b; font-size: 12px; }
+        .center-home { grid-area: 7 / 7 / 10 / 10; background: radial-gradient(circle, #475569, #1e293b); border: 2px solid #64748b; }
+        .path-red { background: rgba(239, 68, 68, 0.4); }
+        .path-green { background: rgba(34, 197, 94, 0.4); }
+        .path-yellow { background: rgba(234, 179, 8, 0.4); }
+        .path-blue { background: rgba(59, 130, 246, 0.4); }
+        .safe-star { color: #fbbf24; font-size: 11px; text-shadow: 0 0 5px #fbbf24; }
 
-        /* Tokens (Gotis) */
-        .token { width: 75%; height: 75%; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; transition: all 0.2s ease; position: absolute; }
-        .token.red { background: #ef4444; }
-        .token.green { background: #22c55e; }
-        .token.yellow { background: #eab308; }
-        .token.blue { background: #3b82f6; }
-        .token.active { animation: pulse 0.8s infinite alternate; z-index: 20; border-color: #f59e0b; }
-
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.25); } }
-
-        /* Dice Section */
-        .controls-area { display: flex; justify-content: space-around; align-items: center; margin-top: 12px; background: #1e293b; padding: 10px; border-radius: 10px; }
-        .turn-card { display: flex; align-items: center; gap: 8px; font-weight: bold; }
-        .turn-indicator { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; }
+        /* OP Tokens (Gotiyan - Choti aur Glowing) */
+        .token { 
+            width: 65%; 
+            height: 65%; 
+            border-radius: 50%; 
+            border: 2px solid #fff; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6); 
+            cursor: pointer; 
+            z-index: 10; 
+            transition: transform 0.2s ease, top 0.2s, left 0.2s; 
+            position: absolute; 
+        }
+        .token.red { background: radial-gradient(circle at 30% 30%, #fca5a5, #ef4444); box-shadow: 0 0 8px #ef4444; }
+        .token.green { background: radial-gradient(circle at 30% 30%, #86efac, #22c55e); box-shadow: 0 0 8px #22c55e; }
+        .token.yellow { background: radial-gradient(circle at 30% 30%, #fde047, #eab308); box-shadow: 0 0 8px #eab308; }
+        .token.blue { background: radial-gradient(circle at 30% 30%, #93c5fd, #3b82f6); box-shadow: 0 0 8px #3b82f6; }
         
-        .dice { width: 50px; height: 50px; background: #fff; color: #000; border-radius: 10px; font-size: 1.8rem; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.4); border: 2px solid #cbd5e1; }
-        .dice.disabled { opacity: 0.5; cursor: not-allowed; }
+        .token.active { 
+            animation: opPulse 0.6s infinite alternate; 
+            z-index: 30; 
+            border-color: #fff; 
+        }
+
+        @keyframes opPulse { 
+            from { transform: scale(1); box-shadow: 0 0 5px #fff; } 
+            to { transform: scale(1.35); box-shadow: 0 0 15px #f59e0b, 0 0 25px #f59e0b; } 
+        }
+
+        /* Dice & Controls Section */
+        .controls-area { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: rgba(15, 23, 42, 0.8); 
+            padding: 10px 16px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .turn-card { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+        .turn-indicator { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 8px currentColor; }
+        
+        .dice { 
+            width: 48px; 
+            height: 48px; 
+            background: linear-gradient(145deg, #ffffff, #e2e8f0); 
+            color: #0f172a; 
+            border-radius: 10px; 
+            font-size: 1.6rem; 
+            font-weight: 900; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.5); 
+            border: 2px solid #94a3b8; 
+            transition: transform 0.15s;
+        }
+        .dice:active { transform: scale(0.9); }
+        .dice.rolling { animation: dice3d 0.4s ease-in-out; }
+        .dice.disabled { opacity: 0.4; pointer-events: none; }
+
+        @keyframes dice3d {
+            0% { transform: rotate(0deg) scale(0.8); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
 
         /* Popups / Modals */
-        .popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; z-index: 100; padding: 20px; }
-        .popup h2 { font-size: 1.8rem; color: #f59e0b; margin-bottom: 10px; }
-        .popup p { font-size: 1rem; color: #94a3b8; margin-bottom: 20px; }
+        .popup { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 16px; z-index: 100; padding: 20px; }
+        .popup h2 { font-size: 1.6rem; color: #f59e0b; margin-bottom: 8px; text-shadow: 0 0 10px rgba(245,158,11,0.5); }
+        .popup p { font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; }
         .player-options { display: flex; gap: 10px; margin-bottom: 20px; }
-        .opt-btn { padding: 12px 20px; font-size: 1.1rem; background: #334155; border: 2px solid #475569; color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .opt-btn.selected { background: #f59e0b; border-color: #f59e0b; color: #000; }
+        .opt-btn { padding: 10px 16px; font-size: 0.95rem; background: #334155; border: 2px solid #475569; color: #fff; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .opt-btn.selected { background: #f59e0b; border-color: #f59e0b; color: #000; box-shadow: 0 0 12px rgba(245,158,11,0.5); }
 
-        .winner-badge { background: #1e293b; border: 1px solid #334155; padding: 8px 16px; border-radius: 6px; margin: 5px; font-weight: bold; width: 80%; }
+        .winner-badge { background: #1e293b; border: 1px solid #334155; padding: 8px 16px; border-radius: 8px; margin: 5px; font-weight: bold; width: 85%; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="game-card">
     <div class="header">
-        <div class="title">Hassan Ludo Game</div>
-        <div>
+        <div class="title">HASSAN LUDO</div>
+        <div class="header-btns">
             <button class="btn btn-warning" onclick="togglePause()">Pause</button>
             <button class="btn btn-danger" onclick="resetToLobby()">Lobby</button>
         </div>
@@ -87,25 +182,25 @@
 
         <!-- Lobby / Welcome Modal -->
         <div id="lobbyModal" class="popup">
-            <h2>Hassan Ludo Game</h2>
-            <p>Select Total Players to Start Arena Match</p>
+            <h2>HASSAN LUDO OP</h2>
+            <p>Select Arena Players</p>
             <div class="player-options">
-                <button class="opt-btn" onclick="selectPlayers(2)">2 Players</button>
-                <button class="opt-btn" onclick="selectPlayers(3)">3 Players</button>
-                <button class="opt-btn selected" onclick="selectPlayers(4)">4 Players</button>
+                <button class="opt-btn" onclick="selectPlayers(2)">2P</button>
+                <button class="opt-btn" onclick="selectPlayers(3)">3P</button>
+                <button class="opt-btn selected" onclick="selectPlayers(4)">4P</button>
             </div>
-            <button class="btn" style="padding: 12px 30px; font-size: 1.1rem;" onclick="startGame()">Start Match</button>
+            <button class="btn" style="padding: 12px 32px; font-size: 1rem;" onclick="startGame()">START MATCH</button>
         </div>
 
         <!-- Pause Modal -->
         <div id="pauseModal" class="popup" style="display: none;">
-            <h2>Game Paused</h2>
-            <button class="btn" style="margin-top: 15px;" onclick="togglePause()">Resume</button>
+            <h2>GAME PAUSED</h2>
+            <button class="btn" style="margin-top: 15px; padding: 10px 24px;" onclick="togglePause()">Resume</button>
         </div>
 
         <!-- Winner Popup Modal -->
         <div id="winnerModal" class="popup" style="display: none;">
-            <h2 id="winnerText">Victory Announcement!</h2>
+            <h2 id="winnerText">Victory!</h2>
             <div id="winnerList" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
             <button id="nextOrLobbyBtn" class="btn" style="margin-top: 20px;" onclick="closeWinnerModal()">Continue</button>
         </div>
@@ -122,7 +217,7 @@
 </div>
 
 <script>
-    // Audio Synth Engine (Web Audio API for pure HTML5 offline sounds)
+    // Sound Synth Engine
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(type) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -130,33 +225,33 @@
         const gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-
         const now = audioCtx.currentTime;
+
         if (type === 'roll') {
-            osc.frequency.setValueAtTime(300, now);
-            osc.frequency.exponentialRampToValueAtTime(150, now + 0.1);
+            osc.frequency.setValueAtTime(350, now);
+            osc.frequency.exponentialRampToValueAtTime(120, now + 0.12);
             gain.gain.setValueAtTime(0.3, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now); osc.stop(now + 0.1);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+            osc.start(now); osc.stop(now + 0.12);
         } else if (type === 'move') {
-            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.setValueAtTime(450, now);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
             osc.start(now); osc.stop(now + 0.05);
         } else if (type === 'cut') {
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(180, now);
-            osc.frequency.exponentialRampToValueAtTime(60, now + 0.25);
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.25);
             gain.gain.setValueAtTime(0.4, now);
             gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
             osc.start(now); osc.stop(now + 0.25);
         } else if (type === 'win') {
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.exponentialRampToValueAtTime(800, now + 0.4);
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(700, now + 0.35);
             gain.gain.setValueAtTime(0.4, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
-            osc.start(now); osc.stop(now + 0.4);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+            osc.start(now); osc.stop(now + 0.35);
         }
     }
 
@@ -170,7 +265,6 @@
     let isPaused = false;
     let winnersArr = [];
 
-    // Path maps for 15x15 board tracking
     const commonPath = [
         [6,1], [6,2], [6,3], [6,4], [6,5],
         [5,6], [4,6], [3,6], [2,6], [1,6], [0,6],
@@ -196,7 +290,6 @@
     };
 
     const startOffsets = { red: 0, green: 13, yellow: 26, blue: 39 };
-
     let tokens = { red: [], green: [], yellow: [], blue: [] };
 
     function selectPlayers(count) {
@@ -210,14 +303,12 @@
         const grid = document.getElementById('board-grid');
         grid.innerHTML = '';
         
-        // 15x15 rendering setup
         for (let r = 0; r < 15; r++) {
             for (let c = 0; c < 15; c++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.id = `cell-${r}-${c}`;
                 
-                // Colors for home stretches
                 if (r === 7 && c >= 1 && c <= 5) cell.classList.add('path-red');
                 if (c === 7 && r >= 1 && r <= 5) cell.classList.add('path-green');
                 if (r === 7 && c >= 9 && c <= 13) cell.classList.add('path-yellow');
@@ -230,7 +321,6 @@
             }
         }
 
-        // Homes setup
         grid.innerHTML += `
             <div class="home red-home"><div class="home-inner" id="red-home-box"></div></div>
             <div class="home green-home"><div class="home-inner" id="green-home-box"></div></div>
@@ -248,13 +338,11 @@
         else if (totalPlayers === 3) enabledPlayers = ['red', 'green', 'yellow'];
         else enabledPlayers = ['red', 'green', 'yellow', 'blue'];
 
-        // Disable unselected home displays
         ['red', 'green', 'yellow', 'blue'].forEach(col => {
             const el = document.querySelector(`.${col}-home`);
-            if (el) el.style.opacity = enabledPlayers.includes(col) ? '1' : '0.2';
+            if (el) el.style.opacity = enabledPlayers.includes(col) ? '1' : '0.15';
         });
 
-        // Tokens Setup
         tokens = { red: [], green: [], yellow: [], blue: [] };
         enabledPlayers.forEach(color => {
             const homeBox = document.getElementById(`${color}-home-box`);
@@ -280,7 +368,9 @@
         const color = enabledPlayers[activePlayerIndex];
         const ind = document.getElementById('turnIndicator');
         const txt = document.getElementById('turnText');
-        ind.style.background = color === 'red' ? '#ef4444' : color === 'green' ? '#22c55e' : color === 'yellow' ? '#eab308' : '#3b82f6';
+        const hex = color === 'red' ? '#ef4444' : color === 'green' ? '#22c55e' : color === 'yellow' ? '#eab308' : '#3b82f6';
+        ind.style.background = hex;
+        ind.style.color = hex;
         txt.innerText = `${color.toUpperCase()}'s Turn`;
         document.getElementById('diceBtn').classList.remove('disabled');
         document.getElementById('diceBtn').innerText = '🎲';
@@ -290,20 +380,26 @@
         if (diceRolled || isPaused) return;
         playSound('roll');
         
-        diceValue = Math.floor(Math.random() * 6) + 1;
-        document.getElementById('diceBtn').innerText = diceValue;
-        diceRolled = true;
+        const diceBtn = document.getElementById('diceBtn');
+        diceBtn.classList.add('rolling');
+        
+        setTimeout(() => {
+            diceBtn.classList.remove('rolling');
+            diceValue = Math.floor(Math.random() * 6) + 1;
+            diceBtn.innerText = diceValue;
+            diceRolled = true;
 
-        const color = enabledPlayers[activePlayerIndex];
-        const movable = tokens[color].filter(t => canMoveToken(t, diceValue));
+            const color = enabledPlayers[activePlayerIndex];
+            const movable = tokens[color].filter(t => canMoveToken(t, diceValue));
 
-        if (movable.length === 0) {
-            setTimeout(nextTurn, 800);
-        } else if (movable.length === 1 && diceValue !== 6 && movable[0].step !== -1) {
-            setTimeout(() => moveToken(color, movable[0].id), 400);
-        } else {
-            highlightTokens(color, movable);
-        }
+            if (movable.length === 0) {
+                setTimeout(nextTurn, 700);
+            } else if (movable.length === 1 && diceValue !== 6 && movable[0].step !== -1) {
+                setTimeout(() => moveToken(color, movable[0].id), 300);
+            } else {
+                highlightTokens(color, movable);
+            }
+        }, 300);
     }
 
     function canMoveToken(token, roll) {
@@ -342,7 +438,6 @@
             if (diceValue === 6) extraTurn = true;
         }
 
-        // Calculate location
         if (token.step >= 0 && token.step <= 50) {
             let pathIdx = (startOffsets[color] + token.step) % 52;
             token.pos = commonPath[pathIdx];
@@ -351,11 +446,10 @@
         } else if (token.step === 56) {
             token.finished = true;
             token.pos = [7, 7];
-            extraTurn = true; // Safe home gives extra turn
+            extraTurn = true;
             playSound('win');
         }
 
-        // Kill check
         if (token.step >= 0 && token.step <= 50 && !safeCoordinates.includes(`${token.pos[0]},${token.pos[1]}`)) {
             enabledPlayers.forEach(otherColor => {
                 if (otherColor !== color) {
@@ -363,7 +457,7 @@
                         if (otherToken.step >= 0 && otherToken.step <= 50 && otherToken.pos[0] === token.pos[0] && otherToken.pos[1] === token.pos[1]) {
                             otherToken.step = -1;
                             otherToken.pos = -1;
-                            extraTurn = true; // Cut gives extra turn
+                            extraTurn = true;
                             playSound('cut');
                         }
                     });
@@ -402,11 +496,11 @@
         });
 
         if (winnersArr.length >= enabledPlayers.length - 1) {
-            document.getElementById('winnerText').innerText = "Game Completed!";
+            document.getElementById('winnerText').innerText = "Match Finished!";
             nextBtn.innerText = "Return to Lobby";
             nextBtn.onclick = resetToLobby;
         } else {
-            document.getElementById('winnerText').innerText = `${color.toUpperCase()} Reached Home!`;
+            document.getElementById('winnerText').innerText = `${color.toUpperCase()} Finished!`;
             nextBtn.innerText = "Continue Game";
             nextBtn.onclick = closeWinnerModal;
         }
@@ -436,7 +530,10 @@
                 const tokenEl = document.createElement('div');
                 tokenEl.className = `token ${color}`;
                 tokenEl.id = `token-${color}-${token.id}`;
-                tokenEl.onclick = () => moveToken(color, token.id);
+                tokenEl.onclick = (e) => {
+                    e.stopPropagation();
+                    moveToken(color, token.id);
+                };
 
                 if (token.step === -1) {
                     const slot = document.getElementById(`${color}-slot-${token.id}`);
