@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management & Business Success Presentation</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --accent-color: #58a6ff;
+            --text-main: #c9d1d9;
+            --text-bright: #ffffff;
+            --border-color: #30363d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 85%;
+            max-width: 900px;
+            height: 520px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        .slide-container.active {
+            display: flex;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: var(--text-bright);
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent-color);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            margin-left: 20px;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .author-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(88, 166, 255, 0.1);
+            border-left: 4px solid var(--accent-color);
+            border-radius: 4px;
+        }
+
+        .nav-controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        .slide-number {
+            font-size: 0.9rem;
+            color: #8b949e;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide 1: Introduction -->
+    <div class="slide-container active" id="slide1">
+        <h1>Introduction to Management</h1>
+        <p>Understanding Business Success & Operations</p>
+        <div class="author-box">
+            <p><strong>Presented By:</strong> HASSAN</p>
+            <p><strong>Program:</strong> IT Student (1st Semester)</p>
+            <p><strong>Subject:</strong> Intro to Business</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: What is Management -->
+    <div class="slide-container" id="slide2">
+        <h2>1. What is Management?</h2>
+        <p>Management ka matlab logon, resources (time, money, tools) aur processes ko is tarah organize aur guide karna hai jisse business goals achieve ho sakein.</p>
+        <p><span class="highlight">Core Concept:</span> Yeh business ke vision ko reality mein badalne ka system hai.</p>
+    </div>
+
+    <!-- Slide 3: 4 Pillars of Management -->
+    <div class="slide-container" id="slide3">
+        <h2>4 Pillars of Management</h2>
+        <ul>
+            <li><span class="highlight">Planning:</span> Realistic targets set karna aur roadmap tayyar karna.</li>
+            <li><span class="highlight">Organizing:</span> Tasks ko divide karna aur teams ko responsibility dena.</li>
+            <li><span class="highlight">Leading:</span> Team ko motivate karna aur right direction dikhana.</li>
+            <li><span class="highlight">Controlling:</span> Progress track karna aur errors ko rectify karna.</li>
+        </ul>
+    </div>
+
+    <!-- Slide 4: How Management Drives Success -->
+    <div class="slide-container" id="slide4">
+        <h2>2. Business Success & Management</h2>
+        <ul>
+            <li><span class="highlight">Resource Optimization:</span> Waste reduction aur maximum efficiency.</li>
+            <li><span class="highlight">Strategic Decisions:</span> Data-driven aur market-aligned choices.</li>
+            <li><span class="highlight">Financial Stability:</span> Smart budget tracking aur cash-flow control.</li>
+            <li><span class="highlight">Adaptability:</span> Market changes aur new tech ko fast adopt karna.</li>
+        </ul>
+    </div>
+
+    <!-- Slide 5: Real World Example & Conclusion -->
+    <div class="slide-container" id="slide5">
+        <h2>Practical IT Example</h2>
+        <p>Ek <strong>Software Agency</strong> ka example lein:</p>
+        <p>Bina management ke projects ke deadlines miss honge. Lekin ek strong management system se tasks timeline ke hisab se distribute hotay hain aur continuous monitoring se quality output deliver hota hai.</p>
+        <div class="author-box" style="margin-top: 15px;">
+            <p><strong>Conclusion:</strong> Solid management hi business ki long-term growth aur stability ko ensure karti hai.</p>
+        </div>
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="nav-controls">
+        <button onclick="changeSlide(-1)">Previous</button>
+        <span class="slide-number" id="slideNum">Slide 1 of 5</span>
+        <button onclick="changeSlide(1)">Next</button>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 5;
+
+        function changeSlide(direction) {
+            document.getElementById(`slide${currentSlide}`).classList.remove('active');
+            
+            currentSlide += direction;
+            if (currentSlide < 1) currentSlide = 1;
+            if (currentSlide > totalSlides) currentSlide = totalSlides;
+
+            document.getElementById(`slide${currentSlide}`).classList.add('active');
+            document.getElementById('slideNum').innerText = `Slide ${currentSlide} of ${totalSlides}`;
+        }
+    </script>
+</body>
+</html>
