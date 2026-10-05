@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Teachers' Day, Teacher Afza! 🎓✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Floating Stars & Academic Icons Background */
+        .floating-icon {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            animation: float 7s linear infinite;
+            font-size: 22px;
+            user-select: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Card Layout */
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            z-index: 10;
+            animation: popIn 0.8s ease-out;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(43deg, #4158D0 0%, #C850C0 100%);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .emoji {
+            font-size: 60px;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        h1 {
+            color: #2d3748;
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        p {
+            color: #4a5568;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        /* Interactive Note Box */
+        .secret-note {
+            display: none;
+            background: #f7fafc;
+            border-left: 4px solid #C850C0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-style: italic;
+            color: #2d3748;
+            font-size: 0.95rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Action Button */
+        .btn {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            background: linear-gradient(43deg, #4158D0 0%, #C850C0 100%);
+            color: white;
+            box-shadow: 0 5px 15px rgba(200, 80, 192, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(200, 80, 192, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="badge">Best Teacher + Best Friend 🌟</div>
+        <div class="emoji">👩‍🏫🤝✨</div>
+        <h1>Happy Teachers' Day, Teacher Afza!</h1>
+        <p>Aap sirf parhate nahi hain, balki ek sachi friend ki tarah hamesha guide bhi karte hain! Lesson samjhana ho ya koi tension share karni ho, aap hamesha best hain. ❤️</p>
+        
+        <div class="secret-note" id="secretNote">
+            "Sikhane ke saath-saath ek acha dost banne ke liye Thank You, Teacher Afza! Aap jaise teachers sach mein bohot rare hote hain." 🚀🌟
+        </div>
+
+        <button class="btn" onclick="toggleNote()" id="btnText">Tap for a special message 📩</button>
+    </div>
+
+    <script>
+        // Floating Background Generator (Stars & Icons)
+        const icons = ['⭐', '📚', '✨', '🎓', '💡', '🌟', '📝'];
+        
+        function createFloatingIcon() {
+            const icon = document.createElement('div');
+            icon.classList.add('floating-icon');
+            icon.innerHTML = icons[Math.floor(Math.random() * icons.length)];
+            icon.style.left = Math.random() * 100 + 'vw';
+            icon.style.animationDuration = Math.random() * 3 + 4 + 's';
+            document.body.appendChild(icon);
+
+            setTimeout(() => {
+                icon.remove();
+            }, 7000);
+        }
+
+        setInterval(createFloatingIcon, 350);
+
+        // Toggle Secret Message
+        function toggleNote() {
+            const note = document.getElementById('secretNote');
+            const btn = document.getElementById('btnText');
+
+            if (note.style.display === "block") {
+                note.style.display = "none";
+                btn.innerText = "Tap for a special message 📩";
+            } else {
+                note.style.display = "block";
+                btn.innerText = "Thank You! ✨";
+            }
+        }
+    </script>
+</body>
+</html>
