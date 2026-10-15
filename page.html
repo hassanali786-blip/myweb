@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment - Introduction to Business</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #0f172a;
+        }
+
+        .assignment-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 850px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            padding: 35px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .header-box {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .header-box h1 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: #38bdf8;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+
+        .info-grid span {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #0284c7;
+            font-weight: 700;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+        }
+
+        .def-box {
+            background: #f8fafc;
+            border-left: 4px solid #0284c7;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 14.5px;
+            line-height: 1.6;
+            color: #334155;
+            margin-bottom: 15px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .pros-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .cons-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .pros-box h3 {
+            color: #166534;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .cons-box h3 {
+            color: #991b1b;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            padding-left: 18px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: #334155;
+        }
+
+        ul li {
+            margin-bottom: 6px;
+        }
+
+        .table-container {
+            margin-top: 25px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            border: 1px solid #cbd5e1;
+        }
+
+        th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        @media (max-width: 650px) {
+            .grid-2, .info-grid {
+                grid-template-columns: 1fr;
+            }
+            .assignment-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="assignment-card">
+    <!-- Assignment Header -->
+    <div class="header-box">
+        <h1>📚 Assignment: Introduction to Business</h1>
+        <div class="info-grid">
+            <div><strong>Subject:</strong> <span>Introduction to Business</span></div>
+            <div><strong>Topic:</strong> <span>Sole Proprietorship & Partnership</span></div>
+            <div><strong>Submitted To:</strong> <span>Miss Amama</span></div>
+            <div><strong>Submitted By:</strong> <span>Hassan Ali (IT 1st Semester)</span></div>
+            <div><strong>Submission Date:</strong> <span>20 October, 2026</span></div>
+        </div>
+    </div>
+
+    <!-- 1. Sole Proprietorship -->
+    <div class="section-title">1. Sole Proprietorship</div>
+    <div class="def-box">
+        <strong>📌 Definition:</strong> A Sole Proprietorship is the simplest and oldest form of business organization. It is owned, managed, and controlled by a single individual. The owner provides all the capital, enjoys all the profits, and bears all the risks alone.
+    </div>
+
+    <div class="grid-2">
+        <div class="pros-box">
+            <h3>👍 Advantages</h3>
+            <ul>
+                <li><strong>Full Control:</strong> Owner has complete decision-making authority without requiring outside approvals.</li>
+                <li><strong>Easy to Start/Dissolve:</strong> Minimal legal formalities and low setup/closing costs.</li>
+                <li><strong>Direct Tax Benefits:</strong> Profits are taxed directly as personal income, avoiding double taxation.</li>
+                <li><strong>Secrecy:</strong> Business trade secrets and financial records remain confidential.</li>
+                <li><strong>Direct Motivation:</strong> Receiving 100% of profits incentivizes hard work.</li>
+            </ul>
+        </div>
+        <div class="cons-box">
+            <h3>👎 Disadvantages</h3>
+            <ul>
+                <li><strong>Unlimited Liability:</strong> Personal assets can be sold to settle business liabilities and debts.</li>
+                <li><strong>Limited Capital:</strong> Fund raising relies solely on personal savings or personal loans.</li>
+                <li><strong>Limited Growth:</strong> Expansion is restricted by limited financial and managerial capacity.</li>
+                <li><strong>Lack of Continuity:</strong> Business may abruptly end if the owner dies or becomes incapacitated.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 2. Partnership -->
+    <div class="section-title">2. Partnership</div>
+    <div class="def-box">
+        <strong>📌 Definition:</strong> A Partnership is a business structure where two or more individuals (up to 20) agree to pool their resources, share profits, and jointly manage a business. It is governed by a Partnership Deed which outlines the rights and duties of each partner.
+    </div>
+
+    <div class="grid-2">
+        <div class="pros-box">
+            <h3>👍 Advantages</h3>
+            <ul>
+                <li><strong>More Capital:</strong> Raises significantly more funds than a sole proprietorship by combining resources.</li>
+                <li><strong>Shared Responsibility:</strong> Management duties and workload are divided based on skills.</li>
+                <li><strong>Better Decision Making:</strong> Diverse skills, perspectives, and expertise lead to better choices.</li>
+                <li><strong>Shared Risk:</strong> Financial losses are shared among all partners, reducing individual burden.</li>
+            </ul>
+        </div>
+        <div class="cons-box">
+            <h3>👎 Disadvantages</h3>
+            <ul>
+                <li><strong>Potential Conflicts:</strong> Differences of opinion or disagreements can cause operational issues.</li>
+                <li><strong>Unlimited Liability:</strong> Partners face unlimited personal liability for debts incurred by the firm.</li>
+                <li><strong>Limited Life:</strong> Firm dissolves if a partner dies, leaves, or becomes bankrupt.</li>
+                <li><strong>Slow Decision Making:</strong> Requires consultation and consensus, which can delay actions.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="section-title">💡 Comparison Table</div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Sole Proprietorship</th>
+                    <th>Partnership</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Ownership</strong></td>
+                    <td>Owned by 1 person</td>
+                    <td>Owned by 2 or more persons</td>
+                </tr>
+                <tr>
+                    <td><strong>Capital Base</strong></td>
+                    <td>Limited to single owner's funds</td>
+                    <td>Larger capital pooled from partners</td>
+                </tr>
+                <tr>
+                    <td><strong>Decision Making</strong></td>
+                    <td>Quick and independent</td>
+                    <td>Shared (may take longer)</td>
+                </tr>
+                <tr>
+                    <td><strong>Risk Bearing</strong></td>
+                    <td>Borne entirely by the owner</td>
+                    <td>Shared among all partners</td>
+                </tr>
+                <tr>
+                    <td><strong>Liability</strong></td>
+                    <td>Unlimited liability</td>
+                    <td>Unlimited liability (General Partnerships)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>
