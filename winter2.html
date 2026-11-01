@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Snow Ops 3D: Anime Winter Battleground</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js 3D Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #030712;
+            touch-action: none;
+        }
+        .font-teko { font-family: 'Teko', sans-serif; }
+        
+        /* Glassmorphism Styling */
+        .hud-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        /* Crosshair */
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .crosshair::before, .crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(56, 189, 248, 0.85);
+        }
+        .crosshair::before { top: 7px; left: 0; width: 16px; height: 2px; }
+        .crosshair::after { top: 0; left: 7px; width: 2px; height: 16px; }
+
+        /* Virtual Joystick */
+        #joystickZone {
+            touch-action: none;
+        }
+        .joystick-base {
+            width: 110px;
+            height: 110px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(56, 189, 248, 0.4);
+            border-radius: 50%;
+            position: relative;
+        }
+        .joystick-stick {
+            width: 45px;
+            height: 45px;
+            background: rgba(56, 189, 248, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 32.5px;
+            left: 32.5px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+        }
+
+        /* Scope Effect */
+        .scope-overlay {
+            background: radial-gradient(circle, transparent 30%, black 70%);
+            border: 3px solid rgba(56, 189, 248, 0.6);
+        }
+    </style>
+</head>
+<body class="w-screen h-screen relative">
+
+    <!-- 3D Canvas Container -->
+    <div id="gameContainer" class="w-full h-full absolute inset-0"></div>
+
+    <!-- Scope Overlay -->
+    <div id="scopeOverlay" class="absolute inset-0 scope-overlay hidden pointer-events-none z-10 flex items-center justify-center">
+        <div class="w-full h-[1px] bg-cyan-400/50"></div>
+        <div class="h-full w-[1px] bg-cyan-400/50 absolute"></div>
+        <div class="w-32 h-32 border border-cyan-400/40 rounded-full absolute"></div>
+    </div>
+
+    <!-- HUD Overlay -->
+    <div id="hud" class="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-3 sm:p-6 opacity-0 transition-opacity duration-500">
+        
+        <!-- Top Bar: Health, MiniMap, Mission Info -->
+        <div class="flex justify-between items-start w-full">
+            
+            <!-- Player Stats -->
+            <div class="hud-panel rounded-2xl p-3 text-white flex flex-col space-y-2 w-48 sm:w-64">
+                <div class="flex items-center justify-between text-xs font-bold text-cyan-300">
+                    <span>ANIME OPERATIVE</span>
+                    <span id="playerRole">ON FOOT</span>
+                </div>
+                <!-- Health Bar -->
+                <div>
+                    <div class="flex justify-between text-xs text-slate-300 mb-1">
+                        <span>HEALTH</span>
+                        <span id="hpValue">100 / 100</span>
+                    </div>
+                    <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <div id="hpBar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 w-full transition-all duration-300"></div>
+                    </div>
+                </div>
+                <!-- Armor Bar -->
+                <div>
+                    <div class="flex justify-between text-xs text-slate-300 mb-1">
+                        <span>ARMOR</span>
+                        <span id="armorValue">50 / 50</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                        <div id="armorBar" class="h-full bg-sky-400 w-full transition-all duration-300"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mission Objective Panel -->
+            <div class="hud-panel rounded-2xl p-3 sm:p-4 text-center max-w-xs sm:max-w-md w-full border-cyan-400/30">
+                <div class="text-xs font-bold text-amber-400 tracking-wider">ACTIVE MISSION</div>
+                <div id="missionTitle" class="text-lg sm:text-2xl font-teko tracking-wide text-cyan-200 uppercase">MISSION 1: SECURE VILLAGE</div>
+                <div id="missionDesc" class="text-xs sm:text-sm text-slate-300">Clear out rogue anime enemy agents patrolling the snowy huts.</div>
+                <div id="missionProgress" class="mt-2 text-xs font-bold text-emerald-400">Enemies Defeated: 0 / 5</div>
+            </div>
+
+            <!-- MiniMap Container -->
+            <div class="hud-panel rounded-2xl p-2 text-center w-28 h-28 sm:w-36 sm:h-36 relative overflow-hidden border-cyan-400/30 flex items-center justify-center">
+                <canvas id="miniMapCanvas" class="w-full h-full rounded-xl"></canvas>
+                <div class="absolute text-[9px] font-bold text-cyan-300 top-1 left-2">MINIMAP</div>
+            </div>
+        </div>
+
+        <!-- Center Aim Crosshair -->
+        <div id="crosshair" class="crosshair"></div>
+
+        <!-- Drive Vehicle Prompt -->
+        <div id="vehiclePrompt" class="hidden absolute top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 hud-panel rounded-2xl px-6 py-3 text-center border-amber-400/50 animate-bounce pointer-events-auto cursor-pointer">
+            <span class="text-amber-300 font-bold text-sm sm:text-lg">PRESS 'F' or TAP TO DRIVE</span>
+            <div id="vehiclePromptType" class="text-xs text-slate-300">Winter Sports Car</div>
+        </div>
+
+        <!-- Bottom Bar: Weapons, Controls, Ammo -->
+        <div class="flex justify-between items-end w-full">
+            
+            <!-- Mobile Touch Joystick -->
+            <div id="joystickZone" class="pointer-events-auto sm:hidden">
+                <div class="joystick-base" id="joystickBase">
+                    <div class="joystick-stick" id="joystickStick"></div>
+                </div>
+            </div>
+
+            <!-- On-Screen Instructions (Desktop) -->
+            <div class="hidden sm:block hud-panel rounded-2xl p-3 text-xs text-slate-300 space-y-1">
+                <div><span class="text-cyan-300 font-bold">WASD:</span> Move / Drive</div>
+                <div><span class="text-cyan-300 font-bold">Mouse Look:</span> Rotate Camera</div>
+                <div><span class="text-cyan-300 font-bold">Left Click:</span> Shoot / Gas</div>
+                <div><span class="text-cyan-300 font-bold">Right Click:</span> Scope Aim</div>
+                <div><span class="text-cyan-300 font-bold">F:</span> Enter/Exit Vehicle</div>
+                <div><span class="text-cyan-300 font-bold">Space / Shift:</span> Jump / Sprint</div>
+            </div>
+
+            <!-- Weapon & Action Controls (Mobile Touch + Ammo HUD) -->
+            <div class="flex items-end space-x-3 pointer-events-auto">
+                
+                <!-- Action Buttons (Mobile / Touch) -->
+                <div class="flex flex-col space-y-2 sm:hidden">
+                    <button id="btnDrive" class="w-12 h-12 rounded-2xl bg-amber-500/80 border border-amber-300 text-white font-bold text-xs flex items-center justify-center active:scale-95">🏎️ DRIVE</button>
+                    <button id="btnJump" class="w-12 h-12 rounded-2xl bg-cyan-600/80 border border-cyan-300 text-white font-bold text-xs flex items-center justify-center active:scale-95">🚀 JUMP</button>
+                    <button id="btnScope" class="w-12 h-12 rounded-2xl bg-indigo-600/80 border border-indigo-300 text-white font-bold text-xs flex items-center justify-center active:scale-95">🔍 AIM</button>
+                    <button id="btnShoot" class="w-14 h-14 rounded-full bg-rose-600/90 border-2 border-rose-300 text-white font-bold text-xs flex items-center justify-center active:scale-95 shadow-lg shadow-rose-600/40">🔥 FIRE</button>
+                </div>
+
+                <!-- Ammo & Weapon Box -->
+                <div class="hud-panel rounded-2xl p-3 text-right text-white min-w-[120px] sm:min-w-[160px]">
+                    <div class="text-xs text-cyan-300 font-bold" id="weaponName">ASSAULT RIFLE</div>
+                    <div class="text-3xl sm:text-4xl font-teko tracking-wider text-amber-300">
+                        <span id="currentAmmo">30</span> / <span id="totalAmmo" class="text-slate-400 text-xl">180</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400">SELECT: 1 / 2 WEAPON</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Menu Overlay -->
+    <div id="mainMenu" class="absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div class="text-6xl sm:text-8xl font-teko font-bold bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-400 bg-clip-text text-transparent drop-shadow-lg">
+            SNOW OPS 3D
+        </div>
+        <p class="text-slate-300 max-w-md text-sm sm:text-base mb-6">
+            An open-world winter tactical shooter inspired by Free Fire. Explore snowy villages, pilot winter sports cars & bikes, execute missions, and eliminate rogue agents!
+        </p>
+
+        <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+            <button id="btnPlay" class="px-10 py-4 bg-gradient-to-r from-cyan-400 via-sky-400 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-slate-950 font-extrabold text-xl rounded-2xl shadow-xl shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer">
+                START WINTER MISSION ❄️
+            </button>
+        </div>
+
+        <div class="mt-8 text-xs text-slate-400 max-w-xs leading-relaxed">
+            Tip: Click the screen to lock cursor control. Walk near vehicles & press <strong>F</strong> to drive.
+        </div>
+    </div>
+
+    <!-- Game Over / Mission Complete Modal -->
+    <div id="modalOverlay" class="hidden absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div id="modalTitle" class="text-5xl font-teko font-bold text-emerald-400 mb-2">MISSION ACCOMPLISHED!</div>
+        <p id="modalDesc" class="text-slate-300 max-w-md text-sm mb-6">You secured the village and neutralized all threats!</p>
+        <button id="btnRestart" class="px-8 py-3.5 bg-gradient-to-r from-emerald-400 to-cyan-500 text-slate-950 font-extrabold text-lg rounded-2xl shadow-lg hover:scale-105 transition">
+            NEXT MISSION 🚀
+        </button>
+    </div>
+
+    <script>
+        // --- Web Audio API Synthesizer ---
+        class AudioSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+            playGunshot() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.12);
+            }
+            playEngine() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(140, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.1);
+            }
+            playExplosion() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(20, this.ctx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.4);
+            }
+            playHit() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+        }
+        const audio = new AudioSynth();
+
+        // --- Game Core Variables ---
+        let scene, camera, renderer, clock;
+        let isPlaying = false;
+        let isScoping = false;
+
+        // Player State
+        const player = {
+            mesh: null,
+            hp: 100,
+            maxHp: 100,
+            armor: 50,
+            speed: 0.25,
+            sprintMultiplier: 1.6,
+            velocity: new THREE.Vector3(),
+            isGrounded: true,
+            inVehicle: null, // null, or reference to car/bike object
+            ammo: 30,
+            totalAmmo: 180,
+            position: new THREE.Vector3(0, 0, 0),
+            rotationY: 0
+        };
+
+        // Input Tracking
+        const keys = { w: false, a: false, s: false, d: false, space: false, shift: false, f: false };
+        let mouseX = 0, mouseY = 0;
+        let touchInput = { x: 0, y: 0 };
+
+        // Entities Arrays
+        let vehicles = [];
+        let enemies = [];
+        let bullets = [];
+        let houses = [];
+        let snowParticles;
+
+        // Mission State
+        let currentMission = 1;
+        let enemiesDefeated = 0;
+        const totalMissionEnemies = 5;
+
+        // MiniMap Canvas
+        const miniMapCanvas = document.getElementById('miniMapCanvas');
+        const miniMapCtx = miniMapCanvas.getContext('2d');
+
+        // --- Init 3D World ---
+        function initWorld() {
+            const container = document.getElementById('gameContainer');
+
+            // Scene Setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0c192c);
+            scene.fog = new THREE.FogExp2(0x0c192c, 0.008);
+
+            // Camera Setup
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x90b0d0, 0.7);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xe0f2fe, 1.2);
+            dirLight.position.set(80, 150, 50);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.camera.near = 0.5;
+            dirLight.shadow.camera.far = 300;
+            const d = 120;
+            dirLight.shadow.camera.left = -d;
+            dirLight.shadow.camera.right = d;
+            dirLight.shadow.camera.top = d;
+            dirLight.shadow.camera.bottom = -d;
+            scene.add(dirLight);
+
+            // Build Environment
+            createTerrain();
+            createSnowfall();
+            createVillageHouses();
+            createVehicles();
+            createPlayerCharacter();
+            spawnEnemies();
+
+            // Listeners
+            window.addEventListener('resize', onWindowResize);
+            setupInputListeners();
+        }
+
+        // --- Procedural Terrain & Trees ---
+        function createTerrain() {
+            // Ground Mesh
+            const groundGeo = new THREE.PlaneGeometry(400, 400, 64, 64);
+            // Heightmap noise displacement
+            const pos = groundGeo.attributes.position;
+            for (let i = 0; i < pos.count; i++) {
+                const vx = pos.getX(i);
+                const vy = pos.getY(i);
+                const z = Math.sin(vx * 0.03) * Math.cos(vy * 0.03) * 3 + Math.sin(vx * 0.08) * 1.5;
+                pos.setZ(i, z);
+            }
+            groundGeo.computeVertexNormals();
+
+            const groundMat = new THREE.MeshStandardMaterial({
+                color: 0xe2e8f0,
+                roughness: 0.9,
+                metalness: 0.1
+            });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            // Frozen Ice Lake Patch
+            const iceGeo = new THREE.CircleGeometry(35, 32);
+            const iceMat = new THREE.MeshStandardMaterial({
+                color: 0x38bdf8,
+                roughness: 0.1,
+                metalness: 0.8,
+                transparent: true,
+                opacity: 0.85
+            });
+            const ice = new THREE.Mesh(iceGeo, iceMat);
+            ice.rotation.x = -Math.PI / 2;
+            ice.position.set(-60, 0.2, -40);
+            scene.add(ice);
+
+            // Populate Snowy Pine Trees
+            for (let i = 0; i < 120; i++) {
+                const tx = (Math.random() - 0.5) * 360;
+                const tz = (Math.random() - 0.5) * 360;
+                // Avoid spawn center
+                if (Math.hypot(tx, tz) > 20) {
+                    createPineTree(tx, tz);
+                }
+            }
+        }
+
+        function createPineTree(x, z) {
+            const treeGroup = new THREE.Group();
+            // Trunk
+            const trunkGeo = new THREE.CylinderGeometry(0.5, 0.8, 4, 8);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 2;
+            trunk.castShadow = true;
+            treeGroup.add(trunk);
+
+            // Snowy Foliage Layers
+            const leavesMat = new THREE.MeshStandardMaterial({ color: 0x0f5132, roughness: 0.8 });
+            const snowMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 });
+
+            for (let i = 0; i < 3; i++) {
+                const coneGeo = new THREE.ConeGeometry(4 - i * 0.9, 4, 8);
+                const cone = new THREE.Mesh(coneGeo, leavesMat);
+                cone.position.y = 4 + i * 2.5;
+                cone.castShadow = true;
+                treeGroup.add(cone);
+
+                // Snow Cap
+                const capGeo = new THREE.ConeGeometry(3.2 - i * 0.9, 1.5, 8);
+                const cap = new THREE.Mesh(capGeo, snowMat);
+                cap.position.y = 4.8 + i * 2.5;
+                treeGroup.add(cap);
+            }
+
+            treeGroup.position.set(x, 0, z);
+            scene.add(treeGroup);
+        }
+
+        // --- Procedural Houses & Outposts ---
+        function createVillageHouses() {
+            const positions = [
+                { x: 30, z: -30 },
+                { x: 55, z: -20 },
+                { x: -40, z: 40 },
+                { x: 20, z: 60 },
+                { x: -50, z: -60 }
+            ];
+
+            positions.forEach(pos => {
+                const house = new THREE.Group();
+                // Base Cabin
+                const wallGeo = new THREE.BoxGeometry(10, 6, 12);
+                const wallMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
+                const walls = new THREE.Mesh(wallGeo, wallMat);
+                walls.position.y = 3;
+                walls.castShadow = true;
+                walls.receiveShadow = true;
+                house.add(walls);
+
+                // Snowy Roof
+                const roofGeo = new THREE.ConeGeometry(9, 5, 4);
+                const roofMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.4 });
+                const roof = new THREE.Mesh(roofGeo, roofMat);
+                roof.position.y = 8;
+                roof.rotation.y = Math.PI / 4;
+                roof.castShadow = true;
+                house.add(roof);
+
+                // Door Frame
+                const doorGeo = new THREE.BoxGeometry(2.2, 4, 0.2);
+                const doorMat = new THREE.MeshStandardMaterial({ color: 0x292524 });
+                const door = new THREE.Mesh(doorGeo, doorMat);
+                door.position.set(0, 2, 6.05);
+                house.add(door);
+
+                house.position.set(pos.x, 0, pos.z);
+                scene.add(house);
+                houses.push(house);
+            });
+        }
+
+        // --- Procedural Vehicles (Sports Car & Motorbike) ---
+        function createVehicles() {
+            // 1. Winter Sports Car
+            const car = new THREE.Group();
+            car.userData = { type: 'Sports Car', speed: 0, maxSpeed: 1.1, accel: 0.02, steering: 0.04 };
+            
+            // Body Mesh
+            const bodyGeo = new THREE.BoxGeometry(4.2, 1.4, 8.5);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.8, roughness: 0.2 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 1.2;
+            body.castShadow = true;
+            car.add(body);
+
+            // Cabin / Glass
+            const cabinGeo = new THREE.BoxGeometry(3.6, 1.1, 4);
+            const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1 });
+            const cabin = new THREE.Mesh(cabinGeo, cabinMat);
+            cabin.position.set(0, 2.2, -0.5);
+            car.add(cabin);
+
+            // Wheels
+            const wheelGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.6, 16);
+            const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 });
+            const wheelPos = [
+                [-2.1, 0.7, 2.5], [2.1, 0.7, 2.5],
+                [-2.1, 0.7, -2.5], [2.1, 0.7, -2.5]
+            ];
+            wheelPos.forEach(p => {
+                const w = new THREE.Mesh(wheelGeo, wheelMat);
+                w.rotation.z = Math.PI / 2;
+                w.position.set(...p);
+                w.castShadow = true;
+                car.add(w);
+            });
+
+            car.position.set(12, 0, 15);
+            scene.add(car);
+            vehicles.push(car);
+
+            // 2. Snow Bike
+            const bike = new THREE.Group();
+            bike.userData = { type: 'Snow Bike', speed: 0, maxSpeed: 1.3, accel: 0.03, steering: 0.05 };
+
+            const frameGeo = new THREE.BoxGeometry(1.2, 1.2, 4);
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, metalness: 0.7, roughness: 0.3 });
+            const frame = new THREE.Mesh(frameGeo, frameMat);
+            frame.position.y = 1;
+            frame.castShadow = true;
+            bike.add(frame);
+
+            // Skis / Track
+            const skiGeo = new THREE.BoxGeometry(0.4, 0.1, 3);
+            const skiMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9 });
+            const leftSki = new THREE.Mesh(skiGeo, skiMat);
+            leftSki.position.set(-0.8, 0.1, 1);
+            const rightSki = leftSki.clone();
+            rightSki.position.x = 0.8;
+            bike.add(leftSki);
+            bike.add(rightSki);
+
+            bike.position.set(-15, 0, 10);
+            scene.add(bike);
+            vehicles.push(bike);
+        }
+
+        // --- Anime Hero Character ---
+        function createPlayerCharacter() {
+            player.mesh = new THREE.Group();
+
+            // Head (Anime proportions)
+            const headGeo = new THREE.SphereGeometry(0.7, 16, 16);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.6 }); // Hair/Head
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 3.2;
+            head.castShadow = true;
+            player.mesh.add(head);
+
+            // Anime Hair Spikes
+            const hairGeo = new THREE.ConeGeometry(0.3, 0.8, 5);
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8 });
+            for(let i=0; i<6; i++) {
+                const spike = new THREE.Mesh(hairGeo, hairMat);
+                spike.position.set(Math.sin(i)*0.4, 3.7, Math.cos(i)*0.4);
+                spike.rotation.x = 0.3;
+                player.mesh.add(spike);
+            }
+
+            // Body / Tactical Jacket
+            const bodyGeo = new THREE.BoxGeometry(1.2, 1.8, 0.8);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 2;
+            body.castShadow = true;
+            player.mesh.add(body);
+
+            // Scarf / Accent
+            const scarfGeo = new THREE.TorusGeometry(0.5, 0.15, 8, 16);
+            const scarfMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e });
+            const scarf = new THREE.Mesh(scarfGeo, scarfMat);
+            scarf.rotation.x = Math.PI / 2;
+            scarf.position.y = 2.8;
+            player.mesh.add(scarf);
+
+            // Rifle Weapon Mesh
+            const rifleGroup = new THREE.Group();
+            const barrelGeo = new THREE.BoxGeometry(0.15, 0.15, 1.8);
+            const rifleMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+            const barrel = new THREE.Mesh(barrelGeo, rifleMat);
+            barrel.position.set(0.6, 2.1, -0.8);
+            rifleGroup.add(barrel);
+            player.mesh.add(rifleGroup);
+
+            player.mesh.position.set(0, 0, 0);
+            scene.add(player.mesh);
+        }
+
+        // --- Rogue Enemy AI Spawning ---
+        function spawnEnemies() {
+            // Remove existing
+            enemies.forEach(e => scene.remove(e.mesh));
+            enemies = [];
+
+            for (let i = 0; i < totalMissionEnemies; i++) {
+                const enemyMesh = new THREE.Group();
+
+                // Red Tactical Suit
+                const bodyGeo = new THREE.BoxGeometry(1.2, 1.8, 0.8);
+                const bodyMat = new THREE.MeshStandardMaterial({ color: 0xbe123c });
+                const body = new THREE.Mesh(bodyGeo, bodyMat);
+                body.position.y = 2;
+                body.castShadow = true;
+                enemyMesh.add(body);
+
+                const headGeo = new THREE.SphereGeometry(0.6, 16, 16);
+                const headMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 3.1;
+                enemyMesh.add(head);
+
+                // Spawn locations around village
+                const angle = (i / totalMissionEnemies) * Math.PI * 2;
+                const dist = 40 + Math.random() * 30;
+                enemyMesh.position.set(Math.sin(angle) * dist, 0, Math.cos(angle) * dist);
+
+                scene.add(enemyMesh);
+
+                enemies.push({
+                    mesh: enemyMesh,
+                    hp: 60,
+                    speed: 0.08,
+                    lastShoot: 0
+                });
+            }
+        }
+
+        // --- Procedural Snow Particle System ---
+        function createSnowfall() {
+            const count = 1200;
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(count * 3);
+
+            for (let i = 0; i < count * 3; i += 3) {
+                pos[i] = (Math.random() - 0.5) * 300;
+                pos[i + 1] = Math.random() * 100;
+                pos[i + 2] = (Math.random() - 0.5) * 300;
+            }
+
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+
+            const mat = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.8,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            snowParticles = new THREE.Points(geo, mat);
+            scene.add(snowParticles);
+        }
+
+        function updateSnowfall() {
+            if (!snowParticles) return;
+            const pos = snowParticles.geometry.attributes.position;
+            for (let i = 1; i < pos.count * 3; i += 3) {
+                pos.array[i] -= 0.3;
+                if (pos.array[i] < 0) pos.array[i] = 100;
+            }
+            pos.needsUpdate = true;
+        }
+
+        // --- Controls & Listeners ---
+        function setupInputListeners() {
+            // Keyboard
+            window.addEventListener('keydown', (e) => {
+                const k = e.key.toLowerCase();
+                if (k === 'w') keys.w = true;
+                if (k === 'a') keys.a = true;
+                if (k === 's') keys.s = true;
+                if (k === 'd') keys.d = true;
+                if (e.code === 'Space') keys.space = true;
+                if (e.key === 'Shift') keys.shift = true;
+                if (k === 'f') toggleVehicleEnter();
+            });
+
+            window.addEventListener('keyup', (e) => {
+                const k = e.key.toLowerCase();
+                if (k === 'w') keys.w = false;
+                if (k === 'a') keys.a = false;
+                if (k === 's') keys.s = false;
+                if (k === 'd') keys.d = false;
+                if (e.code === 'Space') keys.space = false;
+                if (e.key === 'Shift') keys.shift = false;
+            });
+
+            // Pointer Lock / Mouse Look
+            document.addEventListener('pointerlockchange', () => {
+                // Pointer lock state tracking
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === document.body) {
+                    player.rotationY -= e.movementX * 0.003;
+                }
+            });
+
+            window.addEventListener('mousedown', (e) => {
+                if (!isPlaying) return;
+                audio.init();
+                if (e.button === 0) { // Left Click Shoot
+                    shootWeapon();
+                } else if (e.button === 2) { // Right Click Aim Scope
+                    isScoping = !isScoping;
+                    document.getElementById('scopeOverlay').classList.toggle('hidden', !isScoping);
+                }
+            });
+
+            window.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Touch Joystick logic
+            const joystickBase = document.getElementById('joystickBase');
+            const joystickStick = document.getElementById('joystickStick');
+            
+            joystickBase.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = joystickBase.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                let dx = touch.clientX - centerX;
+                let dy = touch.clientY - centerY;
+                const dist = Math.hypot(dx, dy);
+                const maxDist = 40;
+
+                if (dist > maxDist) {
+                    dx = (dx / dist) * maxDist;
+                    dy = (dy / dist) * maxDist;
+                }
+
+                joystickStick.style.transform = `translate(${dx}px, ${dy}px)`;
+                touchInput.x = dx / maxDist;
+                touchInput.y = dy / maxDist;
+            });
+
+            joystickBase.addEventListener('touchend', () => {
+                joystickStick.style.transform = `translate(0px, 0px)`;
+                touchInput.x = 0;
+                touchInput.y = 0;
+            });
+
+            // Mobile Buttons
+            document.getElementById('btnShoot').addEventListener('click', () => { audio.init(); shootWeapon(); });
+            document.getElementById('btnJump').addEventListener('click', () => { jumpPlayer(); });
+            document.getElementById('btnScope').addEventListener('click', () => {
+                isScoping = !isScoping;
+                document.getElementById('scopeOverlay').classList.toggle('hidden', !isScoping);
+            });
+            document.getElementById('btnDrive').addEventListener('click', () => { toggleVehicleEnter(); });
+            document.getElementById('vehiclePrompt').addEventListener('click', () => { toggleVehicleEnter(); });
+        }
+
+        // --- Vehicle Drive Toggle Mechanics ---
+        function toggleVehicleEnter() {
+            if (player.inVehicle) {
+                // Exit Vehicle
+                player.mesh.position.copy(player.inVehicle.position).add(new THREE.Vector3(3, 0, 0));
+                player.mesh.visible = true;
+                player.inVehicle = null;
+                document.getElementById('playerRole').textContent = "ON FOOT";
+            } else {
+                // Find Nearest Vehicle
+                vehicles.forEach(v => {
+                    const dist = player.mesh.position.distanceTo(v.position);
+                    if (dist < 6) {
+                        player.inVehicle = v;
+                        player.mesh.visible = false;
+                        document.getElementById('playerRole').textContent = v.userData.type.toUpperCase();
+                    }
+                });
+            }
+        }
+
+        function checkVehiclePrompt() {
+            if (player.inVehicle) {
+                document.getElementById('vehiclePrompt').classList.add('hidden');
+                return;
+            }
+            let near = false;
+            vehicles.forEach(v => {
+                if (player.mesh.position.distanceTo(v.position) < 6) {
+                    near = true;
+                    document.getElementById('vehiclePromptType').textContent = v.userData.type;
+                }
+            });
+            document.getElementById('vehiclePrompt').classList.toggle('hidden', !near);
+        }
+
+        // --- Shooting & Combat ---
+        function shootWeapon() {
+            if (player.ammo <= 0) return;
+            player.ammo--;
+            document.getElementById('currentAmmo').textContent = player.ammo;
+            audio.playGunshot();
+
+            // Spawn Raycast Bullet
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+            // Check enemy hits
+            const enemyMeshes = enemies.map(e => e.mesh.children[0]);
+            const intersects = raycaster.intersectObjects(enemyMeshes);
+
+            if (intersects.length > 0) {
+                const hitMesh = intersects[0].object.parent;
+                const enemyObj = enemies.find(e => e.mesh === hitMesh);
+                if (enemyObj) {
+                    enemyObj.hp -= 30;
+                    audio.playHit();
+                    if (enemyObj.hp <= 0) {
+                        // Destroy enemy
+                        scene.remove(enemyObj.mesh);
+                        enemies = enemies.filter(e => e !== enemyObj);
+                        enemiesDefeated++;
+                        document.getElementById('missionProgress').textContent = `Enemies Defeated: ${enemiesDefeated} / ${totalMissionEnemies}`;
+                        
+                        if (enemiesDefeated >= totalMissionEnemies) {
+                            missionAccomplished();
+                        }
+                    }
+                }
+            }
+        }
+
+        function jumpPlayer() {
+            if (player.isGrounded && !player.inVehicle) {
+                player.velocity.y = 0.3;
+                player.isGrounded = false;
+            }
+        }
+
+        // --- Main Game Logic Loop ---
+        function updateGame() {
+            if (!isPlaying) return;
+
+            const delta = clock.getDelta();
+
+            // 1. Vehicle Driving Controls
+            if (player.inVehicle) {
+                const v = player.inVehicle;
+                const data = v.userData;
+
+                if (keys.w || touchInput.y < -0.3) {
+                    data.speed = Math.min(data.speed + data.accel, data.maxSpeed);
+                    audio.playEngine();
+                } else if (keys.s || touchInput.y > 0.3) {
+                    data.speed = Math.max(data.speed - data.accel, -data.maxSpeed * 0.5);
+                } else {
+                    data.speed *= 0.96; // Friction
+                }
+
+                if (keys.a || touchInput.x < -0.3) v.rotation.y += data.steering;
+                if (keys.d || touchInput.x > 0.3) v.rotation.y -= data.steering;
+
+                v.translateZ(data.speed);
+                player.mesh.position.copy(v.position);
+
+                // Camera Follow Vehicle
+                const camOffset = new THREE.Vector3(0, 5, -12).applyAxisAngle(new THREE.Vector3(0, 1, 0), v.rotation.y);
+                camera.position.copy(v.position).add(camOffset);
+                camera.lookAt(v.position.clone().add(new THREE.Vector3(0, 2, 0)));
+
+            } else {
+                // 2. On-Foot Character Movement
+                let moveX = 0, moveZ = 0;
+
+                if (keys.w) moveZ += 1;
+                if (keys.s) moveZ -= 1;
+                if (keys.a) moveX += 1;
+                if (keys.d) moveX -= 1;
+
+                if (touchInput.x !== 0 || touchInput.y !== 0) {
+                    moveX = -touchInput.x;
+                    moveZ = -touchInput.y;
+                }
+
+                const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
+                moveVec.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY);
+
+                const currentSpeed = player.speed * (keys.shift ? player.sprintMultiplier : 1);
+                player.mesh.position.addScaledVector(moveVec, currentSpeed);
+
+                player.mesh.rotation.y = player.rotationY;
+
+                // Gravity & Jump Physics
+                player.velocity.y -= 0.015;
+                player.mesh.position.y += player.velocity.y;
+                if (player.mesh.position.y <= 0) {
+                    player.mesh.position.y = 0;
+                    player.velocity.y = 0;
+                    player.isGrounded = true;
+                }
+
+                // Camera Follow Character
+                const dist = isScoping ? 1.5 : 7;
+                const height = isScoping ? 2.2 : 4;
+                const camOffset = new THREE.Vector3(0, height, -dist).applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY);
+                camera.position.copy(player.mesh.position).add(camOffset);
+                camera.lookAt(player.mesh.position.clone().add(new THREE.Vector3(0, 2, 0)));
+            }
+
+            // 3. Enemy AI Patrol & Attack
+            enemies.forEach(e => {
+                const distToPlayer = e.mesh.position.distanceTo(player.mesh.position);
+                if (distToPlayer < 40) {
+                    e.mesh.lookAt(player.mesh.position);
+                    if (distToPlayer > 8) {
+                        e.mesh.translateZ(e.speed);
+                    } else {
+                        // Enemy Attacks Player
+                        const now = performance.now();
+                        if (now - e.lastShoot > 1500) {
+                            e.lastShoot = now;
+                            player.hp -= 8;
+                            audio.playHit();
+                            updateHUDStats();
+
+                            if (player.hp <= 0) {
+                                gameOver();
+                            }
+                        }
+                    }
+                }
+            });
+
+            checkVehiclePrompt();
+            updateSnowfall();
+            renderMiniMap();
+        }
+
+        // --- Render MiniMap Canvas ---
+        function renderMiniMap() {
+            miniMapCtx.fillStyle = '#0f172a';
+            miniMapCtx.fillRect(0, 0, miniMapCanvas.width, miniMapCanvas.height);
+
+            const mapScale = 0.6;
+            const centerX = miniMapCanvas.width / 2;
+            const centerY = miniMapCanvas.height / 2;
+
+            // Draw Houses
+            miniMapCtx.fillStyle = '#78350f';
+            houses.forEach(h => {
+                const mx = centerX + (h.position.x - player.mesh.position.x) * mapScale;
+                const my = centerY + (h.position.z - player.mesh.position.z) * mapScale;
+                miniMapCtx.fillRect(mx - 3, my - 3, 6, 6);
+            });
+
+            // Draw Enemies
+            miniMapCtx.fillStyle = '#ef4444';
+            enemies.forEach(e => {
+                const mx = centerX + (e.mesh.position.x - player.mesh.position.x) * mapScale;
+                const my = centerY + (e.mesh.position.z - player.mesh.position.z) * mapScale;
+                miniMapCtx.beginPath();
+                miniMapCtx.arc(mx, my, 3, 0, Math.PI * 2);
+                miniMapCtx.fill();
+            });
+
+            // Draw Vehicles
+            miniMapCtx.fillStyle = '#f59e0b';
+            vehicles.forEach(v => {
+                const mx = centerX + (v.position.x - player.mesh.position.x) * mapScale;
+                const my = centerY + (v.position.z - player.mesh.position.z) * mapScale;
+                miniMapCtx.fillRect(mx - 2, my - 2, 5, 5);
+            });
+
+            // Draw Player Icon
+            miniMapCtx.fillStyle = '#38bdf8';
+            miniMapCtx.beginPath();
+            miniMapCtx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+            miniMapCtx.fill();
+        }
+
+        // --- HUD & UI Updates ---
+        function updateHUDStats() {
+            document.getElementById('hpValue').textContent = `${Math.max(0, player.hp)} / 100`;
+            document.getElementById('hpBar').style.width = `${Math.max(0, player.hp)}%`;
+        }
+
+        function missionAccomplished() {
+            isPlaying = false;
+            document.exitPointerLock();
+            document.getElementById('modalTitle').textContent = "MISSION ACCOMPLISHED!";
+            document.getElementById('modalTitle').className = "text-5xl font-teko font-bold text-emerald-400 mb-2";
+            document.getElementById('modalDesc').textContent = "You successfully cleared out the rogue anime agents in the snowy territory!";
+            document.getElementById('modalOverlay').classList.remove('hidden');
+        }
+
+        function gameOver() {
+            isPlaying = false;
+            document.exitPointerLock();
+            document.getElementById('modalTitle').textContent = "MISSION FAILED!";
+            document.getElementById('modalTitle').className = "text-5xl font-teko font-bold text-rose-500 mb-2";
+            document.getElementById('modalDesc').textContent = "Operative down! Retreat and try again.";
+            document.getElementById('modalOverlay').classList.remove('hidden');
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- Game Animation Loop ---
+        function animate() {
+            requestAnimationFrame(animate);
+            updateGame();
+            renderer.render(scene, camera);
+        }
+
+        // --- Start Handlers ---
+        document.getElementById('btnPlay').addEventListener('click', () => {
+            audio.init();
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('hud').classList.remove('opacity-0');
+            document.body.requestPointerLock();
+            isPlaying = true;
+        });
+
+        document.getElementById('btnRestart').addEventListener('click', () => {
+            player.hp = 100;
+            player.ammo = 30;
+            enemiesDefeated = 0;
+            updateHUDStats();
+            document.getElementById('missionProgress').textContent = `Enemies Defeated: 0 / ${totalMissionEnemies}`;
+            document.getElementById('modalOverlay').classList.add('hidden');
+            spawnEnemies();
+            document.body.requestPointerLock();
+            isPlaying = true;
+        });
+
+        // Initialize App
+        window.onload = function() {
+            initWorld();
+            animate();
+        };
+    </script>
+</body>
+</html>
