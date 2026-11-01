@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Winter Wonderland Catcher</title>
+    <!-- Tailwind CSS for modern UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for modern typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            color: #f8fafc;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        /* Glassmorphism Panel Styling */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Custom glow effect for canvas container */
+        .glow-box {
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.25);
+        }
+
+        /* Smooth Canvas Styling */
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4">
+
+    <!-- Main Game Wrapper Container -->
+    <div class="relative w-full max-w-4xl flex flex-col items-center">
+        
+        <!-- Header Banner -->
+        <header class="w-full flex justify-between items-center mb-3 px-4 py-2 glass-panel rounded-2xl border-cyan-500/20">
+            <div class="flex items-center space-x-3">
+                <span class="text-3xl animate-bounce">❄️</span>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold title-font bg-gradient-to-r from-cyan-300 via-sky-200 to-indigo-300 bg-clip-text text-transparent">
+                        Frosty Fest Catcher
+                    </h1>
+                    <p class="text-xs text-sky-300/80 hidden sm:block">Catch the gifts & ice crystals, avoid falling icicles!</p>
+                </div>
+            </div>
+            
+            <!-- Controls & Sound Toggle -->
+            <div class="flex items-center space-x-2">
+                <button id="soundToggleBtn" class="p-2 sm:px-3 sm:py-1.5 rounded-xl glass-panel hover:bg-white/10 transition flex items-center space-x-1.5 text-xs text-sky-200">
+                    <span id="soundIcon">🔊</span>
+                    <span class="hidden sm:inline" id="soundText">Sound ON</span>
+                </button>
+                <button id="pauseBtn" class="p-2 sm:px-3 sm:py-1.5 rounded-xl glass-panel hover:bg-white/10 transition text-xs text-sky-200">
+                    ⏸️ Pause
+                </button>
+            </div>
+        </header>
+
+        <!-- Game Screen Box -->
+        <div class="relative w-full aspect-[4/3] max-h-[70vh] rounded-2xl overflow-hidden glass-panel border border-cyan-300/30 glow-box flex items-center justify-center">
+            
+            <!-- The Game Canvas -->
+            <canvas id="gameCanvas" class="w-full h-full"></canvas>
+
+            <!-- Overlay HUD (Score & Combo) -->
+            <div id="hud" class="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none transition-opacity duration-300 opacity-0">
+                <div class="bg-slate-900/80 backdrop-blur border border-sky-400/30 rounded-xl px-4 py-2 text-center min-w-[100px]">
+                    <div class="text-[10px] uppercase tracking-wider text-sky-300 font-bold">Score</div>
+                    <div id="scoreText" class="text-2xl font-black title-font text-sky-100">0</div>
+                </div>
+
+                <div id="comboContainer" class="hidden bg-gradient-to-r from-amber-500/80 to-rose-500/80 backdrop-blur border border-amber-300/40 rounded-xl px-3 py-1 text-center animate-pulse">
+                    <div class="text-[9px] uppercase tracking-wider text-amber-100 font-bold">Combo</div>
+                    <div id="comboText" class="text-lg font-black title-font text-white">x2</div>
+                </div>
+
+                <div class="bg-slate-900/80 backdrop-blur border border-sky-400/30 rounded-xl px-4 py-2 text-center min-w-[100px]">
+                    <div class="text-[10px] uppercase tracking-wider text-sky-300 font-bold">Lives</div>
+                    <div id="livesText" class="text-xl tracking-widest text-rose-400">❤️❤️❤️</div>
+                </div>
+            </div>
+
+            <!-- Start / Game Over Screen Overlay -->
+            <div id="menuOverlay" class="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center z-10 transition-all duration-300">
+                <div class="text-5xl sm:text-6xl mb-2 animate-bounce">☃️</div>
+                <h2 id="menuTitle" class="text-3xl sm:text-4xl font-extrabold title-font text-sky-200 mb-2">Winter Frost Catcher</h2>
+                <p id="menuDesc" class="text-sm sm:text-base text-slate-300 max-w-md mb-6 leading-relaxed">
+                    Slide your sleigh or bucket to catch falling presents 🎁 and magical crystals 💎! Watch out for sharp icicles 🧊!
+                </p>
+
+                <!-- High Score Badge -->
+                <div id="highScoreBadge" class="bg-sky-500/10 border border-sky-400/30 rounded-full px-4 py-1 mb-6 text-xs text-sky-300 font-semibold">
+                    🏆 High Score: <span id="highScoreText">0</span>
+                </div>
+
+                <button id="startBtn" class="px-8 py-3.5 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:to-blue-400 text-slate-950 font-black text-lg rounded-2xl shadow-lg shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer">
+                    PLAY NOW ❄️
+                </button>
+
+                <p class="text-xs text-slate-400 mt-4">Controls: Arrow Keys / A & D / Mouse Drag / Touch Swipe</p>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <footer class="w-full flex justify-between items-center text-xs text-slate-400 mt-3 px-2">
+            <span>🎄 Festive Winter Edition</span>
+            <span>Created with HTML5 Canvas & Web Audio API</span>
+        </footer>
+    </div>
+
+    <!-- JavaScript Game Logic -->
+    <script>
+        // --- Web Audio API Manager ---
+        class SoundManager {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playCatchSound() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, this.ctx.currentTime); // D5
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.15); // A5
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+
+            playCrystalSound() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(880, this.ctx.currentTime); // A5
+                osc.frequency.exponentialRampToValueAtTime(1318.51, this.ctx.currentTime + 0.25); // E6
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.25);
+            }
+
+            playHurtSound() {
+                if (!this.enabled || !this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+        }
+
+        const sounds = new SoundManager();
+
+        // --- Game Setup & State Variables ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // DOM UI Elements
+        const hud = document.getElementById('hud');
+        const scoreText = document.getElementById('scoreText');
+        const livesText = document.getElementById('livesText');
+        const comboContainer = document.getElementById('comboContainer');
+        const comboText = document.getElementById('comboText');
+        const menuOverlay = document.getElementById('menuOverlay');
+        const menuTitle = document.getElementById('menuTitle');
+        const menuDesc = document.getElementById('menuDesc');
+        const startBtn = document.getElementById('startBtn');
+        const soundToggleBtn = document.getElementById('soundToggleBtn');
+        const soundIcon = document.getElementById('soundIcon');
+        const soundText = document.getElementById('soundText');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const highScoreText = document.getElementById('highScoreText');
+
+        // Game State
+        let isPlaying = false;
+        let isPaused = false;
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let highScore = localStorage.getItem('winter_catcher_hs') || 0;
+        highScoreText.textContent = highScore;
+
+        // Player (Bucket / Sleigh)
+        const player = {
+            x: 0,
+            y: 0,
+            width: 90,
+            height: 35,
+            speed: 8,
+            dx: 0
+        };
+
+        // Entities arrays
+        let items = [];
+        let particles = [];
+        let backgroundSnowflakes = [];
+
+        // Controls State
+        const keys = {
+            left: false,
+            right: false
+        };
+
+        // Item Config Types
+        const ITEM_TYPES = [
+            { type: 'gift', emoji: '🎁', points: 10, speed: 2.5, chance: 0.55 },
+            { type: 'crystal', emoji: '💎', points: 25, speed: 3.5, chance: 0.25 },
+            { type: 'icicle', emoji: '🧊', points: 0, hazard: true, speed: 4.2, chance: 0.20 }
+        ];
+
+        let spawnTimer = 0;
+        let spawnInterval = 60; // frames
+
+        // --- Canvas Resizing & Scaling ---
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            player.y = canvas.height - player.height - 25;
+            if (player.x === 0) {
+                player.x = canvas.width / 2 - player.width / 2;
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- Initialize Ambient Snowflakes Background ---
+        function initBackgroundSnow() {
+            backgroundSnowflakes = [];
+            const count = Math.floor(window.innerWidth < 600 ? 30 : 60);
+            for (let i = 0; i < count; i++) {
+                backgroundSnowflakes.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 3 + 1,
+                    density: Math.random() * 1 + 0.5,
+                    opacity: Math.random() * 0.7 + 0.3
+                });
+            }
+        }
+
+        // --- Event Listeners for Input ---
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+        });
+
+        // Mouse & Touch Controls
+        let isDragging = false;
+        
+        function handlePointerMove(e) {
+            if (!isPlaying || isPaused) return;
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const touchX = clientX - rect.left;
+            player.x = touchX - player.width / 2;
+            
+            // Constrain player
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+        }
+
+        canvas.addEventListener('mousemove', handlePointerMove);
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handlePointerMove(e);
+        }, { passive: false });
+
+        // --- Particle System ---
+        function createParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.8) * 5,
+                    size: Math.random() * 4 + 2,
+                    color: color,
+                    alpha: 1,
+                    life: 1
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15; // Gravity effect
+                p.alpha -= 0.03;
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        // --- Item Spawning ---
+        function spawnItem() {
+            const rand = Math.random();
+            let cumulative = 0;
+            let selectedType = ITEM_TYPES[0];
+
+            for (const item of ITEM_TYPES) {
+                cumulative += item.chance;
+                if (rand <= cumulative) {
+                    selectedType = item;
+                    break;
+                }
+            }
+
+            const radius = 20;
+            const x = Math.random() * (canvas.width - radius * 2) + radius;
+            
+            // Speed difficulty ramp up over time
+            const speedMultiplier = 1 + Math.min(score / 300, 1.5);
+
+            items.push({
+                x: x,
+                y: -30,
+                radius: radius,
+                type: selectedType.type,
+                emoji: selectedType.emoji,
+                points: selectedType.points,
+                hazard: selectedType.hazard || false,
+                speed: selectedType.speed * speedMultiplier,
+                rotation: Math.random() * Math.PI,
+                rotSpeed: (Math.random() - 0.5) * 0.05
+            });
+        }
+
+        // --- Update Game Objects ---
+        function update() {
+            if (!isPlaying || isPaused) return;
+
+            // Keyboard Movement
+            if (keys.left) player.x -= player.speed;
+            if (keys.right) player.x += player.speed;
+
+            // Boundaries
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            // Spawning
+            spawnTimer++;
+            if (spawnTimer >= Math.max(25, spawnInterval - Math.floor(score / 20))) {
+                spawnItem();
+                spawnTimer = 0;
+            }
+
+            // Update Items
+            for (let i = items.length - 1; i >= 0; i--) {
+                const item = items[i];
+                item.y += item.speed;
+                item.rotation += item.rotSpeed;
+
+                // Collision detection with Basket/Player
+                if (
+                    item.y + item.radius >= player.y &&
+                    item.y - item.radius <= player.y + player.height &&
+                    item.x + item.radius >= player.x &&
+                    item.x - item.radius <= player.x + player.width
+                ) {
+                    if (item.hazard) {
+                        // Hit Icicle
+                        lives--;
+                        combo = 0;
+                        sounds.playHurtSound();
+                        createParticles(item.x, item.y, '#38bdf8', 18);
+                        updateHUD();
+
+                        if (lives <= 0) {
+                            endGame();
+                        }
+                    } else {
+                        // Caught Gift or Crystal
+                        combo++;
+                        const comboBonus = Math.floor(combo / 3) * 5;
+                        score += item.points + comboBonus;
+
+                        if (item.type === 'crystal') {
+                            sounds.playCrystalSound();
+                            createParticles(item.x, item.y, '#a855f7', 15);
+                        } else {
+                            sounds.playCatchSound();
+                            createParticles(item.x, item.y, '#f43f5e', 12);
+                        }
+
+                        if (score > highScore) {
+                            highScore = score;
+                            localStorage.setItem('winter_catcher_hs', highScore);
+                            highScoreText.textContent = highScore;
+                        }
+
+                        updateHUD();
+                    }
+
+                    items.splice(i, 1);
+                    continue;
+                }
+
+                // Missed items falling off-screen
+                if (item.y - item.radius > canvas.height) {
+                    if (!item.hazard) {
+                        combo = 0; // Reset combo on missed gift
+                        updateHUD();
+                    }
+                    items.splice(i, 1);
+                }
+            }
+
+            // Update particles
+            updateParticles();
+
+            // Background Snow Animation
+            backgroundSnowflakes.forEach(flake => {
+                flake.y += flake.density;
+                flake.x += Math.sin(flake.y * 0.02) * 0.5;
+                if (flake.y > canvas.height) {
+                    flake.y = -10;
+                    flake.x = Math.random() * canvas.width;
+                }
+            });
+        }
+
+        // --- Render Functions ---
+        function drawBackground() {
+            // Winter night sky gradient
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            bgGradient.addColorStop(0, '#0b1329');
+            bgGradient.addColorStop(0.6, '#111c3a');
+            bgGradient.addColorStop(1, '#1e293b');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background Falling Snow
+            ctx.fillStyle = '#ffffff';
+            backgroundSnowflakes.forEach(flake => {
+                ctx.save();
+                ctx.globalAlpha = flake.opacity;
+                ctx.beginPath();
+                ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            // Distant Snowy Hills Effect
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.15)';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 40);
+            ctx.quadraticCurveTo(canvas.width * 0.25, canvas.height - 80, canvas.width * 0.5, canvas.height - 40);
+            ctx.quadraticCurveTo(canvas.width * 0.75, canvas.height, canvas.width, canvas.height - 30);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.fill();
+
+            // Foreground Snowy Floor
+            ctx.fillStyle = '#e0f2fe';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 18);
+            ctx.quadraticCurveTo(canvas.width * 0.5, canvas.height - 25, canvas.width, canvas.height - 18);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.fill();
+        }
+
+        function drawPlayer() {
+            ctx.save();
+            
+            // Glow effect for basket
+            ctx.shadowColor = '#38bdf8';
+            ctx.shadowBlur = 12;
+
+            // Sleigh/Wooden Basket Base
+            const rx = player.x;
+            const ry = player.y;
+            const rw = player.width;
+            const rh = player.height;
+
+            const grad = ctx.createLinearGradient(rx, ry, rx, ry + rh);
+            grad.addColorStop(0, '#0284c7');
+            grad.addColorStop(1, '#0369a1');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.roundRect(rx, ry, rw, rh, 12);
+            ctx.fill();
+
+            // Festive Ribbons / Trim on basket
+            ctx.fillStyle = '#f43f5e';
+            ctx.fillRect(rx + 8, ry + rh * 0.35, rw - 16, 6);
+
+            // Snow layer on top of basket rim
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.roundRect(rx - 2, ry - 3, rw + 4, 7, 4);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawItems() {
+            items.forEach(item => {
+                ctx.save();
+                ctx.translate(item.x, item.y);
+                ctx.rotate(item.rotation);
+
+                ctx.font = '28px serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(item.emoji, 0, 0);
+
+                ctx.restore();
+            });
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+            drawParticles();
+            drawItems();
+            drawPlayer();
+        }
+
+        // --- Game Loop ---
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // --- UI & Helper Controls ---
+        function updateHUD() {
+            scoreText.textContent = score;
+            livesText.textContent = '❤️'.repeat(Math.max(0, lives));
+
+            if (combo >= 2) {
+                comboContainer.classList.remove('hidden');
+                comboText.textContent = `x${Math.floor(combo / 3) + 1}`;
+            } else {
+                comboContainer.classList.add('hidden');
+            }
+        }
+
+        function startGame() {
+            sounds.init();
+            score = 0;
+            lives = 3;
+            combo = 0;
+            items = [];
+            particles = [];
+            isPlaying = true;
+            isPaused = false;
+
+            updateHUD();
+            hud.classList.remove('opacity-0');
+            menuOverlay.classList.add('opacity-0', 'pointer-events-none');
+        }
+
+        function endGame() {
+            isPlaying = false;
+            hud.classList.add('opacity-0');
+            menuOverlay.classList.remove('opacity-0', 'pointer-events-none');
+
+            menuTitle.textContent = "Game Over! ❄️";
+            menuDesc.innerHTML = `You put up a great fight!<br>Final Score: <strong class="text-sky-300 text-lg">${score}</strong>`;
+            startBtn.textContent = "PLAY AGAIN 🔄";
+        }
+
+        // --- Button Event Handlers ---
+        startBtn.addEventListener('click', () => {
+            startGame();
+        });
+
+        soundToggleBtn.addEventListener('click', () => {
+            sounds.enabled = !sounds.enabled;
+            if (sounds.enabled) {
+                soundIcon.textContent = '🔊';
+                soundText.textContent = 'Sound ON';
+            } else {
+                soundIcon.textContent = 'MUTE';
+                soundText.textContent = 'Sound OFF';
+            }
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            if (!isPlaying) return;
+            isPaused = !isPaused;
+            pauseBtn.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+        });
+
+        // Window Onload Initialization
+        window.onload = function () {
+            resizeCanvas();
+            initBackgroundSnow();
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
