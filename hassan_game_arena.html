@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HASSAN GAME ARENA - Custom HUD & Tactical AI Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            background-color: #030712;
+            touch-action: none;
+        }
+        .font-arena { font-family: 'Black Ops One', cursive; }
+        .font-cyber { font-family: 'Orbitron', sans-serif; }
+        
+        .hud-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.25);
+        }
+
+        .gold-glow {
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.5);
+            border-color: rgba(245, 158, 11, 0.7);
+        }
+
+        .sniper-scope {
+            background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.96) 75%);
+            border: 4px solid rgba(14, 165, 233, 0.85);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.95);
+        }
+
+        .crosshair-reticle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 24px;
+            height: 24px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .crosshair-reticle::before, .crosshair-reticle::after {
+            content: '';
+            position: absolute;
+            background: #38bdf8;
+            box-shadow: 0 0 8px #38bdf8;
+        }
+        .crosshair-reticle::before { top: 11px; left: 0; width: 24px; height: 2px; }
+        .crosshair-reticle::after { top: 0; left: 11px; width: 2px; height: 24px; }
+
+        .dmg-text {
+            position: absolute;
+            font-family: 'Black Ops One', cursive;
+            font-size: 22px;
+            color: #f43f5e;
+            text-shadow: 0 0 8px #000, 0 0 12px #f43f5e;
+            pointer-events: none;
+            animation: floatDmg 0.65s ease-out forwards;
+        }
+        @keyframes floatDmg {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            100% { opacity: 0; transform: translate(-50%, -90px) scale(0.7); }
+        }
+
+        /* Virtual Touch Joystick */
+        .joystick-base {
+            width: 115px;
+            height: 115px;
+            background: rgba(15, 23, 42, 0.65);
+            border: 2px solid rgba(56, 189, 248, 0.45);
+            border-radius: 50%;
+            position: relative;
+        }
+        .joystick-thumb {
+            width: 46px;
+            height: 46px;
+            background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+            border-radius: 50%;
+            position: absolute;
+            top: 34.5px;
+            left: 34.5px;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.9);
+        }
+
+        /* Customizable Touch Button Editor Styling */
+        .hud-draggable {
+            position: absolute !important;
+            touch-action: none;
+        }
+        .hud-draggable.editing-mode {
+            outline: 2px dashed #f59e0b;
+            outline-offset: 4px;
+            cursor: move;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.7); }
+        ::-webkit-scrollbar-thumb { background: #0284c7; border-radius: 4px; }
+    </style>
+</head>
+<body class="w-screen h-screen relative bg-slate-950 text-white overflow-hidden">
+
+    <!-- 3D Canvas -->
+    <div id="canvasContainer" class="w-full h-full absolute inset-0"></div>
+
+    <!-- Mobile Right Touch Camera Area -->
+    <div id="touchCameraArea" class="absolute inset-0 z-10 pointer-events-auto"></div>
+
+    <!-- Damage FX Container -->
+    <div id="damageOverlay" class="absolute inset-0 pointer-events-none z-10"></div>
+
+    <!-- Sniper Scope Overlay -->
+    <div id="scopeOverlay" class="hidden absolute inset-0 sniper-scope z-10 pointer-events-none flex items-center justify-center">
+        <div class="w-full h-[1px] bg-cyan-400/80"></div>
+        <div class="h-full w-[1px] bg-cyan-400/80 absolute"></div>
+        <div class="w-44 h-44 border border-cyan-400/60 rounded-full absolute"></div>
+        <div class="w-76 h-76 border border-cyan-400/30 rounded-full absolute"></div>
+    </div>
+
+    <!-- 1. WELCOME POPUP OVERLAY -->
+    <div id="welcomeScreen" class="absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-4 text-center">
+        <div class="relative animate-pulse">
+            <h1 class="text-4xl sm:text-6xl md:text-7xl font-cyber font-black tracking-wider bg-gradient-to-r from-amber-400 via-yellow-200 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_6px_25px_rgba(245,158,11,0.5)]">
+                HASSAN GAME ARENA
+            </h1>
+            <div class="text-cyan-400 font-arena text-base sm:text-xl tracking-widest mt-1">ULTIMATE MASTER EDITION</div>
+        </div>
+        <p class="text-slate-300 max-w-lg text-xs sm:text-sm mt-4 mb-6 leading-relaxed">
+            Welcome Operative! Play 100 progressive levels across 4 seasonal maps (Snow, Desert, Cyber City, Autumn Forest). Fully customize your HUD control layout, mount sports cars/bikes, engage in 3-foot proximity tactical combat, heal with medkits, and complete sub-missions!
+        </p>
+        <button id="btnEnterLobby" class="px-10 py-4 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-lg sm:text-2xl rounded-2xl shadow-xl shadow-amber-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer font-cyber tracking-wider border border-amber-300">
+            ENTER ARENA LOBBY 🚀
+        </button>
+    </div>
+
+    <!-- 2. MAIN LOBBY SYSTEM -->
+    <div id="lobbyScreen" class="hidden absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-md flex flex-col justify-between p-3 sm:p-6 overflow-y-auto">
+        
+        <!-- Lobby Header -->
+        <div class="flex justify-between items-center w-full max-w-6xl mx-auto">
+            <div class="flex items-center space-x-2">
+                <div class="text-xl sm:text-3xl font-cyber text-amber-400 font-black">HASSAN ARENA</div>
+                <div class="bg-cyan-950 border border-cyan-500/40 text-cyan-300 px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold">100-LEVEL MASTER</div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button id="btnOpenVault" class="hud-panel px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-300 border border-cyan-400/40 hover:scale-105">
+                    👕 AVATAR & VAULT
+                </button>
+                <div class="hud-panel gold-glow px-4 py-1.5 rounded-xl flex items-center space-x-2">
+                    <span class="text-lg">🪙</span>
+                    <span id="lobbyCoinCount" class="text-lg font-arena text-amber-400">1000</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Controls: Maps & 100 Level Grid -->
+        <div class="w-full max-w-6xl mx-auto my-3">
+            <div class="flex justify-center space-x-3 mb-4">
+                <button id="tabMapBtn" class="px-5 py-2 rounded-xl font-cyber text-xs sm:text-sm font-bold bg-cyan-600 text-white shadow-lg">
+                    🗺️ SEASONAL MAPS
+                </button>
+                <button id="tabLevelBtn" class="px-5 py-2 rounded-xl font-cyber text-xs sm:text-sm font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                    🏆 100 LEVELS GRID
+                </button>
+            </div>
+
+            <!-- MAP SELECTOR CONTAINER -->
+            <div id="mapSelectorBox" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                <div onclick="selectMap('snow')" id="mapCard-snow" class="hud-panel p-4 rounded-2xl cursor-pointer border-cyan-400 transition hover:scale-105 ring-2 ring-cyan-400">
+                    <div class="text-3xl mb-1">❄️</div>
+                    <div class="text-lg font-arena text-cyan-200">SNOW OPS</div>
+                    <p class="text-[11px] text-slate-300 mt-1">Blizzard terrain with pine trees & falling snow.</p>
+                </div>
+                <div onclick="selectMap('desert')" id="mapCard-desert" class="hud-panel p-4 rounded-2xl cursor-pointer border-slate-700 transition hover:scale-105">
+                    <div class="text-3xl mb-1">🏜️</div>
+                    <div class="text-lg font-arena text-amber-300">DESERT STORM</div>
+                    <p class="text-[11px] text-slate-300 mt-1">Rolling sand dunes, cacti, and warm dusty fog.</p>
+                </div>
+                <div onclick="selectMap('cyber')" id="mapCard-cyber" class="hud-panel p-4 rounded-2xl cursor-pointer border-slate-700 transition hover:scale-105">
+                    <div class="text-3xl mb-1">🏙️</div>
+                    <div class="text-lg font-arena text-purple-400">CYBER CITY</div>
+                    <p class="text-[11px] text-slate-300 mt-1">Neon billboards, dark asphalt, and magenta night lights.</p>
+                </div>
+                <div onclick="selectMap('autumn')" id="mapCard-autumn" class="hud-panel p-4 rounded-2xl cursor-pointer border-slate-700 transition hover:scale-105">
+                    <div class="text-3xl mb-1">🍁</div>
+                    <div class="text-lg font-arena text-orange-400">AUTUMN FOREST</div>
+                    <p class="text-[11px] text-slate-300 mt-1">Golden foliage, fallen leaves, and sunset fog.</p>
+                </div>
+            </div>
+
+            <!-- 100 LEVELS GRID CONTAINER -->
+            <div id="levelGridBox" class="hidden grid grid-cols-5 sm:grid-cols-10 gap-2 max-h-60 overflow-y-auto p-2 hud-panel rounded-2xl">
+                <!-- Level buttons dynamically injected -->
+            </div>
+        </div>
+
+        <!-- Start Game Button -->
+        <div class="w-full max-w-6xl mx-auto flex justify-center pt-2">
+            <button id="btnStartMatch" class="w-full max-w-md py-4 bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xl sm:text-2xl rounded-2xl shadow-xl shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer font-cyber tracking-wider">
+                START ARENA MATCH ⚔️
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. AVATAR & VAULT STORE MODAL -->
+    <div id="vaultModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-4 sm:p-6 overflow-y-auto">
+        <div class="flex justify-between items-center max-w-4xl mx-auto w-full">
+            <div class="text-2xl font-cyber text-cyan-300 font-black">AVATAR & VAULT STORES</div>
+            <button id="btnCloseVault" class="px-4 py-1.5 bg-rose-600 rounded-xl text-xs font-bold text-white">CLOSE ✕</button>
+        </div>
+
+        <div class="max-w-4xl mx-auto w-full my-auto grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+            <!-- Gender & Clothes -->
+            <div class="hud-panel p-4 rounded-2xl space-y-4">
+                <div class="text-base font-cyber text-amber-400 font-bold">AVATAR CUSTOMIZATION</div>
+                <div class="flex space-x-3">
+                    <button onclick="setGender('boy')" id="btnBoy" class="flex-1 py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs">BOY HERO 👦</button>
+                    <button onclick="setGender('girl')" id="btnGirl" class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs">GIRL HERO 👧</button>
+                </div>
+                <div class="text-xs font-bold text-slate-300">OUTFIT CLOTHING</div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <button onclick="setOutfit(0x0284c7)" class="p-2 bg-sky-900 border border-sky-400 rounded-lg text-sky-200">TACTICAL BLUE</button>
+                    <button onclick="setOutfit(0xbe123c)" class="p-2 bg-rose-900 border border-rose-400 rounded-lg text-rose-200">CRIMSON RED</button>
+                    <button onclick="setOutfit(0x15803d)" class="p-2 bg-emerald-900 border border-emerald-400 rounded-lg text-emerald-200">STEALTH GREEN</button>
+                    <button onclick="setOutfit(0xd97706)" class="p-2 bg-amber-900 border border-amber-400 rounded-lg text-amber-200">GOLDEN ROYAL</button>
+                </div>
+            </div>
+
+            <!-- Stores (30 Guns & 30 Cars Info) -->
+            <div class="hud-panel p-4 rounded-2xl space-y-3">
+                <div class="text-base font-cyber text-cyan-300 font-bold">VAULT CATALOG (30 WEAPONS & 30 CARS)</div>
+                <div class="text-xs text-slate-300 leading-relaxed">
+                    Unlock and equip over 30 weapons (Rifles, Shotguns, Snipers, RPGs) and 30 sports cars & bikes using coins earned by completing levels and defeating rogue agents!
+                </div>
+                <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-700 text-xs text-amber-400">
+                    🪙 Current Balance: <span id="vaultCoins" class="font-bold">1000</span> Coins
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. IN-GAME HUD LAYOUT & EDITOR -->
+    <div id="hud" class="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-2 sm:p-4 opacity-0 transition-opacity duration-500">
+        
+        <!-- Top Stats Bar -->
+        <div class="flex justify-between items-start w-full">
+            <div class="hud-panel rounded-xl p-2.5 text-white w-48 sm:w-64 space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-bold tracking-wider text-cyan-300">
+                    <span id="hudAvatarLabel">BOY HERO</span>
+                    <span id="roleText" class="text-amber-400">ON FOOT</span>
+                </div>
+                <!-- Health Bar -->
+                <div>
+                    <div class="flex justify-between text-[10px] text-slate-300 mb-0.5">
+                        <span>HP HEALTH</span>
+                        <span id="hpText">100 / 100</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                        <div id="hpBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 w-full transition-all duration-200"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Level & Mission Badge -->
+            <div class="hud-panel rounded-xl p-2 text-center max-w-[200px] sm:max-w-xs w-full border-cyan-400/40">
+                <div class="text-[10px] font-bold text-amber-400 tracking-widest uppercase" id="hudLevelBadge">LEVEL 1 - MAP: SNOW OPS</div>
+                <div id="hudMissionText" class="text-[10px] font-bold text-emerald-400 bg-emerald-950/70 py-0.5 px-2 rounded-full inline-block border border-emerald-500/40 mt-0.5">
+                    Defeat Rogue Agents: 0 / 5
+                </div>
+            </div>
+
+            <!-- Coins, HUD Editor & Lobby Exit -->
+            <div class="flex flex-col items-end space-y-1">
+                <div class="hud-panel gold-glow px-3 py-1 rounded-xl flex items-center space-x-1">
+                    <span class="text-sm">🪙</span>
+                    <span id="hudCoins" class="text-sm font-arena text-amber-400">1000</span>
+                </div>
+                <div class="flex space-x-1">
+                    <button id="btnToggleHudEditor" class="pointer-events-auto px-2 py-1 bg-amber-600/90 hover:bg-amber-500 rounded-lg text-[10px] font-bold text-white border border-amber-300/40">
+                        ⚙️ EDIT HUD
+                    </button>
+                    <button id="btnExitToLobby" class="pointer-events-auto px-2 py-1 bg-rose-700/80 hover:bg-rose-600 rounded-lg text-[10px] font-bold text-white border border-rose-400/40">
+                        🚪 LOBBY
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="crosshair" class="crosshair-reticle"></div>
+
+        <!-- Action Prompt -->
+        <div id="actionPrompt" class="hidden absolute top-2/3 left-1/2 -translate-x-1/2 -translate-y-1/2 hud-panel rounded-xl px-4 py-2 text-center border-amber-400/60 animate-bounce pointer-events-auto cursor-pointer">
+            <span id="actionText" class="text-amber-300 font-bold text-xs sm:text-sm tracking-wider">PRESS 'E' TO LOOT / HEAL / ENTER HOUSE</span>
+        </div>
+
+        <!-- Dynamic Customizable Mobile Touch Controls -->
+        <!-- Joystick Button -->
+        <div id="ctrl-joystick" class="hud-draggable pointer-events-auto z-30" style="left: 20px; bottom: 20px;">
+            <div class="joystick-base" id="joystickBase">
+                <div class="joystick-thumb" id="joystickThumb"></div>
+            </div>
+        </div>
+
+        <!-- Speedometer -->
+        <div id="speedometer" class="hidden hud-panel rounded-xl p-2 text-center min-w-[100px] border-amber-400/40 pointer-events-none self-center mb-4">
+            <div class="text-[9px] text-amber-300 font-bold tracking-widest">SPEED KM/H</div>
+            <div id="speedValue" class="text-2xl font-arena text-white">0</div>
+        </div>
+
+        <!-- Individual Touch Control Buttons (Draggable/Customizable) -->
+        <div id="ctrl-heal" class="hud-draggable pointer-events-auto z-30" style="right: 170px; bottom: 85px;">
+            <button id="btnMobileHeal" class="w-11 h-11 rounded-xl bg-emerald-600/90 border border-emerald-300 text-white font-bold text-xs shadow-lg">🧪 HEAL</button>
+        </div>
+        <div id="ctrl-interact" class="hud-draggable pointer-events-auto z-30" style="right: 115px; bottom: 85px;">
+            <button id="btnMobileInteract" class="w-11 h-11 rounded-xl bg-amber-600/90 border border-amber-300 text-white font-bold text-xs shadow-lg">📦 LOOT</button>
+        </div>
+        <div id="ctrl-drive" class="hud-draggable pointer-events-auto z-30" style="right: 60px; bottom: 85px;">
+            <button id="btnMobileDrive" class="w-11 h-11 rounded-xl bg-indigo-600/90 border border-indigo-300 text-white font-bold text-xs shadow-lg">🏎️ DRIVE</button>
+        </div>
+        <div id="ctrl-jump" class="hud-draggable pointer-events-auto z-30" style="right: 130px; bottom: 20px;">
+            <button id="btnJump" class="w-11 h-11 rounded-xl bg-cyan-600/90 border border-cyan-300 text-white font-bold text-xs shadow-lg">🚀 JUMP</button>
+        </div>
+        <div id="ctrl-scope" class="hud-draggable pointer-events-auto z-30" style="right: 75px; bottom: 20px;">
+            <button id="btnScope" class="w-11 h-11 rounded-xl bg-purple-600/90 border border-purple-300 text-white font-bold text-xs shadow-lg">🔍 AIM</button>
+        </div>
+        <div id="ctrl-shoot" class="hud-draggable pointer-events-auto z-30" style="right: 15px; bottom: 15px;">
+            <button id="btnShoot" class="w-14 h-14 rounded-full bg-rose-600/95 border-2 border-rose-300 text-white font-bold text-xs shadow-lg shadow-rose-600/50">🔥 FIRE</button>
+        </div>
+
+        <!-- Weapon HUD Display -->
+        <div class="hud-panel rounded-xl p-2.5 text-right text-white min-w-[130px] sm:min-w-[170px] self-end pointer-events-none mb-1">
+            <div class="text-[11px] text-cyan-300 font-bold" id="hudWeaponName">ASSAULT RIFLE</div>
+            <div class="text-2xl sm:text-3xl font-arena tracking-wider text-amber-300 mt-0.5">
+                <span id="clipAmmo">30</span> / <span id="reserveAmmo" class="text-slate-400 text-lg">300</span>
+            </div>
+            <div class="text-[9px] text-slate-400 mt-0.5 hidden sm:block">WASD Move | Drag Screen Rotate | E Loot/Heal | F Drive</div>
+        </div>
+    </div>
+
+    <!-- 5. HUD CUSTOM EDITOR CONTROL PANEL OVERLAY -->
+    <div id="hudEditorBar" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-50 hud-panel p-3 rounded-2xl flex flex-wrap items-center justify-center gap-3 border-amber-400/80 shadow-2xl">
+        <div class="text-xs font-cyber text-amber-400 font-bold">HUD LAYOUT EDITOR</div>
+        <div class="flex items-center space-x-1.5 text-xs text-slate-200">
+            <span>SCALE:</span>
+            <input type="range" id="hudScaleRange" min="0.6" max="1.6" step="0.05" value="1.0" class="w-20 accent-amber-400">
+        </div>
+        <div class="flex items-center space-x-1.5 text-xs text-slate-200">
+            <span>OPACITY:</span>
+            <input type="range" id="hudOpacityRange" min="0.2" max="1.0" step="0.05" value="1.0" class="w-20 accent-amber-400">
+        </div>
+        <button id="btnSaveHudLayout" class="px-3 py-1 bg-emerald-600 rounded-lg text-xs font-bold text-white">SAVE 💾</button>
+        <button id="btnResetHudLayout" class="px-3 py-1 bg-slate-700 rounded-lg text-xs font-bold text-slate-200">RESET 🔄</button>
+    </div>
+
+    <!-- Match Game Over / Level Victory Modal -->
+    <div id="gameOverModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center">
+        <div id="gameOverTitle" class="text-4xl sm:text-5xl font-arena text-emerald-400 mb-1">LEVEL COMPLETED!</div>
+        <div id="gameOverReward" class="text-xl font-arena text-amber-400 mb-4">+300 COINS EARNED!</div>
+        <button id="btnReturnLobby" class="px-8 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black text-lg rounded-xl shadow-lg hover:scale-105 transition">
+            CONTINUE TO LOBBY 🚀
+        </button>
+    </div>
+
+    <script>
+        // --- Web Audio Synth Engine ---
+        class HassanAudioSynth {
+            constructor() { this.ctx = null; }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            }
+            playGunshot() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(320, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.12);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+            }
+            playSlapSound() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+            }
+            playHealSound() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.25);
+            }
+            playHit() {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+            }
+            playEngine(speedRatio = 0) {
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(50 + speedRatio * 160, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.005, this.ctx.currentTime + 0.08);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+            }
+        }
+        const audio = new HassanAudioSynth();
+
+        // --- Core State ---
+        let scene, camera, renderer, clock;
+        let isPlaying = false;
+        let isScoping = false;
+        let selectedMap = 'snow';
+        let currentLevel = parseInt(localStorage.getItem('hassan_max_level')) || 1;
+        let selectedLevel = 1;
+        let playerCoins = parseInt(localStorage.getItem('hassan_player_coins')) || 1000;
+        let selectedGender = 'boy';
+        let selectedOutfitColor = 0x0284c7;
+        let isEditHudMode = false;
+
+        // Player Stats
+        const player = {
+            mesh: null,
+            humParts: null,
+            hp: 100,
+            maxHp: 100,
+            speed: 0.24,
+            velocity: new THREE.Vector3(),
+            isGrounded: true,
+            inVehicle: null,
+            position: new THREE.Vector3(0, 0, 0),
+            rotationY: 0,
+            hasWeapon: true
+        };
+
+        // Inputs
+        const keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
+        let touchInput = { x: 0, y: 0 };
+        let touchCam = { startX: 0, startY: 0, isDragging: false };
+
+        // Entities Arrays
+        let mapElements = [];
+        let enemies = [];
+        let vehicles = [];
+        let healItems = [];
+        let weaponLootItems = [];
+        let subMissionPets = [];
+
+        // --- Default HUD Control Positions ---
+        const DEFAULT_HUD_LAYOUT = {
+            'ctrl-joystick': { left: '20px', bottom: '20px', right: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-heal': { right: '170px', bottom: '85px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-interact': { right: '115px', bottom: '85px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-drive': { right: '60px', bottom: '85px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-jump': { right: '130px', bottom: '20px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-scope': { right: '75px', bottom: '20px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-shoot': { right: '15px', bottom: '15px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 }
+        };
+
+        // --- Init Three.js Engine ---
+        function initEngine() {
+            const container = document.getElementById('canvasContainer');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+            buildLevelGrid();
+            loadHudLayout();
+            setupHudDraggables();
+            window.addEventListener('resize', onWindowResize);
+            setupInputListeners();
+        }
+
+        // --- Humanoid Avatar Rigging ---
+        function createHumanoidMesh(colorHex = 0x0284c7, isGirl = false) {
+            const group = new THREE.Group();
+            group.scale.set(0.75, 0.75, 0.75);
+
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xfde047 });
+            const clothesMat = new THREE.MeshStandardMaterial({ color: colorHex });
+            const jointMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+
+            // Torso
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.6, 0.7), clothesMat);
+            torso.position.y = 1.9; torso.castShadow = true; group.add(torso);
+
+            // Head
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 16), skinMat);
+            head.position.y = 3.05; group.add(head);
+
+            // Hair
+            const hairColor = isGirl ? 0x9333ea : 0x0f172a;
+            const hair = new THREE.Mesh(new THREE.ConeGeometry(0.65, 0.6, 8), new THREE.MeshStandardMaterial({ color: hairColor }));
+            hair.position.set(0, 3.5, -0.1); group.add(hair);
+
+            // Eyes & Nose
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+            const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), eyeMat);
+            eyeL.position.set(-0.18, 3.12, 0.48);
+            const eyeR = eyeL.clone(); eyeR.position.x = 0.18;
+            group.add(eyeL); group.add(eyeR);
+
+            const nose = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.15, 6), skinMat);
+            nose.position.set(0, 3.0, 0.52); nose.rotation.x = Math.PI / 2;
+            group.add(nose);
+
+            // Arms & Legs
+            const armLGroup = new THREE.Group(); armLGroup.position.set(-0.75, 2.4, 0);
+            const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.2), clothesMat);
+            armL.position.y = -0.6; armLGroup.add(armL);
+
+            const armRGroup = new THREE.Group(); armRGroup.position.set(0.75, 2.4, 0);
+            const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 1.2), clothesMat);
+            armR.position.y = -0.6; armRGroup.add(armR);
+
+            const legLGroup = new THREE.Group(); legLGroup.position.set(-0.32, 1.1, 0);
+            const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.3), jointMat);
+            legL.position.y = -0.65; legLGroup.add(legL);
+
+            const legRGroup = new THREE.Group(); legRGroup.position.set(0.32, 1.1, 0);
+            const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.3), jointMat);
+            legR.position.y = -0.65; legRGroup.add(legR);
+
+            group.add(armLGroup); group.add(armRGroup);
+            group.add(legLGroup); group.add(legRGroup);
+
+            return { mesh: group, armL: armLGroup, armR: armRGroup, legL: legLGroup, legR: legRGroup };
+        }
+
+        // --- Detailed Playable Vehicle Builder ---
+        function createVehicle(x, z, type = 'car') {
+            const veh = new THREE.Group();
+            veh.userData = { type: type === 'car' ? 'Sports Car' : 'Dirt Bike', speed: 0, maxSpeed: type === 'car' ? 1.25 : 1.45 };
+
+            if (type === 'car') {
+                const body = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.25, 8.8), new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.8 }));
+                body.position.y = 1.15; veh.add(body);
+
+                const windshield = new THREE.Mesh(new THREE.BoxGeometry(3.8, 1.15, 4.2), new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35 }));
+                windshield.position.set(0, 2.15, -0.4); veh.add(windshield);
+
+                const seat = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.2, 1.3), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+                seat.position.set(-0.85, 1.5, -0.5); veh.add(seat);
+
+                const wheelGeo = new THREE.CylinderGeometry(0.72, 0.72, 0.55, 16);
+                const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+                veh.userData.wheels = [];
+                [[-2.2, 0.7, 2.7], [2.2, 0.7, 2.7], [-2.2, 0.7, -2.7], [2.2, 0.7, -2.7]].forEach(p => {
+                    const w = new THREE.Mesh(wheelGeo, wheelMat);
+                    w.rotation.z = Math.PI / 2; w.position.set(...p); veh.add(w);
+                    veh.userData.wheels.push(w);
+                });
+            } else { // Bike
+                const frame = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.25, 4.2), new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.7 }));
+                frame.position.y = 1.05; veh.add(frame);
+
+                const seat = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.4, 1.2), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+                seat.position.set(0, 1.5, -0.2); veh.add(seat);
+
+                const wheelGeo = new THREE.CylinderGeometry(0.85, 0.85, 0.35, 16);
+                const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
+                veh.userData.wheels = [];
+
+                const wheelF = new THREE.Mesh(wheelGeo, wheelMat);
+                wheelF.rotation.z = Math.PI / 2; wheelF.position.set(0, 0.85, 1.9); veh.add(wheelF);
+                veh.userData.wheels.push(wheelF);
+
+                const wheelB = wheelF.clone(); wheelB.position.z = -1.9; veh.add(wheelB);
+                veh.userData.wheels.push(wheelB);
+            }
+
+            veh.position.set(x, 0, z);
+            scene.add(veh); vehicles.push(veh);
+        }
+
+        // --- Seasonal Map Builder ---
+        function createSeasonalMap(type) {
+            mapElements.forEach(el => scene.remove(el));
+            mapElements = []; enemies = []; vehicles = []; healItems = []; weaponLootItems = []; subMissionPets = [];
+
+            let groundColor = 0xf1f5f9;
+            let fogColor = 0x0a1424;
+
+            if (type === 'desert') { groundColor = 0xd97706; fogColor = 0x451a03; }
+            else if (type === 'cyber') { groundColor = 0x090d16; fogColor = 0x030712; }
+            else if (type === 'autumn') { groundColor = 0x9a3412; fogColor = 0x431407; }
+
+            scene.background = new THREE.Color(fogColor);
+            scene.fog = new THREE.FogExp2(fogColor, 0.0035);
+
+            // Terrain Ground
+            const ground = new THREE.Mesh(
+                new THREE.PlaneGeometry(900, 900),
+                new THREE.MeshStandardMaterial({ color: groundColor, roughness: 0.85 })
+            );
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground); mapElements.push(ground);
+
+            const ambient = new THREE.AmbientLight(0xffffff, type === 'cyber' ? 0.45 : 0.85);
+            scene.add(ambient); mapElements.push(ambient);
+
+            // Enterable Houses with Doors
+            createHouse(40, -40);
+            createHouse(-50, 50);
+
+            // Playable Vehicles
+            createVehicle(18, 12, 'car');
+            createVehicle(-18, 18, 'bike');
+
+            // Pickups & Enemies
+            spawnHealthItems();
+            spawnWeaponLootItems();
+            spawnSubMissionPets();
+            spawnEnemies();
+        }
+
+        function createHouse(x, z) {
+            const group = new THREE.Group();
+            const walls = new THREE.Mesh(new THREE.BoxGeometry(14, 8, 14), new THREE.MeshStandardMaterial({ color: 0x78350f }));
+            walls.position.y = 4; group.add(walls);
+
+            const roof = new THREE.Mesh(new THREE.ConeGeometry(12, 5, 4), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
+            roof.position.y = 10.5; roof.rotation.y = Math.PI / 4; group.add(roof);
+
+            group.position.set(x, 0, z);
+            scene.add(group); mapElements.push(group);
+        }
+
+        function spawnHealthItems() {
+            [{ x: 12, z: -22, hp: 30 }, { x: -28, z: -38, hp: 15 }, { x: 35, z: 45, hp: 50 }].forEach(c => {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.2), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
+                mesh.position.set(c.x, 0.6, c.z); mesh.userData = { hpRestore: c.hp };
+                scene.add(mesh); healItems.push(mesh);
+            });
+        }
+
+        function spawnWeaponLootItems() {
+            [{ x: -12, z: -18, name: 'SNIPER RIFLE' }, { x: 22, z: -32, name: 'SHOTGUN' }].forEach(w => {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.4, 0.4), new THREE.MeshStandardMaterial({ color: 0xa855f7 }));
+                mesh.position.set(w.x, 0.4, w.z); mesh.userData = { name: w.name };
+                scene.add(mesh); weaponLootItems.push(mesh);
+            });
+        }
+
+        function spawnSubMissionPets() {
+            const pet = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 1.2), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
+            pet.position.set(25, 0.4, -15); scene.add(pet); subMissionPets.push(pet);
+        }
+
+        function spawnEnemies() {
+            const count = 4 + selectedLevel * 2;
+            for (let i = 0; i < count; i++) {
+                const hum = createHumanoidMesh(0xbe123c, false);
+                const angle = (i / count) * Math.PI * 2;
+                const dist = 35 + Math.random() * 40;
+                hum.mesh.position.set(Math.sin(angle) * dist, 0, Math.cos(angle) * dist);
+                scene.add(hum.mesh);
+                enemies.push({ hum: hum, hp: 60 + selectedLevel * 10, speed: 0.06 + selectedLevel * 0.005, lastAttack: 0 });
+            }
+        }
+
+        function buildLevelGrid() {
+            const container = document.getElementById('levelGridBox');
+            container.innerHTML = '';
+            for (let i = 1; i <= 100; i++) {
+                const btn = document.createElement('button');
+                const isUnlocked = i <= currentLevel;
+                btn.className = `p-2 rounded-lg font-arena text-xs font-bold transition ${
+                    isUnlocked ? (i === selectedLevel ? 'bg-cyan-500 text-slate-950 ring-2 ring-white' : 'bg-slate-800 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-900') : 'bg-slate-900 text-slate-600 cursor-not-allowed'
+                }`;
+                btn.textContent = `L${i}`;
+                if (isUnlocked) {
+                    btn.onclick = () => {
+                        selectedLevel = i;
+                        buildLevelGrid();
+                    };
+                }
+                container.appendChild(btn);
+            }
+        }
+
+        // --- Custom HUD Layout Drag & Save Logic ---
+        function setupHudDraggables() {
+            const draggables = document.querySelectorAll('.hud-draggable');
+            draggables.forEach(el => {
+                let active = false;
+                let currentX, currentY, initialX, initialY;
+
+                el.addEventListener('pointerdown', (e) => {
+                    if (!isEditHudMode) return;
+                    active = true;
+                    initialX = e.clientX - el.offsetLeft;
+                    initialY = e.clientY - el.offsetTop;
+                    el.setPointerCapture(e.pointerId);
+                });
+
+                el.addEventListener('pointermove', (e) => {
+                    if (!active || !isEditHudMode) return;
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    el.style.left = `${currentX}px`;
+                    el.style.top = `${currentY}px`;
+                    el.style.right = 'auto';
+                    el.style.bottom = 'auto';
+                });
+
+                el.addEventListener('pointerup', (e) => {
+                    if (!active) return;
+                    active = false;
+                    el.releasePointerCapture(e.pointerId);
+                });
+            });
+        }
+
+        function saveHudLayout() {
+            const layout = {};
+            document.querySelectorAll('.hud-draggable').forEach(el => {
+                layout[el.id] = {
+                    left: el.style.left,
+                    top: el.style.top,
+                    right: el.style.right,
+                    bottom: el.style.bottom,
+                    scale: el.style.transform ? parseFloat(el.style.transform.replace('scale(', '').replace(')', '')) : 1.0,
+                    opacity: el.style.opacity ? parseFloat(el.style.opacity) : 1.0
+                };
+            });
+            localStorage.setItem('hassan_hud_layout', JSON.stringify(layout));
+            alert("HUD Layout Saved Successfully!");
+        }
+
+        function loadHudLayout() {
+            const saved = localStorage.getItem('hassan_hud_layout');
+            const layout = saved ? JSON.parse(saved) : DEFAULT_HUD_LAYOUT;
+            Object.keys(layout).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const cfg = layout[id];
+                    el.style.left = cfg.left || 'auto';
+                    el.style.top = cfg.top || 'auto';
+                    el.style.right = cfg.right || 'auto';
+                    el.style.bottom = cfg.bottom || 'auto';
+                    if (cfg.scale) el.style.transform = `scale(${cfg.scale})`;
+                    if (cfg.opacity) el.style.opacity = cfg.opacity;
+                }
+            });
+        }
+
+        function resetHudLayout() {
+            localStorage.removeItem('hassan_hud_layout');
+            loadHudLayout();
+            document.getElementById('hudScaleRange').value = 1.0;
+            document.getElementById('hudOpacityRange').value = 1.0;
+        }
+
+        // --- Touch 360 Camera Drag & Control Listeners ---
+        function setupInputListeners() {
+            window.addEventListener('keydown', (e) => {
+                const k = e.key.toLowerCase();
+                if (k === 'w') keys.w = true;
+                if (k === 'a') keys.a = true;
+                if (k === 's') keys.s = true;
+                if (k === 'd') keys.d = true;
+                if (e.code === 'Space') keys.space = true;
+                if (e.key === 'Shift') keys.shift = true;
+                if (k === 'e') interactLootOrHeal();
+                if (k === 'f') toggleVehicle();
+            });
+
+            window.addEventListener('keyup', (e) => {
+                const k = e.key.toLowerCase();
+                if (k === 'w') keys.w = false;
+                if (k === 'a') keys.a = false;
+                if (k === 's') keys.s = false;
+                if (k === 'd') keys.d = false;
+                if (e.code === 'Space') keys.space = false;
+                if (e.key === 'Shift') keys.shift = false;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === document.body && !isEditHudMode) {
+                    player.rotationY -= e.movementX * 0.003;
+                }
+            });
+
+            const touchCamArea = document.getElementById('touchCameraArea');
+            touchCamArea.addEventListener('touchstart', (e) => {
+                if (isEditHudMode) return;
+                const touch = e.touches[0];
+                touchCam.startX = touch.clientX;
+                touchCam.startY = touch.clientY;
+                touchCam.isDragging = true;
+            });
+
+            touchCamArea.addEventListener('touchmove', (e) => {
+                if (!touchCam.isDragging || isEditHudMode) return;
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - touchCam.startX;
+                player.rotationY -= deltaX * 0.005;
+                touchCam.startX = touch.clientX;
+                touchCam.startY = touch.clientY;
+            });
+
+            touchCamArea.addEventListener('touchend', () => { touchCam.isDragging = false; });
+
+            window.addEventListener('mousedown', (e) => {
+                if (!isPlaying || isEditHudMode) return;
+                audio.init();
+                if (e.button === 0) performShootAction();
+                else if (e.button === 2) {
+                    isScoping = !isScoping;
+                    document.getElementById('scopeOverlay').classList.toggle('hidden', !isScoping);
+                }
+            });
+
+            window.addEventListener('contextmenu', e => e.preventDefault());
+
+            // Touch Joystick
+            const joystickBase = document.getElementById('joystickBase');
+            const joystickThumb = document.getElementById('joystickThumb');
+            joystickBase.addEventListener('touchmove', (e) => {
+                if (isEditHudMode) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = joystickBase.getBoundingClientRect();
+                let dx = touch.clientX - (rect.left + rect.width / 2);
+                let dy = touch.clientY - (rect.top + rect.height / 2);
+                const dist = Math.hypot(dx, dy);
+                if (dist > 38) { dx = (dx / dist) * 38; dy = (dy / dist) * 38; }
+                joystickThumb.style.transform = `translate(${dx}px, ${dy}px)`;
+                touchInput.x = dx / 38; touchInput.y = dy / 38;
+            });
+
+            joystickBase.addEventListener('touchend', () => {
+                joystickThumb.style.transform = `translate(0px, 0px)`;
+                touchInput.x = 0; touchInput.y = 0;
+            });
+
+            document.getElementById('btnShoot').addEventListener('click', () => {
+                if (isEditHudMode) return;
+                audio.init(); performShootAction();
+            });
+            document.getElementById('btnJump').addEventListener('click', () => {
+                if (isEditHudMode) return;
+                if (player.isGrounded) { player.velocity.y = 0.35; player.isGrounded = false; }
+            });
+            document.getElementById('btnMobileHeal').addEventListener('click', () => { if (!isEditHudMode) interactLootOrHeal(); });
+            document.getElementById('btnMobileInteract').addEventListener('click', () => { if (!isEditHudMode) interactLootOrHeal(); });
+            document.getElementById('btnMobileDrive').addEventListener('click', () => { if (!isEditHudMode) toggleVehicle(); });
+        }
+
+        function interactLootOrHeal() {
+            healItems.forEach((item, idx) => {
+                if (player.mesh.position.distanceTo(item.position) < 4) {
+                    player.hp = Math.min(player.maxHp, player.hp + item.userData.hpRestore);
+                    audio.playHealSound();
+                    updateHUDStats();
+                    scene.remove(item); healItems.splice(idx, 1);
+                }
+            });
+
+            weaponLootItems.forEach((w, idx) => {
+                if (player.mesh.position.distanceTo(w.position) < 4) {
+                    audio.playHealSound();
+                    player.hasWeapon = true;
+                    document.getElementById('hudWeaponName').textContent = w.userData.name;
+                    scene.remove(w); weaponLootItems.splice(idx, 1);
+                }
+            });
+        }
+
+        function toggleVehicle() {
+            if (player.inVehicle) {
+                player.mesh.position.copy(player.inVehicle.position).add(new THREE.Vector3(3.5, 0, 0));
+                player.mesh.visible = true;
+                player.inVehicle = null;
+                document.getElementById('roleText').textContent = "ON FOOT";
+                document.getElementById('speedometer').classList.add('hidden');
+            } else {
+                vehicles.forEach(v => {
+                    if (player.mesh.position.distanceTo(v.position) < 6) {
+                        player.inVehicle = v;
+                        player.mesh.visible = false;
+                        document.getElementById('roleText').textContent = "DRIVING";
+                        document.getElementById('speedometer').classList.remove('hidden');
+                    }
+                });
+            }
+        }
+
+        function triggerDamageText(dmg) {
+            const el = document.createElement('div');
+            el.className = 'dmg-text';
+            el.textContent = `-${dmg}`;
+            el.style.left = `${window.innerWidth / 2 + (Math.random() - 0.5) * 40}px`;
+            el.style.top = `${window.innerHeight / 2 + (Math.random() - 0.5) * 40}px`;
+            document.getElementById('damageOverlay').appendChild(el);
+            setTimeout(() => el.remove(), 650);
+        }
+
+        function performShootAction() {
+            if (!player.hasWeapon) {
+                // Hand Slap Attack when unarmed
+                audio.playSlapSound();
+                if (player.humParts && player.humParts.armR) {
+                    player.humParts.armR.rotation.x = -Math.PI / 2;
+                    setTimeout(() => { player.humParts.armR.rotation.x = 0; }, 150);
+                }
+            } else {
+                audio.playGunshot();
+            }
+
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+
+            const enemyMeshes = enemies.map(e => e.hum.mesh.children[0]);
+            const intersects = raycaster.intersectObjects(enemyMeshes);
+
+            if (intersects.length > 0) {
+                const hitParent = intersects[0].object.parent;
+                const enemyObj = enemies.find(e => e.hum.mesh === hitParent);
+                if (enemyObj) {
+                    const damage = player.hasWeapon ? 35 : 15;
+                    enemyObj.hp -= damage;
+                    triggerDamageText(damage);
+                    audio.playHit();
+                    if (enemyObj.hp <= 0) {
+                        scene.remove(enemyObj.hum.mesh);
+                        enemies = enemies.filter(e => e !== enemyObj);
+                        document.getElementById('hudMissionText').textContent = `Defeat Rogue Agents: ${enemies.length} left`;
+                        if (enemies.length === 0) completeLevelMatch();
+                    }
+                }
+            }
+        }
+
+        function completeLevelMatch() {
+            const reward = 200 + selectedLevel * 100;
+            playerCoins += reward;
+            localStorage.setItem('hassan_player_coins', playerCoins);
+            if (selectedLevel >= currentLevel && currentLevel < 100) {
+                currentLevel++;
+                localStorage.setItem('hassan_max_level', currentLevel);
+            }
+            document.getElementById('hudCoins').textContent = playerCoins;
+            document.getElementById('gameOverReward').textContent = `+${reward} COINS EARNED!`;
+            isPlaying = false;
+            document.exitPointerLock();
+            document.getElementById('gameOverModal').classList.remove('hidden');
+        }
+
+        function updateHUDStats() {
+            document.getElementById('hpText').textContent = `${Math.max(0, player.hp)} / 100`;
+            document.getElementById('hpBar').style.width = `${Math.max(0, player.hp)}%`;
+        }
+
+        function updateGameLoop() {
+            if (!isPlaying) return;
+
+            if (player.inVehicle) {
+                const v = player.inVehicle;
+                if (keys.w || touchInput.y < -0.3) {
+                    v.userData.speed = Math.min(v.userData.speed + 0.02, v.userData.maxSpeed);
+                    audio.playEngine(v.userData.speed / v.userData.maxSpeed);
+                } else v.userData.speed *= 0.96;
+
+                if (keys.a || touchInput.x < -0.3) v.rotation.y += 0.04;
+                if (keys.d || touchInput.x > 0.3) v.rotation.y -= 0.04;
+
+                v.translateZ(v.userData.speed);
+                player.mesh.position.copy(v.position);
+                document.getElementById('speedValue').textContent = Math.floor(v.userData.speed * 100);
+
+                if (v.userData.wheels) {
+                    v.userData.wheels.forEach(w => w.rotation.x += v.userData.speed * 0.5);
+                }
+
+                const camOffset = new THREE.Vector3(0, 5.5, -13).applyAxisAngle(new THREE.Vector3(0, 1, 0), v.rotation.y);
+                camera.position.copy(v.position).add(camOffset);
+                camera.lookAt(v.position.clone().add(new THREE.Vector3(0, 2, 0)));
+            } else {
+                let moveX = 0, moveZ = 0;
+                if (keys.w) moveZ += 1; if (keys.s) moveZ -= 1;
+                if (keys.a) moveX += 1; if (keys.d) moveX -= 1;
+                if (touchInput.x !== 0 || touchInput.y !== 0) { moveX = -touchInput.x; moveZ = -touchInput.y; }
+
+                const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize();
+                moveVec.applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY);
+
+                player.mesh.position.addScaledVector(moveVec, player.speed);
+                player.mesh.rotation.y = player.rotationY;
+
+                player.velocity.y -= 0.016;
+                player.mesh.position.y += player.velocity.y;
+                if (player.mesh.position.y <= 0) { player.mesh.position.y = 0; player.velocity.y = 0; player.isGrounded = true; }
+
+                const camOffset = new THREE.Vector3(0, isScoping ? 1.8 : 3.8, isScoping ? -1.0 : -6.5).applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY);
+                camera.position.copy(player.mesh.position).add(camOffset);
+                camera.lookAt(player.mesh.position.clone().add(new THREE.Vector3(0, 1.8, 0)));
+            }
+
+            // Tactical 3-Foot Proximity AI Engagement & Auto Lock-On
+            enemies.forEach(e => {
+                const dist = e.hum.mesh.position.distanceTo(player.mesh.position);
+
+                // Auto-aim alignment when within 3 feet (tactical proximity)
+                if (dist <= 3.5) {
+                    player.rotationY = Math.atan2(e.hum.mesh.position.x - player.mesh.position.x, e.hum.mesh.position.z - player.mesh.position.z);
+                }
+
+                if (dist < 40) {
+                    e.hum.mesh.lookAt(player.mesh.position);
+                    if (dist > 3.0) {
+                        e.hum.mesh.translateZ(e.speed);
+                    } else {
+                        // Tactical close proximity attack engagement (~3 ft)
+                        const now = performance.now();
+                        if (now - e.lastAttack > 1100) {
+                            e.lastAttack = now;
+                            player.hp -= 10;
+                            audio.playHit();
+                            updateHUDStats();
+                            if (player.hp <= 0) {
+                                isPlaying = false; document.exitPointerLock();
+                                alert("MISSION FAILED! RETREAT TO LOBBY.");
+                                document.getElementById('hud').classList.add('opacity-0');
+                                document.getElementById('lobbyScreen').classList.remove('hidden');
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.selectMap = function(mapType) {
+            selectedMap = mapType;
+            ['snow', 'desert', 'cyber', 'autumn'].forEach(m => {
+                const card = document.getElementById(`mapCard-${m}`);
+                if (m === mapType) {
+                    card.className = "hud-panel p-4 rounded-2xl cursor-pointer border-cyan-400 transition hover:scale-105 ring-2 ring-cyan-400";
+                } else {
+                    card.className = "hud-panel p-4 rounded-2xl cursor-pointer border-slate-700 transition hover:scale-105";
+                }
+            });
+        };
+
+        window.setGender = function(g) {
+            selectedGender = g;
+            document.getElementById('btnBoy').className = g === 'boy' ? 'flex-1 py-2 rounded-xl bg-cyan-600 text-white font-bold text-xs' : 'flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs';
+            document.getElementById('btnGirl').className = g === 'girl' ? 'flex-1 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs' : 'flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs';
+            document.getElementById('hudAvatarLabel').textContent = g === 'boy' ? 'BOY HERO' : 'GIRL HERO';
+        };
+
+        window.setOutfit = function(color) {
+            selectedOutfitColor = color;
+        };
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            updateGameLoop();
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        }
+
+        // HUD Editor Controls Listeners
+        document.getElementById('btnToggleHudEditor').addEventListener('click', () => {
+            isEditHudMode = !isEditHudMode;
+            document.getElementById('hudEditorBar').classList.toggle('hidden', !isEditHudMode);
+            document.querySelectorAll('.hud-draggable').forEach(el => {
+                el.classList.toggle('editing-mode', isEditHudMode);
+            });
+            if (!isEditHudMode) saveHudLayout();
+        });
+
+        document.getElementById('hudScaleRange').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.querySelectorAll('.hud-draggable').forEach(el => {
+                el.style.transform = `scale(${val})`;
+            });
+        });
+
+        document.getElementById('hudOpacityRange').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.querySelectorAll('.hud-draggable').forEach(el => {
+                el.style.opacity = val;
+            });
+        });
+
+        document.getElementById('btnSaveHudLayout').addEventListener('click', saveHudLayout);
+        document.getElementById('btnResetHudLayout').addEventListener('click', resetHudLayout);
+
+        // Lobby Tab Listeners
+        document.getElementById('tabMapBtn').addEventListener('click', () => {
+            document.getElementById('mapSelectorBox').classList.remove('hidden');
+            document.getElementById('levelGridBox').classList.add('hidden');
+            document.getElementById('tabMapBtn').className = "px-5 py-2 rounded-xl font-cyber text-xs sm:text-sm font-bold bg-cyan-600 text-white shadow-lg";
+            document.getElementById('tabLevelBtn').className = "px-5 py-2 rounded-xl font-cyber text-xs sm:text-sm font-bold bg-slate-800 text-slate-300 border border-slate-700";
+        });
+
+        document.getElementById('tabLevelBtn').addEventListener('click', () => {
+            document.getElementById('levelGridBox').classList.remove('hidden');
+            document.getElementById('mapSelectorBox').classList.add('hidden');
+            document.getElementById('tabLevelBtn').className = "px-5 py-2 rounded-xl font-cyber text-xs sm:text-sm font-bold bg-cyan-600 text-white shadow-lg";
+            document.getElementById('tabMapBtn').className = "px-5 py-2 rounded-xl font-cyber text-xs sm:text-sm font-bold bg-slate-800 text-slate-300 border border-slate-700";
+        });
+
+        document.getElementById('btnEnterLobby').addEventListener('click', () => {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+            document.getElementById('lobbyCoinCount').textContent = playerCoins;
+        });
+
+        document.getElementById('btnOpenVault').addEventListener('click', () => {
+            document.getElementById('vaultCoins').textContent = playerCoins;
+            document.getElementById('vaultModal').classList.remove('hidden');
+        });
+
+        document.getElementById('btnCloseVault').addEventListener('click', () => {
+            document.getElementById('vaultModal').classList.add('hidden');
+        });
+
+        document.getElementById('btnStartMatch').addEventListener('click', () => {
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('hud').classList.remove('opacity-0');
+            
+            if (player.mesh) scene.remove(player.mesh);
+            const hum = createHumanoidMesh(selectedOutfitColor, selectedGender === 'girl');
+            player.mesh = hum.mesh;
+            player.humParts = hum;
+            player.mesh.position.set(0, 0, 0);
+            player.hp = 100; updateHUDStats();
+            scene.add(player.mesh);
+
+            document.getElementById('hudLevelBadge').textContent = `LEVEL ${selectedLevel} - MAP: ${selectedMap.toUpperCase()}`;
+            createSeasonalMap(selectedMap);
+            document.body.requestPointerLock();
+            isPlaying = true;
+        });
+
+        document.getElementById('btnExitToLobby').addEventListener('click', () => {
+            isPlaying = false; document.exitPointerLock();
+            document.getElementById('hud').classList.add('opacity-0');
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+            buildLevelGrid();
+        });
+
+        document.getElementById('btnReturnLobby').addEventListener('click', () => {
+            document.getElementById('gameOverModal').classList.add('hidden');
+            document.getElementById('hud').classList.add('opacity-0');
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+            buildLevelGrid();
+        });
+
+        window.onload = function() {
+            initEngine();
+            animate();
+        };
+    </script>
+</body>
+</html>
