@@ -54,10 +54,26 @@
         .font-cyber { font-family: 'Orbitron', sans-serif; }
 
         .hud-panel {
-            background: rgba(8, 13, 26, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(56, 189, 248, 0.35);
-            box-shadow: 0 4px 16px rgba(2, 132, 199, 0.2);
+            background: linear-gradient(145deg, rgba(10, 16, 32, 0.90), rgba(6, 10, 22, 0.86));
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .gold-glow {
+            box-shadow: 0 0 16px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(253, 224, 71, 0.25);
+            border-color: rgba(245, 158, 11, 0.85);
+        }
+
+        .lobby-tactical-card {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(12, 74, 110, 0.55));
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+            transition: all 0.18s ease;
+        }
+        .lobby-tactical-card:hover {
+            border-color: #fbbf24;
+            transform: translateY(-1px) scale(1.02);
         }
 
         .gold-glow {
@@ -89,8 +105,31 @@
         .crosshair-reticle::before { top: 12px; left: 0; width: 26px; height: 2px; }
         .crosshair-reticle::after { top: 0; left: 12px; width: 2px; height: 26px; }
         .crosshair-locked::before, .crosshair-locked::after {
-            background: #f43f5e !important;
-            box-shadow: 0 0 12px #f43f5e !important;
+            background: #ef4444 !important;
+            box-shadow: 0 0 14px #ef4444, 0 0 24px #dc2626 !important;
+        }
+        .crosshair-headshot::before, .crosshair-headshot::after {
+            background: #facc15 !important;
+            box-shadow: 0 0 16px #facc15, 0 0 26px #ef4444 !important;
+        }
+
+        /* Medkit Circular Radial Progress Ring */
+        #medkitProgressSvg {
+            position: absolute;
+            inset: -4px;
+            width: 48px;
+            height: 48px;
+            transform: rotate(-90deg);
+            pointer-events: none;
+        }
+        #medkitProgressCircle {
+            fill: none;
+            stroke: #10b981;
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            stroke-dasharray: 126;
+            stroke-dashoffset: 126;
+            filter: drop-shadow(0 0 6px #10b981);
         }
         .crosshair-headshot::before, .crosshair-headshot::after {
             background: #facc15 !important;
@@ -211,58 +250,50 @@
             </button>
         </div>
 
-        <!-- =================================================================== -->
-        <!-- 1. STARTUP LOADING SCREEN ("MINI FREE FIRE" + NOSTALGIC BGM)        -->
-        <!-- =================================================================== -->
-        <div id="startupLoadingScreen" class="absolute inset-0 z-[100] bg-gradient-to-br from-sky-950 via-slate-900 to-amber-950 flex flex-col items-center justify-center p-6 text-center">
-            <div class="mb-2 px-3 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-cyber tracking-widest">
-                HASSAN GAME ARENA • DAYLIGHT SUNLIGHT EDITION
-            </div>
-            <h1 class="text-4xl sm:text-6xl md:text-7xl font-cyber font-black tracking-wider bg-gradient-to-r from-amber-400 via-yellow-200 to-orange-500 bg-clip-text text-transparent drop-shadow-[0_6px_30px_rgba(245,158,11,0.55)]">
+        <!-- 1. STARTUP LOADING SCREEN ("MINI FREE FIRE") -->
+        <div id="startupLoadingScreen" class="absolute inset-0 z-[100] bg-gradient-to-br from-slate-950 via-sky-950 to-slate-950 flex flex-col items-center justify-center p-6 text-center">
+            <div class="text-4xl sm:text-6xl font-arena bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-500 bg-clip-text text-transparent drop-shadow-2xl tracking-wider">
                 MINI FREE FIRE
-            </h1>
-            <div class="text-cyan-300 font-arena text-xs sm:text-base tracking-widest mt-1">
-                2KM OPEN WORLD • CLIMBABLE ROOFTOPS • LUCKY EVENT • LIVE VOICE SQUAD
             </div>
-
-            <div class="w-full max-w-md mt-7">
-                <div class="flex justify-between text-[11px] font-cyber text-slate-200 mb-1.5">
-                    <span id="loadingStatusText">Loading Sunlight, Rooftops & Persistent Profile...</span>
-                    <span id="loadingPercentText" class="text-amber-400">0%</span>
-                </div>
-                <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-cyan-500/40 p-0.5">
-                    <div id="loadingProgressBar" class="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-cyan-400 rounded-full transition-all duration-150" style="width: 0%;"></div>
-                </div>
-                <button id="btnEnableMusicNow" class="mt-4 px-4 py-1.5 rounded-full bg-amber-500/25 border border-amber-400/60 text-amber-300 text-[11px] font-cyber hover:bg-amber-500/40">
-                    🎵 TAP TO PLAY CLASSIC LOBBY BGM
-                </button>
+            <div class="text-xs sm:text-sm font-cyber text-cyan-300 tracking-widest mt-1 mb-6">
+                HASSAN GAME ARENA • ULTIMATE EDITION
             </div>
+            <div class="w-64 sm:w-80 h-3 bg-slate-900 rounded-full overflow-hidden border border-cyan-500/40 p-0.5">
+                <div id="loadingProgressBar" class="h-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 rounded-full transition-all duration-300" style="width: 10%;"></div>
+            </div>
+            <div class="flex justify-between w-64 sm:w-80 text-[10px] font-mono text-slate-300 mt-1.5">
+                <span id="loadingStatusText">Initializing Arena...</span>
+                <span id="loadingPercentText">10%</span>
+            </div>
+            <button id="btnEnableMusicNow" class="mt-6 px-4 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 text-xs font-cyber font-bold hover:bg-amber-500/30 transition">
+                🎵 TAP FOR LOBBY MUSIC
+            </button>
         </div>
 
         <!-- =================================================================== -->
-        <!-- 2. COMPACT LOBBY (PROFILE LINE, LUCKY EVENT, MIC & SQUAD SELECTOR)  -->
+        <!-- 2. PREMIUM REDESIGNED LOBBY (ZERO IN-GAME BUTTONS VISIBLE HERE)     -->
         <!-- =================================================================== -->
-        <div id="lobbyScreen" class="hidden absolute inset-0 z-40 pointer-events-none flex flex-col justify-between p-2 sm:p-3">
+        <div id="lobbyScreen" class="hidden absolute inset-0 z-40 pointer-events-none flex flex-col justify-between p-2.5 sm:p-3.5">
             
             <!-- TOP BAR: Clickable Player Profile Card (with Mini Level Line) + Currencies + Settings -->
-            <div class="flex justify-between items-start w-full pointer-events-auto gap-1.5">
+            <div class="flex justify-between items-start w-full pointer-events-auto gap-2">
                 <!-- Top-Left Interactive Player Profile Badge -->
-                <div id="btnOpenProfileModal" class="hud-panel px-2.5 py-1.5 rounded-xl flex items-center space-x-2.5 border-amber-400/60 cursor-pointer hover:border-amber-300 transition">
-                    <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex flex-col items-center justify-center text-slate-950 font-black shadow">
-                        <span class="text-[9px] leading-none">LV</span>
-                        <span id="lobbyProfileSmallLvl" class="text-sm font-cyber leading-none">1</span>
+                <div id="btnOpenProfileModal" class="hud-panel px-3 py-1.5 rounded-2xl flex items-center space-x-2.5 border-amber-400/70 cursor-pointer hover:border-amber-300 transition">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-600 flex flex-col items-center justify-center text-slate-950 font-black shadow-lg">
+                        <span class="text-[8px] leading-none tracking-wider">LV</span>
+                        <span id="lobbyProfileSmallLvl" class="text-base font-cyber leading-none">1</span>
                     </div>
-                    <div class="leading-tight min-w-[130px] sm:min-w-[165px]">
+                    <div class="leading-tight min-w-[140px] sm:min-w-[175px]">
                         <div class="flex items-center justify-between space-x-1.5">
-                            <span class="font-cyber text-xs font-bold text-white" id="lobbyPlayerName">HASSAN_PRO</span>
-                            <span id="lobbyRankBadge" class="px-1.5 py-0.2 rounded bg-slate-700 text-slate-200 text-[9px] font-cyber font-bold border border-slate-400">
+                            <span class="font-cyber text-xs font-bold text-white tracking-wide" id="lobbyPlayerName">HASSAN_PRO</span>
+                            <span id="lobbyRankBadge" class="px-1.5 py-0.5 rounded-md bg-slate-700 text-slate-200 text-[9px] font-cyber font-bold border border-slate-400">
                                 🥈 SILVER
                             </span>
                         </div>
                         <!-- Small Level Progress Line inside Profile -->
                         <div class="flex items-center space-x-1.5 mt-1">
                             <div class="flex-1 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
-                                <div id="lobbyMiniLevelBar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400" style="width: 25%;"></div>
+                                <div id="lobbyMiniLevelBar" class="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400" style="width: 25%;"></div>
                             </div>
                             <span class="text-[8px] font-mono text-cyan-300" id="lobbyMiniLvlNum">Lv.1</span>
                         </div>
@@ -275,104 +306,112 @@
 
                 <!-- Top-Right Gold, Ranked Tokens, Fullscreen & Settings Button -->
                 <div class="flex items-center space-x-1.5">
-                    <!-- Ranked Tokens Pill -->
-                    <div class="hud-panel border-purple-400/60 px-2 py-1 rounded-xl flex items-center space-x-1" title="Ranked Tokens for Event Spin">
+                    <div class="hud-panel border-purple-400/70 px-2.5 py-1.5 rounded-xl flex items-center space-x-1" title="Ranked Tokens for Event Spin">
                         <span class="text-xs">🎟️</span>
                         <span id="lobbyTokenCount" class="text-xs sm:text-sm font-arena text-purple-300">5</span>
                     </div>
-                    <!-- Gold Pill -->
-                    <div class="hud-panel gold-glow px-2 py-1 rounded-xl flex items-center space-x-1">
+                    <div class="hud-panel gold-glow px-2.5 py-1.5 rounded-xl flex items-center space-x-1">
                         <span class="text-xs">🪙</span>
                         <span id="lobbyCoinCount" class="text-xs sm:text-sm font-arena text-amber-400">2500</span>
                     </div>
-                    <!-- Settings Button -->
-                    <button id="btnOpenSettingsModal" class="hud-panel px-2.5 py-1.5 rounded-xl text-xs font-bold text-cyan-300 hover:border-amber-400 hover:scale-105 transition">
+                    <button id="btnOpenSettingsModal" class="lobby-tactical-card px-3 py-1.5 rounded-xl text-xs font-bold text-cyan-300">
                         ⚙️
                     </button>
                 </div>
             </div>
 
-            <!-- MIDDLE ROW: Compact Left Menu (Store + Event + Avatar/Pets + Friends + 100 Levels) -->
+            <!-- MIDDLE ROW: Compact Left Menu + Right Squad & Co-Standing Teammate Info -->
             <div class="flex justify-between items-center w-full my-auto">
                 <!-- Left Compact Vertical Stack -->
-                <div class="flex flex-col space-y-1.5 pointer-events-auto w-32 sm:w-36">
-                    <!-- Store & Event Side-by-Side Row -->
-                    <div class="grid grid-cols-2 gap-1">
-                        <button id="btnOpenVault" class="hud-panel p-1.5 rounded-xl text-center hover:border-cyan-400 hover:scale-[1.03] transition">
-                            <div class="text-sm">🛒</div>
+                <div class="flex flex-col space-y-1.5 pointer-events-auto w-36 sm:w-40">
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <button id="btnOpenVault" class="lobby-tactical-card p-2 rounded-xl text-center">
+                            <div class="text-base">🛒</div>
                             <div class="text-[9px] font-cyber font-bold text-cyan-300">STORE</div>
                         </button>
-                        <button id="btnOpenEventModal" class="hud-panel border-amber-400/70 p-1.5 rounded-xl text-center hover:border-amber-300 hover:scale-[1.03] transition relative">
-                            <div class="text-sm">🎁</div>
+                        <button id="btnOpenEventModal" class="lobby-tactical-card border-amber-400/80 p-2 rounded-xl text-center relative">
+                            <div class="text-base">🎁</div>
                             <div class="text-[9px] font-cyber font-bold text-amber-300">EVENT</div>
-                            <span class="absolute -top-1 -right-1 bg-amber-500 text-slate-950 text-[7px] font-black px-1 rounded-full">SPIN</span>
+                            <span class="absolute -top-1 -right-1 bg-amber-500 text-slate-950 text-[7px] font-black px-1.5 rounded-full">SPIN</span>
                         </button>
                     </div>
 
-                    <button id="btnOpenAvatarRoom" class="hud-panel px-2.5 py-1.5 rounded-xl text-left flex items-center space-x-1.5 hover:border-amber-400 hover:scale-[1.03] transition">
-                        <span class="text-sm">🐾</span>
+                    <button id="btnOpenAvatarRoom" class="lobby-tactical-card px-2.5 py-1.5 rounded-xl text-left flex items-center space-x-2">
+                        <span class="text-base">🐾</span>
                         <div>
                             <div class="text-[10px] font-cyber font-bold text-amber-300">AVATAR & PETS</div>
-                            <div class="text-[8px] text-slate-400">Bird, Lion, Tiger, Dog...</div>
+                            <div class="text-[8px] text-slate-300">Skins, Bird, Lion, Tiger...</div>
                         </div>
                     </button>
 
-                    <button id="btnOpenFriendsModal" class="hud-panel px-2.5 py-1.5 rounded-xl text-left flex items-center space-x-1.5 hover:border-emerald-400 hover:scale-[1.03] transition relative">
-                        <span class="text-sm">👥</span>
+                    <button id="btnOpenFriendsModal" class="lobby-tactical-card px-2.5 py-1.5 rounded-xl text-left flex items-center space-x-2 relative">
+                        <span class="text-base">👥</span>
                         <div>
                             <div class="text-[10px] font-cyber font-bold text-emerald-300">LIVE FRIENDS</div>
-                            <div class="text-[8px] text-slate-400">UID Invite & Squad</div>
+                            <div class="text-[8px] text-slate-300">Invite UID & Inspect</div>
                         </div>
                         <span id="friendReqBadge" class="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                             2
                         </span>
                     </button>
 
-                    <button id="btnOpenLevelsModal" class="hud-panel px-2.5 py-1.5 rounded-xl text-left flex items-center space-x-1.5 hover:border-purple-400 hover:scale-[1.03] transition">
-                        <span class="text-sm">🏆</span>
+                    <button id="btnOpenLevelsModal" class="lobby-tactical-card px-2.5 py-1.5 rounded-xl text-left flex items-center space-x-2">
+                        <span class="text-base">🏆</span>
                         <div>
                             <div class="text-[10px] font-cyber font-bold text-purple-300">100 LEVELS</div>
-                            <div class="text-[8px] text-slate-400">Stage Progress</div>
+                            <div class="text-[8px] text-slate-300">Campaign Stages</div>
                         </div>
                     </button>
                 </div>
 
-                <!-- Right Compact Squad Size Selector (Solo / Duo / Squad) -->
-                <div class="flex flex-col space-y-1.5 pointer-events-auto w-32 sm:w-36 text-right">
-                    <div class="hud-panel p-2 rounded-xl">
-                        <div class="text-[8px] font-cyber text-cyan-300 font-bold mb-1">TEAM SIZE WITH FRIENDS</div>
+                <!-- Right Squad Party Size & Co-Standing Teammates Card -->
+                <div class="flex flex-col space-y-1.5 pointer-events-auto w-36 sm:w-44 text-right">
+                    <div class="hud-panel p-2 rounded-xl border-emerald-400/50">
+                        <div class="text-[8px] font-cyber text-cyan-300 font-bold mb-1">SQUAD PARTY MODE</div>
                         <div class="grid grid-cols-3 gap-1 text-[9px] font-cyber font-bold">
                             <button onclick="setPartySizeMode(1)" id="partyBtn-1" class="py-1 rounded bg-slate-800 text-slate-300">SOLO</button>
                             <button onclick="setPartySizeMode(2)" id="partyBtn-2" class="py-1 rounded bg-slate-800 text-slate-300">DUO</button>
                             <button onclick="setPartySizeMode(4)" id="partyBtn-4" class="py-1 rounded bg-emerald-600 text-white">SQUAD</button>
                         </div>
                         <div class="text-[8px] text-emerald-300 mt-1 font-bold" id="lobbyActiveSquadSummary">Active Squad: 1/4</div>
+                        <div id="lobbySquadMembersMini" class="mt-1 space-y-0.5 text-left"></div>
                     </div>
 
                     <div class="hud-panel p-2 rounded-xl text-[9px]">
-                        <div class="text-slate-400">ACTIVE PET</div>
+                        <div class="text-slate-400">COMPANION PET</div>
                         <div class="font-bold text-amber-300 truncate" id="lobbyActivePetName">🐶 Loyal Pup</div>
-                        <div class="text-slate-400 mt-1">EQUIPPED GUN</div>
+                        <div class="text-slate-400 mt-1">PRIMARY WEAPON</div>
                         <div class="font-bold text-cyan-300 truncate" id="lobbyWpnName">AK-47</div>
                     </div>
                 </div>
             </div>
 
-            <!-- BOTTOM ROW: Emote + Voice Chat Mic Button Under Avatar + Bottom-Right Stacked Mode & START -->
-            <div class="flex justify-between items-end w-full pointer-events-auto">
-                <!-- Bottom-Left Emote & Fullscreen -->
-                <div class="flex items-center space-x-1.5">
-                    <button onclick="triggerLobbyEmoteDemo()" class="hud-panel px-2.5 py-1.5 rounded-xl text-[10px] font-bold text-pink-300 border-pink-400/50 hover:scale-105">
-                        💃 EMOTE
-                    </button>
-                    <button id="btnLobbyFullscreen" class="hud-panel px-2.5 py-1.5 rounded-xl text-[10px] font-bold text-cyan-300 hover:scale-105">
-                        📱 FULL
-                    </button>
+            <!-- BOTTOM ROW: Lobby Text Chat + Voice Chat Mic + Stacked Mode & START -->
+            <div class="flex justify-between items-end w-full pointer-events-auto gap-2">
+                <!-- Bottom-Left Live Squad Text Chat & Emote -->
+                <div class="flex flex-col space-y-1 w-48 sm:w-64">
+                    <div class="hud-panel rounded-xl p-1.5 border-cyan-500/40">
+                        <div id="lobbyChatMessages" class="h-12 overflow-y-auto text-[9px] space-y-0.5 text-slate-200 mb-1 pr-1">
+                            <div><span class="text-amber-400 font-bold">[SYSTEM]:</span> Invite friends by UID to chat & stand together!</div>
+                        </div>
+                        <div class="flex space-x-1">
+                            <input type="text" id="lobbyChatInput" placeholder="Message squad..." maxlength="48" class="flex-1 bg-slate-900/90 border border-slate-700 rounded-lg px-2 py-0.5 text-[9px] text-white focus:outline-none focus:border-cyan-400">
+                            <button id="btnSendLobbyChat" class="px-2 py-0.5 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-[9px] font-bold">SEND</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1">
+                        <button onclick="triggerLobbyEmoteDemo()" class="lobby-tactical-card px-2.5 py-1 rounded-xl text-[9px] font-bold text-pink-300 border-pink-400/50">
+                            💃 EMOTE
+                        </button>
+                        <button id="btnLobbyFullscreen" class="lobby-tactical-card px-2.5 py-1 rounded-xl text-[9px] font-bold text-cyan-300">
+                            📱 FULL
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Bottom-Center Voice Chat Mic Button Directly Below 3D Avatar -->
                 <div class="flex flex-col items-center">
-                    <button id="btnLobbyVoiceMic" class="hud-panel px-3.5 py-1.5 rounded-full border-emerald-400/70 flex items-center space-x-1.5 text-[10px] font-cyber font-bold text-emerald-300 hover:scale-105 transition">
+                    <button id="btnLobbyVoiceMic" class="hud-panel px-3.5 py-1.5 rounded-full border-emerald-400/80 flex items-center space-x-1.5 text-[10px] font-cyber font-bold text-emerald-300 hover:scale-105 transition shadow-lg">
                         <span id="lobbyMicIcon">🎙️</span>
                         <span id="lobbyMicLabel">VOICE: OFF</span>
                     </button>
@@ -380,7 +419,7 @@
 
                 <!-- Bottom-Right Corner: Mode/Map Selector Stacked Directly Above START Button -->
                 <div class="flex flex-col items-end space-y-1.5">
-                    <button id="btnOpenModeSelector" class="hud-panel px-3 py-1.5 rounded-xl border-cyan-400/70 hover:border-amber-400 flex items-center space-x-2 transition shadow-lg">
+                    <button id="btnOpenModeSelector" class="lobby-tactical-card px-3 py-1.5 rounded-xl border-cyan-400/80 flex items-center space-x-2 shadow-lg">
                         <div class="text-right">
                             <div class="text-[8px] font-cyber text-amber-400 uppercase tracking-wider">SELECT MAP / MODE ▲</div>
                             <div class="text-[10px] sm:text-[11px] font-cyber font-bold text-white" id="lobbySelectedModeText">
@@ -398,389 +437,278 @@
         </div>
 
         <!-- =================================================================== -->
-        <!-- 3. PLAYER PROFILE MODAL (STATS, LEVEL BAR & VISITOR LIKE BUTTON)    -->
+        <!-- 3. PLAYER PROFILE MODAL WITH SIDE-BY-SIDE 3D AVATAR PREVIEW         -->
         <!-- =================================================================== -->
-        <div id="profileModal" class="hidden absolute inset-0 z-50 bg-slate-950/94 backdrop-blur-xl flex flex-col justify-between p-3 sm:p-5 overflow-y-auto">
-            <div class="flex justify-between items-center max-w-3xl mx-auto w-full">
-                <div class="text-base sm:text-xl font-cyber text-amber-400 font-black">PLAYER PROFILE & CAREER CARD</div>
+        <div id="profileModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-3 sm:p-5 overflow-y-auto">
+            <div class="flex justify-between items-center max-w-4xl mx-auto w-full">
+                <div class="text-base sm:text-xl font-cyber text-amber-400 font-black" id="profileModalHeaderTitle">PLAYER PROFILE & 3D SHOWCASE</div>
                 <button id="btnCloseProfileModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
             </div>
 
-            <div class="max-w-3xl mx-auto w-full my-auto hud-panel p-4 rounded-2xl border-amber-400/50 space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
-                            FF
-                        </div>
+            <div class="max-w-4xl mx-auto w-full my-auto grid grid-cols-1 md:grid-cols-12 gap-3">
+                <!-- Left Side: Live Rendered 3D Avatar + Companion Pet Viewport -->
+                <div class="md:col-span-5 hud-panel rounded-2xl border-cyan-400/50 p-2 flex flex-col items-center justify-between relative overflow-hidden min-h-[220px]">
+                    <div class="text-[9px] font-cyber text-cyan-300 font-bold tracking-wider z-10">LIVE 3D AVATAR & PET</div>
+                    <div id="profileAvatar3DContainer" class="w-full h-48 rounded-xl overflow-hidden"></div>
+                    <div class="text-[9px] text-amber-300 font-bold z-10" id="profile3DPetBadge">🐶 Loyal Pup</div>
+                </div>
+
+                <!-- Right Side: Stats, Editable Name (when self), Level Bar & Visitor Like Button -->
+                <div class="md:col-span-7 hud-panel p-4 rounded-2xl border-amber-400/50 flex flex-col justify-between space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
                         <div>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2" id="profileSelfNameEditRow">
                                 <input type="text" id="profileNameInput" value="HASSAN_PRO" maxlength="16" class="bg-slate-900 border border-slate-700 rounded-lg px-2 py-0.5 font-cyber text-sm font-bold text-white w-36 focus:outline-none focus:border-amber-400">
                                 <button onclick="saveCustomPlayerName()" class="px-2 py-0.5 bg-cyan-600 rounded text-[10px] font-bold">SAVE</button>
                             </div>
+                            <div class="hidden font-cyber text-base font-black text-white" id="profileInspectedNameDisplay">FRIEND_NAME</div>
                             <div class="text-xs font-mono text-amber-300 mt-1">UID: <span id="profileModalUID">FF-00000000</span></div>
                         </div>
-                    </div>
 
-                    <!-- Visitor / Spectator Like Button on Profile -->
-                    <div class="flex items-center space-x-2 bg-slate-900 px-3 py-2 rounded-xl border border-pink-500/40">
-                        <div class="text-right">
-                            <div class="text-[9px] text-slate-400">SPECTATOR & VISITOR LIKES</div>
-                            <div class="text-base font-arena text-pink-400">👍 <span id="profileModalLikesCount">0</span> LIKES</div>
+                        <!-- Visitor / Spectator Like Button on Profile -->
+                        <div class="flex items-center space-x-2 bg-slate-900 px-3 py-2 rounded-xl border border-pink-500/40">
+                            <div class="text-right">
+                                <div class="text-[8px] text-slate-400">PROFILE LIKES</div>
+                                <div class="text-sm font-arena text-pink-400">👍 <span id="profileModalLikesCount">0</span></div>
+                            </div>
+                            <button id="btnGiveProfileLike" class="px-3 py-1.5 bg-gradient-to-r from-pink-600 to-rose-500 hover:scale-105 active:scale-95 rounded-xl text-xs font-cyber font-bold text-white shadow">
+                                👍 LIKE
+                            </button>
                         </div>
-                        <button id="btnGiveProfileLike" class="px-3 py-1.5 bg-gradient-to-r from-pink-600 to-rose-500 hover:scale-105 active:scale-95 rounded-xl text-xs font-cyber font-bold text-white shadow">
-                            👍 LIKE
-                        </button>
                     </div>
-                </div>
 
-                <!-- Level Progress Bar Line -->
-                <div class="bg-slate-900/90 p-3 rounded-xl border border-cyan-500/30">
-                    <div class="flex justify-between items-center text-xs font-cyber mb-1">
-                        <span class="text-cyan-300 font-bold">ACCOUNT LEVEL <span id="profileModalLevelNum" class="text-amber-400 text-sm">1</span></span>
-                        <span class="text-slate-400 text-[10px]" id="profileModalXpText">0 / 500 XP</span>
+                    <!-- Level Progress Bar Line -->
+                    <div class="bg-slate-900/90 p-2.5 rounded-xl border border-cyan-500/30">
+                        <div class="flex justify-between items-center text-xs font-cyber mb-1">
+                            <span class="text-cyan-300 font-bold">LEVEL <span id="profileModalLevelNum" class="text-amber-400 text-sm">1</span></span>
+                            <span class="text-slate-400 text-[10px]" id="profileModalXpText">0 / 500 XP</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-700">
+                            <div id="profileModalLevelBar" class="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 transition-all duration-300" style="width: 20%;"></div>
+                        </div>
                     </div>
-                    <div class="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-700">
-                        <div id="profileModalLevelBar" class="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 transition-all duration-300" style="width: 20%;"></div>
-                    </div>
-                </div>
 
-                <!-- Rank, Matches, Kills & Booyahs Grid -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
-                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                        <div class="text-[9px] text-slate-400">RANKED TIER</div>
-                        <div class="text-xs font-cyber font-bold text-amber-300 mt-0.5" id="profileModalRank">🥈 SILVER</div>
-                    </div>
-                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                        <div class="text-[9px] text-slate-400">RANK POINTS</div>
-                        <div class="text-sm font-arena text-cyan-300 mt-0.5" id="profileModalRP">0 RP</div>
-                    </div>
-                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                        <div class="text-[9px] text-slate-400">TOTAL ELIMINATIONS</div>
-                        <div class="text-sm font-arena text-rose-400 mt-0.5" id="profileModalKills">0</div>
-                    </div>
-                    <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-                        <div class="text-[9px] text-slate-400">BOOYAHS WON</div>
-                        <div class="text-sm font-arena text-emerald-400 mt-0.5" id="profileModalBooyahs">0</div>
+                    <!-- Rank, Matches, Kills & Booyahs Grid -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+                            <div class="text-[8px] text-slate-400">RANK TIER</div>
+                            <div class="text-xs font-cyber font-bold text-amber-300 mt-0.5" id="profileModalRank">🥈 SILVER</div>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+                            <div class="text-[8px] text-slate-400">RANK POINTS</div>
+                            <div class="text-xs font-arena text-cyan-300 mt-0.5" id="profileModalRP">0 RP</div>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+                            <div class="text-[8px] text-slate-400">KILLS</div>
+                            <div class="text-xs font-arena text-rose-400 mt-0.5" id="profileModalKills">0</div>
+                        </div>
+                        <div class="bg-slate-900 p-2 rounded-xl border border-slate-800">
+                            <div class="text-[8px] text-slate-400">BOOYAHS</div>
+                            <div class="text-xs font-arena text-emerald-400 mt-0.5" id="profileModalBooyahs">0</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- =================================================================== -->
-        <!-- 4. LUCKY EVENT SPIN MODAL (1 TOKEN / 100 GOLD | 10 TOKENS / 1000 GOLD)-->
-        <!-- =================================================================== -->
-        <div id="eventSpinModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-3 sm:p-4 overflow-y-auto">
-            <div class="flex flex-wrap justify-between items-center max-w-5xl mx-auto w-full gap-2">
-                <div class="flex items-center space-x-2">
-                    <div class="text-base sm:text-xl font-cyber text-amber-400 font-black">🎁 LUCKY ROYALE EVENT SPIN</div>
-                    <span class="hud-panel border-purple-400 px-2.5 py-0.5 rounded-xl text-xs font-arena text-purple-300">🎟️ <span id="eventTokensDisplay">5</span></span>
-                    <span class="hud-panel gold-glow px-2.5 py-0.5 rounded-xl text-xs font-arena text-amber-400">🪙 <span id="eventGoldDisplay">2500</span></span>
-                </div>
-                <button id="btnCloseEventModal" class="px-4 py-1.5 bg-rose-600 rounded-xl text-xs font-bold">LOBBY ✕</button>
+        <!-- 4. LUCKY EVENT SPIN MODAL -->
+        <div id="eventSpinModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-4">
+            <div class="flex justify-between items-center max-w-3xl mx-auto w-full">
+                <div class="text-lg font-cyber text-amber-400 font-black">🎁 LUCKY ROYALE EVENT SPIN</div>
+                <button id="btnCloseEventModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
             </div>
-
-            <!-- Event Grand Prize Pool Grid -->
-            <div class="max-w-5xl mx-auto w-full my-auto space-y-3 py-2">
-                <div class="text-center text-xs text-cyan-300 font-bold">
-                    WIN EXCLUSIVE MYTHIC X-SUITS, EVOLUTION GUN SKINS & ROYALE BUNDLES!
+            <div class="max-w-3xl mx-auto w-full my-auto hud-panel p-4 rounded-2xl border-amber-400/60 space-y-3 text-center">
+                <div class="flex justify-center space-x-4 text-xs font-bold">
+                    <span class="text-amber-300">🪙 GOLD: <span id="eventModalGold">2500</span></span>
+                    <span class="text-purple-300">🎟️ TOKENS: <span id="eventModalTokens">5</span></span>
                 </div>
-                <div id="eventPrizePoolGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <!-- Populated via JS -->
+                <div id="eventPrizePoolGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]"></div>
+                <div id="eventSpinResultBox" class="hidden bg-slate-900 p-2.5 rounded-xl border border-amber-400">
+                    <div class="text-[10px] text-emerald-400 font-bold mb-1">REWARDS WON:</div>
+                    <div id="eventSpinResultItems" class="flex flex-wrap justify-center gap-1.5 text-[10px]"></div>
                 </div>
-
-                <!-- Spin Result Display Box -->
-                <div id="eventSpinResultBox" class="hidden hud-panel border-amber-400 p-3 rounded-2xl text-center">
-                    <div class="text-xs font-cyber text-amber-300 font-bold mb-1">🎉 CONGRATULATIONS! REWARDS UNLOCKED:</div>
-                    <div id="eventSpinResultItems" class="flex flex-wrap justify-center gap-2 text-xs font-bold text-white"></div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                    <button onclick="executeEventSpin(1, 'token')" class="py-2 bg-purple-600 hover:bg-purple-500 rounded-xl text-xs font-bold">1x SPIN (1 🎟️)</button>
+                    <button onclick="executeEventSpin(10, 'token')" class="py-2 bg-purple-700 hover:bg-purple-600 rounded-xl text-xs font-bold">10x SPIN (10 🎟️)</button>
+                    <button onclick="executeEventSpin(1, 'gold')" class="py-2 bg-amber-500 text-slate-950 rounded-xl text-xs font-black">1x SPIN (100 🪙)</button>
+                    <button onclick="executeEventSpin(10, 'gold')" class="py-2 bg-amber-400 text-slate-950 rounded-xl text-xs font-black">10x SPIN (1000 🪙)</button>
                 </div>
-            </div>
-
-            <!-- Spin Action Buttons (1 Spin vs 10 Spins with Token or Gold) -->
-            <div class="max-w-5xl mx-auto w-full grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button onclick="executeEventSpin(1, 'token')" class="py-2 px-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-105 transition font-cyber text-[10px] sm:text-xs font-bold text-white shadow-lg">
-                    1x SPIN • 🎟️ 1 TOKEN
-                </button>
-                <button onclick="executeEventSpin(1, 'gold')" class="py-2 px-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:scale-105 transition font-cyber text-[10px] sm:text-xs font-black text-slate-950 shadow-lg">
-                    1x SPIN • 🪙 100 GOLD
-                </button>
-                <button onclick="executeEventSpin(10, 'token')" class="py-2 px-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-purple-700 hover:scale-105 transition font-cyber text-[10px] sm:text-xs font-bold text-white shadow-lg border border-pink-300">
-                    10x SPIN • 🎟️ 10 TOKENS
-                </button>
-                <button onclick="executeEventSpin(10, 'gold')" class="py-2 px-2 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:scale-105 transition font-cyber text-[10px] sm:text-xs font-black text-slate-950 shadow-lg border border-yellow-200">
-                    10x SPIN • 🪙 1000 GOLD
-                </button>
             </div>
         </div>
 
-        <!-- =================================================================== -->
-        <!-- 5. AUDIO & CUSTOM HUD SETTINGS MODAL                                -->
-        <!-- =================================================================== -->
-        <div id="settingsModal" class="hidden absolute inset-0 z-50 bg-slate-950/94 backdrop-blur-xl flex flex-col justify-between p-4">
-            <div class="flex justify-between items-center max-w-2xl mx-auto w-full">
-                <div class="text-base sm:text-xl font-cyber text-cyan-300 font-black">⚙️ AUDIO & CONTROL SETTINGS</div>
-                <button id="btnCloseSettingsModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">SAVE & CLOSE ✓</button>
-            </div>
-
-            <div class="max-w-2xl mx-auto w-full my-auto hud-panel p-4 rounded-2xl space-y-4 text-xs">
+        <!-- 5. SETTINGS MODAL -->
+        <div id="settingsModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-center items-center p-4">
+            <div class="hud-panel p-5 rounded-2xl max-w-md w-full space-y-4 border-cyan-400/50">
                 <div class="flex justify-between items-center">
-                    <span class="font-bold text-slate-200">🎵 CLASSIC FREE FIRE LOBBY MUSIC</span>
-                    <button id="btnToggleLobbyBgm" class="px-4 py-1.5 rounded-xl bg-emerald-600 font-cyber font-bold text-white">ON ✓</button>
+                    <span class="font-cyber text-base font-bold text-cyan-300">⚙️ AUDIO & HUD SETTINGS</span>
+                    <button id="btnCloseSettingsModal" class="px-2.5 py-1 bg-rose-600 rounded-lg text-xs font-bold">✕</button>
                 </div>
-
-                <div>
-                    <div class="flex justify-between font-bold text-slate-200 mb-1">
-                        <span>🔊 MASTER SFX & FOOTSTEP VOLUME</span>
-                        <span id="sfxVolLabel" class="text-amber-400">100%</span>
+                <div class="space-y-3 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span>Lobby Music (BGM)</span>
+                        <button id="btnToggleLobbyBgm" class="px-3 py-1 bg-emerald-600 rounded-lg font-bold">ON ✓</button>
                     </div>
-                    <input type="range" id="sfxVolumeSlider" min="0" max="1" step="0.05" value="1" class="w-full accent-amber-400">
-                </div>
-
-                <div>
-                    <div class="flex justify-between font-bold text-slate-200 mb-1">
-                        <span>🎶 LOBBY MUSIC VOLUME</span>
-                        <span id="bgmVolLabel" class="text-cyan-400">60%</span>
-                    </div>
-                    <input type="range" id="bgmVolumeSlider" min="0" max="1" step="0.05" value="0.6" class="w-full accent-cyan-400">
-                </div>
-
-                <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
                     <div>
-                        <div class="font-bold text-amber-300">🎮 CUSTOM TOUCH HUD LAYOUT</div>
-                        <div class="text-[10px] text-slate-400">Drag, resize & save button positions</div>
+                        <div class="flex justify-between mb-1"><span>Sound Effects (SFX)</span><span id="sfxVolLabel">100%</span></div>
+                        <input type="range" id="sfxVolumeSlider" min="0" max="1" step="0.05" value="1" class="w-full accent-cyan-400">
                     </div>
-                    <button id="btnOpenHudFromSettings" class="px-4 py-2 bg-amber-500 text-slate-950 font-cyber font-black rounded-xl">
-                        CUSTOMIZE HUD
+                    <div>
+                        <div class="flex justify-between mb-1"><span>Music Volume</span><span id="bgmVolLabel">60%</span></div>
+                        <input type="range" id="bgmVolumeSlider" min="0" max="1" step="0.05" value="0.6" class="w-full accent-amber-400">
+                    </div>
+                    <button id="btnOpenHudFromSettings" class="w-full py-2.5 bg-amber-500 text-slate-950 font-cyber font-black rounded-xl">
+                        🎛️ CUSTOMIZE IN-GAME HUD LAYOUT
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- =================================================================== -->
-        <!-- 6. MODE & MAP SELECTOR MODAL (4 MODES + 4 DAYLIGHT WEATHER MAPS)    -->
-        <!-- =================================================================== -->
-        <div id="modeSelectorModal" class="hidden absolute inset-0 z-50 bg-slate-950/92 backdrop-blur-lg flex flex-col justify-between p-3 sm:p-4 overflow-y-auto">
-            <div class="flex justify-between items-center max-w-5xl mx-auto w-full">
-                <div class="text-base sm:text-xl font-cyber text-amber-400 font-black">SELECT BATTLE MODE & DAYLIGHT MAP</div>
-                <button id="btnCloseModeModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CONFIRM ✓</button>
+        <!-- 6. VAULT STORE MODAL -->
+        <div id="vaultModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-4">
+            <div class="flex justify-between items-center max-w-4xl mx-auto w-full">
+                <div class="font-cyber text-base sm:text-lg font-bold text-cyan-300">🛒 VAULT STORE • 🪙 <span id="vaultCoins">2500</span></div>
+                <button id="btnCloseVault" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
             </div>
+            <div class="max-w-4xl mx-auto w-full flex flex-wrap gap-1.5 my-2">
+                <button onclick="switchStoreTab('pets')" class="px-2.5 py-1 bg-slate-800 rounded-lg text-[10px] font-bold">🐾 PETS</button>
+                <button onclick="switchStoreTab('guns')" class="px-2.5 py-1 bg-slate-800 rounded-lg text-[10px] font-bold">🔫 30 GUNS</button>
+                <button onclick="switchStoreTab('gskins')" class="px-2.5 py-1 bg-slate-800 rounded-lg text-[10px] font-bold">🎨 GUN SKINS</button>
+                <button onclick="switchStoreTab('vehicles')" class="px-2.5 py-1 bg-slate-800 rounded-lg text-[10px] font-bold">🏎️ 30 VEHICLES</button>
+                <button onclick="switchStoreTab('skills')" class="px-2.5 py-1 bg-slate-800 rounded-lg text-[10px] font-bold">⚡ 30 SKILLS</button>
+                <button onclick="switchStoreTab('emotes')" class="px-2.5 py-1 bg-slate-800 rounded-lg text-[10px] font-bold">💃 30 EMOTES</button>
+            </div>
+            <div id="storeItemsGrid" class="max-w-4xl mx-auto w-full flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-4 gap-2 pr-1"></div>
+        </div>
 
-            <div class="max-w-5xl mx-auto w-full my-auto space-y-3 py-2">
+        <!-- 7. AVATAR & PETS CUSTOMIZATION MODAL -->
+        <div id="avatarRoomModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-4 overflow-y-auto">
+            <div class="flex justify-between items-center max-w-3xl mx-auto w-full">
+                <div class="font-cyber text-base font-bold text-amber-300">🐾 AVATAR & COMPANION PETS</div>
+                <button id="btnCloseAvatarRoom" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
+            </div>
+            <div class="max-w-3xl mx-auto w-full my-auto space-y-3">
+                <div class="flex space-x-2">
+                    <button onclick="setGender('boy')" class="flex-1 py-2 bg-sky-700 rounded-xl text-xs font-bold">👦 BOY HERO</button>
+                    <button onclick="setGender('girl')" class="flex-1 py-2 bg-pink-700 rounded-xl text-xs font-bold">👧 GIRL HERO</button>
+                </div>
+                <div class="text-xs font-bold text-cyan-300">OUTFITS & X-SUITS:</div>
+                <div id="avatarOutfitsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]"></div>
+                <div class="text-xs font-bold text-amber-300">COMPANION PETS (BIRDS, LIONS, TIGERS, DOGS...):</div>
+                <div id="companionPetsGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px]"></div>
+            </div>
+        </div>
+
+        <!-- 8. LIVE FRIENDS & UID INVITE MODAL -->
+        <div id="friendsModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-4 overflow-y-auto">
+            <div class="flex justify-between items-center max-w-3xl mx-auto w-full">
+                <div class="font-cyber text-base font-bold text-emerald-300">👥 LIVE FRIENDS & UID SQUAD</div>
+                <button id="btnCloseFriendsModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
+            </div>
+            <div class="max-w-3xl mx-auto w-full my-auto space-y-3 text-xs">
+                <div class="hud-panel p-3 rounded-xl flex flex-wrap justify-between items-center gap-2">
+                    <div>MY UID: <span id="modalMyUID" class="font-mono text-amber-300 font-bold">FF-00000000</span></div>
+                    <button onclick="copyPlayerUID()" class="px-3 py-1 bg-amber-500 text-slate-950 rounded-lg font-bold">COPY UID 📋</button>
+                </div>
+                <div class="flex space-x-2">
+                    <input type="text" id="inputFriendUID" placeholder="Enter Friend UID (e.g. FF-12345678)" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                    <button id="btnSendUIDInvite" class="px-4 py-2 bg-emerald-600 rounded-xl font-bold">INVITE ➕</button>
+                </div>
                 <div>
-                    <div class="text-[11px] font-cyber text-cyan-300 font-bold mb-1.5">1. CHOOSE GAME MODE:</div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                        <div onclick="selectGameMode('br2km')" id="modeCard-br2km" class="hud-panel p-2.5 rounded-xl cursor-pointer border-amber-400 ring-2 ring-amber-400">
-                            <div class="text-xs font-cyber font-bold text-amber-300">🪂 2KM RANKED BR</div>
-                            <div class="text-[10px] text-emerald-400 font-bold mt-0.5">30 KILLS = BOOYAH!</div>
-                            <p class="text-[9px] text-slate-300 mt-1">2km open map with Plane Drop Lock, Climbable Rooftops, Independent Squad AI & Ranked Tokens.</p>
-                        </div>
+                    <div class="text-[10px] font-bold text-cyan-300 mb-1">ACTIVE LOBBY SQUAD (<span id="modalSquadCount">1</span>/4):</div>
+                    <div id="activeSquadList" class="space-y-1"></div>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-rose-300 mb-1">INCOMING FRIEND REQUESTS:</div>
+                    <div id="incomingRequestsList" class="space-y-1"></div>
+                </div>
+                <div>
+                    <div class="text-[10px] font-bold text-amber-300 mb-1">ONLINE PLAYERS (INSPECT ID OR INVITE):</div>
+                    <div id="onlinePlayersList" class="space-y-1"></div>
+                </div>
+            </div>
+        </div>
 
-                        <div onclick="selectGameMode('duel5')" id="modeCard-duel5" class="hud-panel p-2.5 rounded-xl cursor-pointer border-slate-700">
-                            <div class="text-xs font-cyber font-bold text-cyan-300">⚔️ CUSTOM ROOM (1v1/2v2)</div>
-                            <div class="text-[10px] text-amber-400 font-bold mt-0.5">5 ROUNDS DUEL</div>
-                            <p class="text-[9px] text-slate-300 mt-1">Tactical 1v1 or 2v2 room with friends or smart AI bots. Win 3 of 5 rounds for Victory!</p>
-                        </div>
+        <!-- 9. 100 LEVELS MODAL -->
+        <div id="levelsModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-4">
+            <div class="flex justify-between items-center max-w-4xl mx-auto w-full">
+                <div class="font-cyber text-base font-bold text-purple-300">🏆 100 CAMPAIGN LEVELS</div>
+                <button id="btnCloseLevelsModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
+            </div>
+            <div id="levelGridBox" class="max-w-4xl mx-auto w-full flex-1 overflow-y-auto grid grid-cols-5 sm:grid-cols-10 gap-1.5 my-3"></div>
+        </div>
 
-                        <div onclick="selectGameMode('clash4')" id="modeCard-clash4" class="hud-panel p-2.5 rounded-xl cursor-pointer border-slate-700">
-                            <div class="text-xs font-cyber font-bold text-purple-300">🛡️ 4v4 CLASH SQUAD</div>
-                            <div class="text-[10px] text-amber-400 font-bold mt-0.5">4 ROUNDS + ROUND STORE</div>
-                            <p class="text-[9px] text-slate-300 mt-1">4v4 squad battle! Opens Weapon Store before rounds to pick guns & Gloo Walls.</p>
-                        </div>
-
-                        <div onclick="selectGameMode('tdm40')" id="modeCard-tdm40" class="hud-panel p-2.5 rounded-xl cursor-pointer border-slate-700">
-                            <div class="text-xs font-cyber font-bold text-rose-300">🔥 4v4 TEAM DEATHMATCH</div>
-                            <div class="text-[10px] text-emerald-400 font-bold mt-0.5">40 KILLS • INSTANT REVIVE</div>
-                            <p class="text-[9px] text-slate-300 mt-1">Spawn in Armory Room, grab guns off racks, fight to 40 kills with instant respawn.</p>
-                        </div>
+        <!-- 10. MODE & SEASONAL MAP SELECTOR MODAL -->
+        <div id="modeSelectorModal" class="hidden absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between p-4 overflow-y-auto">
+            <div class="flex justify-between items-center max-w-3xl mx-auto w-full">
+                <div class="font-cyber text-base font-bold text-cyan-300">🗺️ SELECT GAME MODE & WEATHER MAP</div>
+                <button id="btnCloseModeModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
+            </div>
+            <div class="max-w-3xl mx-auto w-full my-auto space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <div id="modeCard-br2km" onclick="selectGameMode('br2km')" class="hud-panel p-2.5 rounded-xl cursor-pointer border-amber-400 ring-2 ring-amber-400">
+                        <div class="font-cyber font-bold text-amber-300">🪂 2KM RANKED BR</div>
+                        <div class="text-[10px] text-slate-300">Plane Drop • 30 Kills Booyah</div>
+                    </div>
+                    <div id="modeCard-duel5" onclick="selectGameMode('duel5')" class="hud-panel p-2.5 rounded-xl cursor-pointer border-slate-700">
+                        <div class="font-cyber font-bold text-cyan-300">⚔️ 1v1 / 2v2 ROOM</div>
+                        <div class="text-[10px] text-slate-300">5 Tactical Duel Rounds</div>
+                    </div>
+                    <div id="modeCard-clash4" onclick="selectGameMode('clash4')" class="hud-panel p-2.5 rounded-xl cursor-pointer border-slate-700">
+                        <div class="font-cyber font-bold text-emerald-300">🛡️ 4v4 CLASH SQUAD</div>
+                        <div class="text-[10px] text-slate-300">4 Rounds + Weapon Store</div>
+                    </div>
+                    <div id="modeCard-tdm40" onclick="selectGameMode('tdm40')" class="hud-panel p-2.5 rounded-xl cursor-pointer border-slate-700">
+                        <div class="font-cyber font-bold text-rose-300">🔥 4v4 TEAM DEATHMATCH</div>
+                        <div class="text-[10px] text-slate-300">40 Kills • Instant Revive</div>
                     </div>
                 </div>
-
-                <div>
-                    <div class="text-[11px] font-cyber text-cyan-300 font-bold mb-1.5">2. CHOOSE SUNLIGHT & WEATHER ENVIRONMENT:</div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <div onclick="selectWeatherMap('sunny')" id="wmap-sunny" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-cyan-400 ring-1 ring-cyan-400">
-                            <div class="text-xs font-arena text-sky-300">☀️ CLEAR SUNLIGHT</div>
-                            <div class="text-[9px] text-slate-400">Blue Sky & Bright Sun</div>
-                        </div>
-                        <div onclick="selectWeatherMap('snow')" id="wmap-snow" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-slate-700">
-                            <div class="text-xs font-arena text-cyan-200">❄️ ALPINE SNOW</div>
-                            <div class="text-[9px] text-slate-400">Crisp Sunny Snowfield</div>
-                        </div>
-                        <div onclick="selectWeatherMap('desert')" id="wmap-desert" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-slate-700">
-                            <div class="text-xs font-arena text-amber-300">🏜️ SAHARA DUNES</div>
-                            <div class="text-[9px] text-slate-400">Dubai Sun & Pyramids</div>
-                        </div>
-                        <div onclick="selectWeatherMap('autumn')" id="wmap-autumn" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-slate-700">
-                            <div class="text-xs font-arena text-orange-400">🍁 GOLDEN VALLEY</div>
-                            <div class="text-[9px] text-slate-400">Warm Afternoon Sun</div>
-                        </div>
-                    </div>
+                <div class="grid grid-cols-4 gap-2 text-center">
+                    <div id="wmap-sunny" onclick="selectWeatherMap('sunny')" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-cyan-400 ring-1 ring-cyan-400">☀️ SUNNY</div>
+                    <div id="wmap-snow" onclick="selectWeatherMap('snow')" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-slate-700">❄️ SNOW</div>
+                    <div id="wmap-desert" onclick="selectWeatherMap('desert')" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-slate-700">🏜️ DESERT</div>
+                    <div id="wmap-autumn" onclick="selectWeatherMap('autumn')" class="bg-slate-900 p-2 rounded-xl cursor-pointer border border-slate-700">🍂 AUTUMN</div>
                 </div>
-            </div>
-
-            <div class="text-center">
-                <button id="btnConfirmAndStart" class="px-8 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 font-black text-sm rounded-xl font-cyber">
-                    APPLY & RETURN TO LOBBY
+                <button id="btnConfirmAndStart" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-cyber font-black rounded-xl">
+                    CONFIRM SELECTION ✓
                 </button>
             </div>
         </div>
 
-        <!-- =================================================================== -->
-        <!-- 7. LIVE FRIENDS & SQUAD UID INVITE MODAL                            -->
-        <!-- =================================================================== -->
-        <div id="friendsModal" class="hidden absolute inset-0 z-50 bg-slate-950/94 backdrop-blur-xl flex flex-col justify-between p-3 sm:p-4 overflow-y-auto">
-            <div class="flex justify-between items-center max-w-4xl mx-auto w-full">
-                <div class="text-base sm:text-xl font-cyber text-emerald-400 font-black">LIVE FRIENDS & SQUAD INVITE (UID)</div>
-                <button id="btnCloseFriendsModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
+        <!-- 11. TRANSPORT PLANE DROP OVERLAY -->
+        <div id="planeDropOverlay" class="hidden absolute top-16 left-1/2 -translate-x-1/2 z-40 hud-panel p-3 rounded-2xl text-center border-amber-400 pointer-events-auto">
+            <div class="text-xs font-cyber text-amber-300 font-bold mb-1">✈️ TRANSPORT JET OVER 2KM ISLAND</div>
+            <div class="flex flex-wrap justify-center gap-1.5 mb-2 text-[9px]">
+                <button onclick="lockDropLandmark(0, -180, 'Burj Khalifa')" class="px-2 py-1 bg-slate-800 rounded">🏙️ Burj Khalifa</button>
+                <button onclick="lockDropLandmark(220, 160, 'Eiffel Tower')" class="px-2 py-1 bg-slate-800 rounded">🗼 Eiffel Tower</button>
+                <button onclick="lockDropLandmark(-240, -190, 'Pyramids')" class="px-2 py-1 bg-slate-800 rounded">🔺 Pyramids</button>
             </div>
-
-            <div class="max-w-4xl mx-auto w-full my-auto grid grid-cols-1 md:grid-cols-2 gap-3 py-2 text-xs">
-                <div class="hud-panel p-3 rounded-2xl space-y-2.5">
-                    <div class="bg-slate-900 p-2.5 rounded-xl border border-amber-400/40 flex justify-between items-center">
-                        <div>
-                            <div class="text-[9px] text-slate-400">YOUR PERSISTENT PLAYER UID</div>
-                            <div class="text-sm font-mono font-black text-amber-300" id="modalMyUID">FF-00000000</div>
-                        </div>
-                        <button onclick="copyPlayerUID()" class="px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg text-[10px]">COPY UID</button>
-                    </div>
-
-                    <div>
-                        <div class="text-[10px] font-cyber text-cyan-300 font-bold mb-1">INVITE FRIEND BY UID:</div>
-                        <div class="flex space-x-1.5">
-                            <input type="text" id="inputFriendUID" placeholder="Enter UID (e.g. FF-77412098)" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-cyan-400">
-                            <button id="btnSendUIDInvite" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-[10px]">
-                                INVITE ➕
-                            </button>
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="text-[10px] font-cyber text-emerald-300 font-bold mb-1">ACTIVE SQUAD TEAMMATES (<span id="modalSquadCount">1</span>/4):</div>
-                        <div id="activeSquadList" class="space-y-1 max-h-28 overflow-y-auto"></div>
-                    </div>
-                </div>
-
-                <div class="hud-panel p-3 rounded-2xl space-y-2.5">
-                    <div>
-                        <div class="text-[10px] font-cyber text-rose-400 font-bold mb-1">INCOMING FRIEND REQUESTS:</div>
-                        <div id="incomingRequestsList" class="space-y-1.5"></div>
-                    </div>
-
-                    <div>
-                        <div class="text-[10px] font-cyber text-amber-300 font-bold mb-1">LIVE ONLINE PLAYERS:</div>
-                        <div id="onlinePlayersList" class="space-y-1 max-h-32 overflow-y-auto"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- =================================================================== -->
-        <!-- 8. AVATAR & COMPANION PETS MODAL (BIRD, LION, MONKEY, TIGER, DOG, GOAT) -->
-        <!-- =================================================================== -->
-        <div id="avatarRoomModal" class="hidden absolute inset-0 z-50 bg-slate-950/94 backdrop-blur-xl flex flex-col justify-between p-3 sm:p-4 overflow-y-auto">
-            <div class="flex justify-between items-center max-w-4xl mx-auto w-full">
-                <div class="text-base sm:text-xl font-cyber text-amber-400 font-black">AVATAR, X-SUITS & COMPANION PETS</div>
-                <button id="btnCloseAvatarRoom" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">DONE ✓</button>
-            </div>
-
-            <div class="max-w-4xl mx-auto w-full my-auto grid grid-cols-1 md:grid-cols-2 gap-3 py-2 text-xs">
-                <div class="hud-panel p-3 rounded-2xl space-y-2">
-                    <div class="font-cyber text-cyan-300 font-bold">1. CHARACTER GENDER & OUTFITS / X-SUITS</div>
-                    <div class="flex space-x-2">
-                        <button onclick="setGender('boy')" class="flex-1 py-1.5 rounded-xl bg-cyan-600 text-white font-bold">BOY HERO 👦</button>
-                        <button onclick="setGender('girl')" class="flex-1 py-1.5 rounded-xl bg-slate-800 text-slate-300 font-bold">GIRL HERO 👧</button>
-                    </div>
-                    <div id="avatarOutfitsGrid" class="grid grid-cols-2 gap-1.5 pt-1 max-h-44 overflow-y-auto"></div>
-                </div>
-
-                <div class="hud-panel p-3 rounded-2xl space-y-2">
-                    <div class="font-cyber text-amber-300 font-bold">2. COMPANION PETS (BIRD, LION, MONKEY, TIGER, DOG, GOAT)</div>
-                    <div id="companionPetsGrid" class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- =================================================================== -->
-        <!-- 9. 100-LEVEL CAMPAIGN MODAL                                         -->
-        <!-- =================================================================== -->
-        <div id="levelsModal" class="hidden absolute inset-0 z-50 bg-slate-950/94 backdrop-blur-xl flex flex-col justify-between p-3 sm:p-4 overflow-y-auto">
-            <div class="flex justify-between items-center max-w-5xl mx-auto w-full">
-                <div class="text-base sm:text-xl font-cyber text-purple-400 font-black">100 PROGRESSIVE CAMPAIGN LEVELS</div>
-                <button id="btnCloseLevelsModal" class="px-3 py-1 bg-rose-600 rounded-lg text-xs font-bold">CLOSE ✕</button>
-            </div>
-            <div id="levelGridBox" class="max-w-5xl mx-auto w-full my-auto grid grid-cols-5 sm:grid-cols-10 gap-1.5 max-h-72 overflow-y-auto hud-panel p-3 rounded-2xl"></div>
-        </div>
-
-        <!-- =================================================================== -->
-        <!-- 10. ULTIMATE VAULT STORE MODAL (PETS, GUNS, SKINS, VEHICLES, EMOTES)-->
-        <!-- =================================================================== -->
-        <div id="vaultModal" class="hidden absolute inset-0 z-50 bg-slate-950/96 backdrop-blur-xl flex flex-col justify-between p-3 sm:p-4 overflow-y-auto">
-            <div class="flex flex-wrap justify-between items-center max-w-6xl mx-auto w-full gap-2">
-                <div class="flex items-center space-x-2">
-                    <div class="text-base sm:text-xl font-cyber text-cyan-300 font-black">MINI FREE FIRE VAULT STORE</div>
-                    <span class="hud-panel gold-glow px-2.5 py-0.5 rounded-xl text-xs font-arena text-amber-400">🪙 <span id="vaultCoins">2500</span></span>
-                </div>
-                <button id="btnCloseVault" class="px-4 py-1.5 bg-rose-600 hover:bg-rose-500 rounded-xl text-xs font-bold text-white">LOBBY ✕</button>
-            </div>
-
-            <div class="flex flex-wrap justify-center gap-1 max-w-6xl mx-auto w-full my-1.5">
-                <button onclick="switchStoreTab('pets')" id="stab-pets" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-cyan-600 text-white">🐾 PETS (BIRD/LION/TIGER)</button>
-                <button onclick="switchStoreTab('weapons')" id="stab-weapons" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300">🔫 30 GUNS</button>
-                <button onclick="switchStoreTab('gunSkins')" id="stab-gunSkins" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300">🎨 30 GUN SKINS</button>
-                <button onclick="switchStoreTab('vehicles')" id="stab-vehicles" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300">🏍️ 30 VEHICLES</button>
-                <button onclick="switchStoreTab('vehSkins')" id="stab-vehSkins" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300">✨ 30 VEH SKINS</button>
-                <button onclick="switchStoreTab('jetSkins')" id="stab-jetSkins" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300">🪂 30 JETS</button>
-                <button onclick="switchStoreTab('skills')" id="stab-skills" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300">⚡ 30 SKILLS</button>
-                <button onclick="switchStoreTab('emotes')" id="stab-emotes" class="store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300">💃 30 EMOTES</button>
-            </div>
-
-            <div class="max-w-6xl mx-auto w-full flex-1 overflow-y-auto hud-panel p-2.5 rounded-2xl">
-                <div id="storeItemsGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 text-xs"></div>
-            </div>
-        </div>
-
-        <!-- =================================================================== -->
-        <!-- 11. IN-GAME PLANE DROP LOCATION LOCK OVERLAY                        -->
-        <!-- =================================================================== -->
-        <div id="planeDropOverlay" class="hidden absolute top-14 left-1/2 -translate-x-1/2 z-30 hud-panel p-2.5 rounded-2xl border-amber-400/80 text-center w-72 sm:w-80 pointer-events-auto">
-            <div class="text-[11px] font-cyber text-amber-300 font-bold">✈️ FLIGHT JET OVER 2KM ARENA</div>
-            <div class="text-[9px] text-slate-300 mb-1.5">Tap a Landmark Drop Zone or Eject Parachute now!</div>
-            <div class="grid grid-cols-3 gap-1 mb-1.5 text-[9px] font-bold">
-                <button onclick="lockDropZone(0, -180, 'Burj Khalifa')" class="bg-slate-800 hover:bg-cyan-700 p-1 rounded">🏙️ Burj Khalifa</button>
-                <button onclick="lockDropZone(220, 160, 'Eiffel Tower')" class="bg-slate-800 hover:bg-cyan-700 p-1 rounded">🗼 Eiffel Tower</button>
-                <button onclick="lockDropZone(-240, -190, 'Pyramids')" class="bg-slate-800 hover:bg-cyan-700 p-1 rounded">🏜️ Pyramids</button>
-                <button onclick="lockDropZone(-210, 210, 'Statue Liberty')" class="bg-slate-800 hover:bg-cyan-700 p-1 rounded">🗽 Liberty</button>
-                <button onclick="lockDropZone(110, -80, 'City Bank')" class="bg-slate-800 hover:bg-cyan-700 p-1 rounded">🏦 City Bank</button>
-                <button onclick="lockDropZone(-110, 95, 'Town Center')" class="bg-slate-800 hover:bg-cyan-700 p-1 rounded">🏘️ Town Houses</button>
-            </div>
-            <button id="btnEjectParachute" class="w-full py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black text-xs rounded-xl font-cyber">
-                🪂 EJECT & OPEN PARACHUTE
+            <button id="btnEjectParachute" class="px-5 py-1.5 bg-amber-500 text-slate-950 font-cyber font-black text-xs rounded-xl animate-bounce">
+                🪂 EJECT PARACHUTE NOW
             </button>
         </div>
 
-        <!-- =================================================================== -->
-        <!-- 12. CLASH SQUAD ROUND WEAPON STORE MODAL                            -->
-        <!-- =================================================================== -->
-        <div id="clashRoundStoreModal" class="hidden absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
-            <div class="hud-panel p-4 rounded-2xl max-w-xl w-full border-amber-400">
-                <div class="flex justify-between items-center mb-2">
-                    <div class="text-sm font-cyber text-amber-400 font-black" id="clashStoreTitle">CLASH SQUAD — ROUND 1 ARMORY</div>
-                    <span class="text-xs font-arena text-emerald-400">CASH: $<span id="clashCashText">800</span></span>
+        <!-- 12. CLASH SQUAD ROUND ARMORY STORE MODAL -->
+        <div id="clashRoundStoreModal" class="hidden absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
+            <div class="hud-panel p-4 rounded-2xl max-w-lg w-full space-y-3 border-emerald-400">
+                <div class="flex justify-between items-center">
+                    <span class="font-cyber text-sm font-bold text-emerald-300">🛡️ CLASH ARMORY STORE</span>
+                    <span class="text-xs text-amber-300 font-bold">CASH: $<span id="clashStoreCash">800</span></span>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs mb-3" id="clashStoreGunsGrid"></div>
-                <button id="btnStartClashRound" class="w-full py-2 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl font-cyber">
-                    READY FOR ROUND FIGHT ⚔️
+                <div id="clashStoreWeaponsGrid" class="grid grid-cols-2 gap-2 text-xs"></div>
+                <button id="btnStartClashRound" class="w-full py-2 bg-emerald-500 text-slate-950 font-cyber font-black rounded-xl text-xs">
+                    READY FOR ROUND ▶
                 </button>
             </div>
         </div>
 
         <!-- =================================================================== -->
-        <!-- 13. IN-GAME HUD & MULTI-TOUCH INDEPENDENT CONTROLS                  -->
+        <!-- 13. IN-GAME HUD & MULTI-TOUCH INDEPENDENT CONTROLS (HIDDEN IN LOBBY)-->
         <!-- =================================================================== -->
-        <div id="hud" class="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-2 sm:p-2.5 opacity-0 transition-opacity duration-500">
+        <div id="hud" class="hidden absolute inset-0 pointer-events-none z-20 flex flex-col justify-between p-2 sm:p-2.5 opacity-0 transition-opacity duration-300">
             
             <!-- Top Bar -->
             <div class="flex justify-between items-start w-full">
-                <!-- Left: Vitality HP, Bag & Live Spectator Count -->
+                <!-- Left: Vitality HP (200 Max), Bag & Live Spectator Count -->
                 <div class="hud-panel rounded-xl p-1.5 text-white w-44 sm:w-56 space-y-0.5">
                     <div class="flex items-center justify-between text-[9px] font-bold text-cyan-300">
                         <span id="hudAvatarLabel">HERO + PET</span>
@@ -789,7 +717,7 @@
                     <div>
                         <div class="flex justify-between text-[9px] text-slate-300">
                             <span>VITALITY HP</span>
-                            <span id="hpText">100 / 100</span>
+                            <span id="hpText">200 / 200</span>
                         </div>
                         <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
                             <div id="hpBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 w-full transition-all duration-150"></div>
@@ -801,75 +729,44 @@
                     </div>
                 </div>
 
-                <!-- Center: Mode Scoreboard / Kills to Booyah / Line-of-Sight Target Status -->
-                <div class="hud-panel rounded-xl p-1.5 text-center max-w-[225px] sm:max-w-xs w-full border-cyan-400/40">
-                    <div class="text-[9px] font-cyber text-amber-400 font-bold uppercase" id="hudModeHeader">2KM RANKED BR</div>
+                <!-- Center: Mode Scoreboard + Safe Zone Status + Line-of-Sight Target Status -->
+                <div class="hud-panel rounded-xl p-1.5 text-center max-w-[235px] sm:max-w-xs w-full border-cyan-400/40">
+                    <div class="flex items-center justify-center space-x-2 text-[9px] font-cyber font-bold uppercase">
+                        <span class="text-amber-400" id="hudModeHeader">2KM RANKED BR</span>
+                        <span class="text-sky-300" id="hudSafeZoneTimer">🔵 ZONE: 280m</span>
+                    </div>
                     <div id="hudMissionText" class="text-[10px] font-bold text-emerald-400 bg-emerald-950/75 py-0.5 px-2 rounded-full inline-block border border-emerald-500/40 mt-0.5">
                         Kills: 0 / 30 (Booyah)
-                    </div>
-                    <div id="hudTargetInfo" class="hidden text-[9px] font-cyber text-rose-400 mt-0.5">
-                        🎯 CLEAR AIM • 45m
-                    </div>
-                </div>
-
-                <!-- Right: Gold, In-Game Mic, HUD Editor & Exit -->
-                <div class="flex flex-col items-end space-y-1">
-                    <div class="hud-panel gold-glow px-2 py-0.5 rounded-lg flex items-center space-x-1">
-                        <span class="text-[10px]">🪙</span>
-                        <span id="hudCoins" class="text-xs font-arena text-amber-400">2500</span>
-                    </div>
-                    <div class="flex space-x-1">
-                        <button id="btnInGameMic" class="pointer-events-auto px-2 py-0.5 bg-emerald-700/90 rounded text-[9px] font-bold text-white">
-                            🎙️ MIC
-                        </button>
-                        <button id="btnToggleHudEditor" class="pointer-events-auto px-2 py-0.5 bg-amber-600/90 rounded text-[9px] font-bold text-white">
-                            ⚙️ HUD
-                        </button>
-                        <button id="btnExitToLobby" class="pointer-events-auto px-2 py-0.5 bg-rose-700/85 rounded text-[9px] font-bold text-white">
-                            🚪 EXIT
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Center Line-of-Sight Reticle -->
+            <!-- Center Crosshair Reticle -->
             <div id="crosshair" class="crosshair-reticle"></div>
 
-            <!-- Contextual Loot/Box Prompt -->
-            <div id="actionPrompt" class="hidden absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 hud-panel rounded-xl px-3.5 py-1 text-center border-amber-400/80 pointer-events-auto cursor-pointer">
-                <span id="actionText" class="text-amber-300 font-bold text-xs tracking-wider">TAP LOOT / PRESS 'E'</span>
+            <!-- Action / Pickup Prompt -->
+            <div id="actionPrompt" class="hidden absolute top-2/3 left-1/2 -translate-x-1/2 hud-panel px-4 py-1.5 rounded-xl border-amber-400 text-xs font-bold text-amber-300 pointer-events-auto cursor-pointer">
+                <span id="actionText">Pick Up Loot</span>
             </div>
 
-            <!-- 6-Slot Quick Emote Wheel Overlay -->
-            <div id="emoteWheelOverlay" class="hidden absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 hud-panel p-3 rounded-2xl border-pink-400/80 pointer-events-auto w-64">
-                <div class="flex justify-between items-center mb-1.5">
-                    <span class="text-[10px] font-cyber text-pink-300 font-bold">💃 EMOTES (6 SLOTS)</span>
-                    <button id="btnCloseEmoteWheel" class="text-[10px] bg-rose-600 px-1.5 py-0.5 rounded font-bold">✕</button>
+            <!-- In-Game Emote Wheel Popup -->
+            <div id="emoteWheelOverlay" class="hidden absolute bottom-24 right-48 z-40 hud-panel p-2.5 rounded-2xl border-pink-400 pointer-events-auto">
+                <div class="flex justify-between items-center mb-1.5 text-[10px] font-bold text-pink-300">
+                    <span>EMOTES</span>
+                    <button id="btnCloseEmoteWheel" class="text-rose-400">✕</button>
                 </div>
                 <div id="hudEmoteButtonsGrid" class="grid grid-cols-3 gap-1.5"></div>
             </div>
 
-            <!-- Draggable Multi-Touch Virtual Joystick -->
+            <!-- Draggable Virtual Joystick & Sprint Button -->
             <div id="ctrl-joystick" class="hud-draggable pointer-events-auto z-30" style="left: 18px; bottom: 16px;">
                 <div class="joystick-base" id="joystickBase">
                     <div class="joystick-thumb" id="joystickThumb"></div>
                 </div>
             </div>
-
-            <!-- Draggable Sprint Button -->
             <div id="ctrl-sprint" class="hud-draggable pointer-events-auto z-30" style="left: 134px; bottom: 44px;">
-                <button id="btnMobileSprint" class="w-11 h-11 rounded-full bg-sky-600/90 border-2 border-sky-300 text-white font-bold text-[9px] shadow-lg">
+                <button id="btnMobileSprint" class="w-10 h-10 rounded-full bg-slate-800/90 border border-amber-300 text-white font-bold text-[9px] shadow-lg">
                     🏃 RUN
                 </button>
             </div>
 
-            <!-- Vehicle Speedometer -->
-            <div id="speedometer" class="hidden hud-panel rounded-xl p-1.5 text-center min-w-[85px] border-amber-400/40 pointer-events-none self-center mb-1">
-                <div class="text-[8px] text-amber-300 font-bold">KM/H</div>
-                <div id="speedValue" class="text-lg font-arena text-white">0</div>
-            </div>
-
-            <!-- Draggable Independent Action Buttons -->
+            <!-- Draggable Independent Action Buttons (Including Crouch SIT & Prone PRONE!) -->
             <div id="ctrl-gloo" class="hud-draggable pointer-events-auto z-30" style="right: 215px; bottom: 18px;">
                 <button id="btnMobileGloo" class="w-11 h-11 rounded-xl bg-cyan-500/90 border-2 border-cyan-200 text-slate-950 font-black text-[9px] shadow-lg">
                     🧱 GLOO<br><span id="glooBadgeCount">5</span>
@@ -885,9 +782,14 @@
                     ⚡ SKILL
                 </button>
             </div>
+            <!-- Medkit Button with Circular Radial Progress Ring -->
             <div id="ctrl-heal" class="hud-draggable pointer-events-auto z-30" style="right: 165px; bottom: 72px;">
-                <button id="btnMobileHeal" class="w-10 h-10 rounded-xl bg-emerald-600/90 border border-emerald-300 text-white font-bold text-[9px] shadow-lg">
-                    🧪 MED
+                <button id="btnMobileHeal" class="relative w-10 h-10 rounded-full bg-emerald-600/95 border border-emerald-300 text-white font-bold text-[9px] shadow-lg flex items-center justify-center">
+                    <svg id="medkitProgressSvg" class="hidden" viewBox="0 0 48 48">
+                        <circle cx="24" cy="24" r="20" stroke="rgba(15,23,42,0.7)" stroke-width="3.5" fill="none"></circle>
+                        <circle id="medkitProgressCircle" cx="24" cy="24" r="20"></circle>
+                    </svg>
+                    <span>🧪 MED</span>
                 </button>
             </div>
             <div id="ctrl-interact" class="hud-draggable pointer-events-auto z-30" style="right: 116px; bottom: 72px;">
@@ -898,6 +800,17 @@
             <div id="ctrl-drive" class="hud-draggable pointer-events-auto z-30" style="right: 66px; bottom: 72px;">
                 <button id="btnMobileDrive" class="w-10 h-10 rounded-xl bg-indigo-600/90 border border-indigo-300 text-white font-bold text-[9px] shadow-lg">
                     🏎️ DRIVE
+                </button>
+            </div>
+            <!-- New Crouch (Sit) & Prone (Lie Down) Stance Buttons -->
+            <div id="ctrl-crouch" class="hud-draggable pointer-events-auto z-30" style="right: 116px; bottom: 122px;">
+                <button id="btnMobileCrouch" class="w-10 h-10 rounded-xl bg-slate-700/95 border border-sky-300 text-white font-bold text-[9px] shadow-lg">
+                    🧎 SIT
+                </button>
+            </div>
+            <div id="ctrl-prone" class="hud-draggable pointer-events-auto z-30" style="right: 66px; bottom: 122px;">
+                <button id="btnMobileProne" class="w-10 h-10 rounded-xl bg-slate-800/95 border border-amber-300 text-white font-bold text-[9px] shadow-lg">
+                    🛌 PRONE
                 </button>
             </div>
             <div id="ctrl-jump" class="hud-draggable pointer-events-auto z-30" style="right: 130px; bottom: 18px;">
@@ -911,9 +824,15 @@
                 </button>
             </div>
             <div id="ctrl-shoot" class="hud-draggable pointer-events-auto z-30" style="right: 14px; bottom: 14px;">
-                <button id="btnShoot" class="w-14 h-14 rounded-full bg-rose-600/95 border-2 border-rose-300 text-white font-bold text-xs shadow-lg shadow-rose-600/50">
-                    🔥 FIRE
+                <button id="btnShoot" class="w-14 h-14 rounded-full bg-rose-600/95 border-2 border-rose-300 text-white font-bold text-[10px] shadow-lg shadow-rose-600/50">
+                    🔥 FIRE<br><span class="text-[7px] text-amber-200">DRAG ▲</span>
                 </button>
+            </div>
+
+            <!-- Vehicle Speedometer -->
+            <div id="speedometer" class="hidden hud-panel rounded-xl p-1.5 text-center min-w-[85px] border-amber-400/40 pointer-events-none self-center mb-1">
+                <div class="text-[8px] text-amber-300 font-bold">KM/H</div>
+                <div id="speedValue" class="text-lg font-arena text-white">0</div>
             </div>
 
             <!-- Weapon & Ammo Display -->
@@ -1156,6 +1075,46 @@
                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 osc.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(now); osc.stop(now + 0.1);
+            }
+            playButtonClick() {
+                if (!this.ctx || this.sfxVol <= 0.01) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(780, now);
+                osc.frequency.exponentialRampToValueAtTime(1180, now + 0.045);
+                gain.gain.setValueAtTime(0.14 * this.sfxVol, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(now); osc.stop(now + 0.05);
+            }
+            playVictoryFanfare() {
+                if (!this.ctx || this.sfxVol <= 0.01) return;
+                const now = this.ctx.currentTime;
+                // Booming Impact Bass + Triumphant Brass Chord Fanfare
+                const bass = this.ctx.createOscillator();
+                const bassGain = this.ctx.createGain();
+                bass.type = 'sawtooth';
+                bass.frequency.setValueAtTime(140, now);
+                bass.frequency.exponentialRampToValueAtTime(34, now + 0.75);
+                bassGain.gain.setValueAtTime(0.55 * this.sfxVol, now);
+                bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.78);
+                bass.connect(bassGain); bassGain.connect(this.ctx.destination);
+                bass.start(now); bass.stop(now + 0.8);
+
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    const t0 = now + idx * 0.14;
+                    osc.frequency.setValueAtTime(freq, t0);
+                    gain.gain.setValueAtTime(0.28 * this.sfxVol, t0);
+                    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.55);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(t0); osc.stop(t0 + 0.56);
+                });
             }
             playEngine(ratio = 0) {
                 if (!this.ctx || this.sfxVol <= 0.01) return;
@@ -1413,11 +1372,24 @@
         let lobbyShowcaseGroup = null;
         let lobbyHeroRig = null;
         let lobbyPetRig = null;
+        let lobbyAllyRigs = [];
         let lobbyRotateDrag = { active: false, lastX: 0 };
 
+        // Dedicated 3D Preview Renderer for Profile Inspection Modal
+        let profileScene = null, profileCamera = null, profileRenderer = null, profileAvatarRig = null;
+
         let solidColliders = [];     // Solid Walls & Obstacles
-        let rooftopZones = [];       // Climbable Stairs & Walkable Rooftops!
-        let wallRayMeshes = [];      // Meshes that physically block bullets via Raycaster!
+        let rooftopZones = [];       // Climbable Stairs & Walkable Rooftops
+        let wallRayMeshes = [];      // Meshes that physically block bullets via Raycaster
+
+        // Shrinking Battle Royale Safe Zone State
+        let safeZone = {
+            radius: 320,
+            minRadius: 32,
+            shrinkSpeed: 0.045,
+            mesh: null,
+            damageTimer: 0
+        };
 
         let matchState = {
             kills: 0,
@@ -1435,8 +1407,9 @@
             mesh: null,
             humParts: null,
             petRig: null,
-            hp: 100,
-            maxHp: 100,
+            hp: 200,
+            maxHp: 200,
+            stance: 'stand', // 'stand' | 'crouch' | 'prone'
             walkSpeed: 0.15,
             sprintSpeed: 0.29,
             velocity: new THREE.Vector3(),
@@ -1449,6 +1422,8 @@
             footstepTimer: 0,
             lastFireTime: 0,
             medkits: 2,
+            isHealingMedkit: false,
+            medkitProgress: 0,
             glooWalls: 5,
             activeEmoteAnim: null,
             emoteTimer: 0,
@@ -1465,6 +1440,8 @@
         let touchInput = { x: 0, y: 0 };
         let activeJoystickTouchId = null;
         let activeCameraTouchId = null;
+        let activeFireTouchId = null;
+        let fireDragStartY = 0;
         let touchCam = { startX: 0, startY: 0 };
         let cameraPitch = 0.15;
 
@@ -1482,6 +1459,8 @@
             'ctrl-gloo': { right: '215px', bottom: '18px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
             'ctrl-emote': { right: '215px', bottom: '72px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
             'ctrl-skill': { right: '165px', bottom: '122px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-crouch': { right: '116px', bottom: '122px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
+            'ctrl-prone': { right: '66px', bottom: '122px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
             'ctrl-heal': { right: '165px', bottom: '72px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
             'ctrl-interact': { right: '116px', bottom: '72px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
             'ctrl-drive': { right: '66px', bottom: '72px', left: 'auto', top: 'auto', scale: 1.0, opacity: 1.0 },
@@ -1551,261 +1530,203 @@
                     }
                 }
             }
+            // Enforce Hard Solid Collision on Deployed Gloo Walls so enemies/vehicles/players cannot pass through!
+            for (let j = 0; j < glooWallBarriers.length; j++) {
+                const gw = glooWallBarriers[j];
+                const dx = pos.x - gw.mesh.position.x;
+                const dz = pos.z - gw.mesh.position.z;
+                const distSq = dx * dx + dz * dz;
+                const minSep = radius + 2.6;
+                if (distSq < minSep * minSep) {
+                    const dist = Math.sqrt(distSq) || 0.01;
+                    const push = minSep - dist;
+                    pos.x += (dx / dist) * push;
+                    pos.z += (dz / dist) * push;
+                }
+            }
             pos.x = Math.max(-980, Math.min(980, pos.x));
             pos.z = Math.max(-980, Math.min(980, pos.z));
         }
 
         // =========================================================================
-        // 7. 3D HUMANOID RIG (WITH HEADSHOT TARGET HITBOX) + 6 PET SPECIES
+        // 7. 3D CHARACTER, PET & REALISTIC GROUND LOOT BUILDERS
         // =========================================================================
-        function createHumanoidMesh(colorHex = 0x0284c7, isGirl = false, gunSkinColor = 0x1e293b, backpackLvl = 1) {
+        function createHumanoidMesh(outfitColor, isGirl, gunColor, bagLvl = 1) {
             const group = new THREE.Group();
-            group.scale.set(0.76, 0.76, 0.76);
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.6 });
+            const suitMat = new THREE.MeshStandardMaterial({ color: outfitColor, roughness: 0.45 });
+            const hairMat = new THREE.MeshStandardMaterial({ color: isGirl ? 0xec4899 : 0x0f172a });
 
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xfde047, roughness: 0.5 });
-            const clothesMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
-            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.7 });
-
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.65, 0.7), clothesMat);
-            torso.position.y = 1.95;
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.35, 0.55), suitMat);
+            torso.position.y = 1.65;
             group.add(torso);
 
-            const bagColor = backpackLvl === 3 ? 0xd97706 : (backpackLvl === 2 ? 0x0284c7 : 0x334155);
-            const bagScale = 0.8 + backpackLvl * 0.2;
-            const bagMesh = new THREE.Mesh(
-                new THREE.BoxGeometry(0.85 * bagScale, 1.15 * bagScale, 0.5 * bagScale),
-                new THREE.MeshStandardMaterial({ color: bagColor })
-            );
-            bagMesh.position.set(0, 2.0, -0.52);
-            group.add(bagMesh);
-
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 18, 18), skinMat);
-            head.position.y = 3.1;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.42, 16, 16), skinMat);
+            head.position.y = 2.65;
             group.add(head);
 
-            const hairMat = new THREE.MeshStandardMaterial({ color: isGirl ? 0x9333ea : 0x1e293b });
-            const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.58, 16, 16, 0, Math.PI * 2, 0, Math.PI / 1.8), hairMat);
-            hairTop.position.set(0, 3.15, -0.05);
-            group.add(hairTop);
+            const hair = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 14), hairMat);
+            hair.position.set(0, 2.75, -0.05);
+            group.add(hair);
 
-            if (isGirl) {
-                const ponytail = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.9, 8), hairMat);
-                ponytail.position.set(0, 2.95, -0.65);
-                ponytail.rotation.x = -Math.PI / 4;
-                group.add(ponytail);
-            }
+            const bag = new THREE.Mesh(
+                new THREE.BoxGeometry(0.55 + bagLvl * 0.1, 0.75 + bagLvl * 0.1, 0.35),
+                new THREE.MeshStandardMaterial({ color: 0x334155 })
+            );
+            bag.position.set(0, 1.75, -0.42);
+            group.add(bag);
 
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x090d16 });
-            const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 8), eyeMat);
-            eyeL.position.set(-0.19, 3.16, 0.49);
-            const eyeR = eyeL.clone();
-            eyeR.position.x = 0.19;
-            group.add(eyeL, eyeR);
+            const armL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 1.05, 0.28), suitMat);
+            armL.position.set(-0.65, 1.7, 0);
+            const armR = new THREE.Mesh(new THREE.BoxGeometry(0.28, 1.05, 0.28), suitMat);
+            armR.position.set(0.65, 1.7, 0.2);
+            armR.rotation.x = -Math.PI / 3;
 
-            const armLGroup = new THREE.Group();
-            armLGroup.position.set(-0.76, 2.55, 0);
-            const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.14, 1.15), clothesMat);
-            armL.position.y = -0.55;
-            const handL = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), skinMat);
-            handL.position.y = -1.18;
-            armLGroup.add(armL, handL);
+            const gunMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(0.14, 0.22, 1.25),
+                new THREE.MeshStandardMaterial({ color: gunColor, metalness: 0.8 })
+            );
+            gunMesh.position.set(0, -0.45, 0.45);
+            armR.add(gunMesh);
 
-            const armRGroup = new THREE.Group();
-            armRGroup.position.set(0.76, 2.55, 0);
-            const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.14, 1.15), clothesMat);
-            armR.position.y = -0.55;
-            const handR = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), skinMat);
-            handR.position.y = -1.18;
+            const legL = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.05, 0.32), suitMat);
+            legL.position.set(-0.26, 0.55, 0);
+            const legR = new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.05, 0.32), suitMat);
+            legR.position.set(0.26, 0.55, 0);
 
-            const gunGroup = createRealistic3DGunMesh(gunSkinColor);
-            gunGroup.position.set(0, -1.15, 0.55);
-            armRGroup.add(armR, handR, gunGroup);
-            armRGroup.rotation.x = -Math.PI / 4;
-
-            const legLGroup = new THREE.Group();
-            legLGroup.position.set(-0.32, 1.15, 0);
-            const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.15), pantsMat);
-            legL.position.y = -0.55;
-            legLGroup.add(legL);
-
-            const legRGroup = new THREE.Group();
-            legRGroup.position.set(0.32, 1.15, 0);
-            const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.15), pantsMat);
-            legR.position.y = -0.55;
-            legRGroup.add(legR);
-
-            group.add(armLGroup, armRGroup, legLGroup, legRGroup);
-            return { mesh: group, torso, head, armL: armLGroup, armR: armRGroup, legL: legLGroup, legR: legRGroup, gunGroup };
+            group.add(armL, armR, legL, legR);
+            return { mesh: group, armL, armR, legL, legR };
         }
 
-        function createRealistic3DGunMesh(colorHex = 0x1e293b) {
-            const gun = new THREE.Group();
-            const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.85, roughness: 0.25 });
-            const darkMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 });
-            const woodMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 });
-
-            const receiver = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.85), bodyMat);
-            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.75, 8), darkMat);
-            barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 0.04, 0.72);
-            const stock = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.24, 0.45), woodMat);
-            stock.position.set(0, -0.04, -0.58);
-            const mag = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.42, 0.2), darkMat);
-            mag.position.set(0, -0.24, 0.12); mag.rotation.x = 0.25;
-            gun.add(receiver, barrel, stock, mag);
-            return gun;
-        }
-
-        // Dynamic 3D Pet Builder (Dog, Bird, Lion, Monkey, Tiger, Goat)
-        function createCompanionPetMesh(petId = 'pet_dog') {
+        function createCompanionPetMesh(petId) {
             const spec = COMPANION_PETS_LIST.find(p => p.id === petId) || COMPANION_PETS_LIST[0];
-            const pet = new THREE.Group();
-            const mainMat = new THREE.MeshStandardMaterial({ color: spec.color, roughness: 0.55 });
-            const accMat = new THREE.MeshStandardMaterial({ color: spec.accent, roughness: 0.45 });
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x090d16 });
+            const group = new THREE.Group();
+            const bodyMat = new THREE.MeshStandardMaterial({ color: spec.color, roughness: 0.6 });
+            const accMat = new THREE.MeshStandardMaterial({ color: spec.accent });
 
-            const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 16, 16), mainMat);
-            body.scale.set(0.95, 0.85, 1.25);
-            body.position.y = spec.kind === 'bird' ? 1.35 : 0.52;
-            pet.add(body);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.45, 0.85), bodyMat);
+            body.position.y = 0.42;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), bodyMat);
+            head.position.set(0, 0.72, 0.42);
+            const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.45), accMat);
+            tail.position.set(0, 0.55, -0.5);
+            tail.rotation.x = -0.6;
 
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), mainMat);
-            head.position.set(0, body.position.y + 0.38, 0.45);
-            pet.add(head);
-
-            // Eyes
-            const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), eyeMat);
-            eyeL.position.set(-0.15, head.position.y + 0.05, 0.8);
-            const eyeR = eyeL.clone(); eyeR.position.x = 0.15;
-            pet.add(eyeL, eyeR);
+            group.add(body, head, tail);
 
             let wingL = null, wingR = null;
             if (spec.kind === 'bird') {
-                // Flapping Wings & Beak
-                wingL = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.08, 0.38), accMat);
-                wingL.position.set(-0.58, body.position.y + 0.1, 0);
-                wingR = wingL.clone(); wingR.position.x = 0.58;
-                const beak = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.32, 6), accMat);
-                beak.rotation.x = Math.PI / 2; beak.position.set(0, head.position.y - 0.04, 0.92);
-                pet.add(wingL, wingR, beak);
+                wingL = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.35), accMat);
+                wingL.position.set(-0.45, 0.55, 0);
+                wingR = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.35), accMat);
+                wingR.position.set(0.45, 0.55, 0);
+                group.add(wingL, wingR);
             } else if (spec.kind === 'lion') {
-                // Majestic Lion Mane
-                const mane = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.18, 10, 18), accMat);
-                mane.position.set(0, head.position.y, 0.32);
-                pet.add(mane);
-            } else if (spec.kind === 'tiger') {
-                // Tiger Stripes
-                [-0.2, 0.05, 0.3].forEach(zOff => {
-                    const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.04, 6, 16), accMat);
-                    stripe.position.set(0, body.position.y, zOff);
-                    pet.add(stripe);
-                });
-            } else if (spec.kind === 'goat') {
-                // Curved Goat Horns
-                const hornL = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.45, 8), accMat);
-                hornL.position.set(-0.2, head.position.y + 0.42, 0.4);
-                hornL.rotation.x = -0.35;
-                const hornR = hornL.clone(); hornR.position.x = 0.2;
-                pet.add(hornL, hornR);
-            } else if (spec.kind === 'monkey') {
-                // Round Monkey Ears & Long Tail
-                const earL = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), accMat);
-                earL.position.set(-0.42, head.position.y + 0.05, 0.42);
-                const earR = earL.clone(); earR.position.x = 0.42;
-                pet.add(earL, earR);
-            } else {
-                // Dog Ears
-                const earL = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.4, 8), accMat);
-                earL.position.set(-0.32, head.position.y + 0.28, 0.42);
-                const earR = earL.clone(); earR.position.x = 0.32;
-                pet.add(earL, earR);
+                const mane = new THREE.Mesh(new THREE.TorusGeometry(0.34, 0.14, 8, 16), accMat);
+                mane.position.copy(head.position);
+                group.add(mane);
             }
-
-            const tail = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.45, 8), accMat);
-            tail.position.set(0, body.position.y + 0.2, -0.52);
-            tail.rotation.x = -Math.PI / 4;
-            pet.add(tail);
-
-            return { mesh: pet, tail, wingL, wingR, kind: spec.kind, hopCycle: 0 };
-        }
-
-        // Realistic Ground Loot & Enemy Death Boxes
-        function createRealisticMedkitMesh() {
-            const kit = new THREE.Group();
-            const box = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.45, 0.85), new THREE.MeshStandardMaterial({ color: 0xf8fafc }));
-            const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.08, 0.16), new THREE.MeshBasicMaterial({ color: 0xe11d48 }));
-            crossH.position.y = 0.25;
-            const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.08, 0.55), new THREE.MeshBasicMaterial({ color: 0xe11d48 }));
-            crossV.position.y = 0.25;
-            kit.add(box, crossH, crossV);
-            return kit;
-        }
-
-        function spawnEnemyDeathLootBox(x, y, z) {
-            const boxGroup = new THREE.Group();
-            const crate = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.9, 1.0), new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 }));
-            crate.position.y = 0.45;
-            const lidTrim = new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.15, 1.06), new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xd97706, emissiveIntensity: 0.4 }));
-            lidTrim.position.y = 0.9;
-            const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.35, 6.5, 12, 1, true), new THREE.MeshBasicMaterial({ color: 0xfacc15, transparent: true, opacity: 0.32, side: THREE.DoubleSide }));
-            beam.position.y = 3.25;
-            boxGroup.add(crate, lidTrim, beam);
-            boxGroup.position.set(x, y, z);
-            boxGroup.userData = { kind: 'deathBox', label: 'LOOT ENEMY DEATH BOX (+Med, +Ammo, +150 Gold)' };
-            scene.add(boxGroup);
-            realisticLootItems.push(boxGroup);
+            return { mesh: group, tail, wingL, wingR, hopCycle: 0 };
         }
 
         function spawnRealisticGroundLoot(x, y, z, kind, payload = null) {
-            let obj = new THREE.Group();
+            const group = new THREE.Group();
+            let label = 'Pick Up Item';
             if (kind === 'gun') {
-                const gunMesh = createRealistic3DGunMesh(0xf59e0b);
-                gunMesh.scale.set(1.35, 1.35, 1.35);
-                gunMesh.rotation.z = Math.PI / 2;
-                gunMesh.position.y = 0.45;
-                obj.add(gunMesh);
-                obj.userData = { kind: 'gun', gun: payload, label: `PICK UP ${payload.name}` };
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.3, 1.5), new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.8 }));
+                mesh.position.y = 0.4;
+                group.add(mesh);
+                label = `Pick Up ${payload ? payload.name : 'Rifle'}`;
             } else if (kind === 'medkit') {
-                const kit = createRealisticMedkitMesh();
-                kit.position.y = 0.35;
-                obj.add(kit);
-                obj.userData = { kind: 'medkit', label: 'LOOT MEDICAL KIT (+1 Med)' };
-            } else if (kind === 'backpack') {
-                const bag = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.15, 0.65), new THREE.MeshStandardMaterial({ color: payload === 3 ? 0xd97706 : 0x0284c7 }));
-                bag.position.y = 0.6;
-                obj.add(bag);
-                obj.userData = { kind: 'backpack', level: payload, label: `EQUIP LEVEL ${payload} BACKPACK` };
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.45, 0.7), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
+                mesh.position.y = 0.35;
+                group.add(mesh);
+                label = 'Pick Up Medkit (+50% HP)';
+            } else if (kind === 'deathbox') {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.85, 1.1), new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.6 }));
+                mesh.position.y = 0.45;
+                group.add(mesh);
+                label = 'Loot Enemy Death Box';
+            } else {
+                const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.45), new THREE.MeshStandardMaterial({ color: 0x0284c7 }));
+                mesh.position.y = 0.45;
+                group.add(mesh);
+                label = 'Pick Up Level 2 Backpack';
             }
-            const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.15, 20), new THREE.MeshBasicMaterial({ color: 0x38bdf8, side: THREE.DoubleSide }));
-            ring.rotation.x = -Math.PI / 2; ring.position.y = 0.08;
-            obj.add(ring);
-            obj.position.set(x, y, z);
-            scene.add(obj);
-            realisticLootItems.push(obj);
+            group.position.set(x, y, z);
+            group.userData = { kind, payload, label };
+            scene.add(group);
+            realisticLootItems.push(group);
+        }
+
+        function interactNearbyObjects() {
+            for (let i = realisticLootItems.length - 1; i >= 0; i--) {
+                const item = realisticLootItems[i];
+                if (player.mesh.position.distanceTo(item.position) < 4.8) {
+                    const { kind, payload } = item.userData;
+                    if (kind === 'gun' && payload) {
+                        const idx = REAL_GUNS_LIST.findIndex(g => g.id === payload.id);
+                        if (idx >= 0) equippedGunIdx = idx;
+                        document.getElementById('hudWeaponName').textContent = payload.name;
+                        player.clip = 30; player.reserve += 90;
+                    } else if (kind === 'medkit') {
+                        player.medkits++;
+                    } else if (kind === 'deathbox') {
+                        player.medkits++; player.glooWalls += 2; player.reserve += 60;
+                    } else if (kind === 'backpack') {
+                        bagLevel = Math.max(bagLevel, payload || 2);
+                        document.getElementById('hudBackpackText').textContent = `🎒 Bag Lv.${bagLevel}`;
+                    }
+                    audio.playPickup();
+                    updateGoodsHUD();
+                    scene.remove(item);
+                    realisticLootItems.splice(i, 1);
+                    showToast(`Collected: ${item.userData.label}`);
+                    break;
+                }
+            }
         }
 
         // =========================================================================
-        // 8. 3D LOBBY SHOWCASE (CLEAR VIEW OF HERO + EQUIPPED PET)
+        // 8. 3D LOBBY SHOWCASE (CLEAR VIEW OF HERO + PET + CO-STANDING SQUADMATES)
         // =========================================================================
         function buildLobbyShowcase() {
             if (lobbyShowcaseGroup) scene.remove(lobbyShowcaseGroup);
             lobbyShowcaseGroup = new THREE.Group();
+            lobbyAllyRigs = [];
 
-            const pad = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.8, 0.28, 32), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85 }));
-            const ring = new THREE.Mesh(new THREE.RingGeometry(2.45, 2.68, 32), new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide }));
+            const pad = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.8, 0.28, 36), new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85 }));
+            const ring = new THREE.Mesh(new THREE.RingGeometry(3.45, 3.72, 36), new THREE.MeshBasicMaterial({ color: 0xf59e0b, side: THREE.DoubleSide }));
             ring.rotation.x = -Math.PI / 2; ring.position.y = 0.15;
             lobbyShowcaseGroup.add(pad, ring);
 
             const gunSkin = GUN_SKINS_LIST[equippedGunSkinIdx] || GUN_SKINS_LIST[0];
             lobbyHeroRig = createHumanoidMesh(selectedOutfitColor, selectedGender === 'girl', gunSkin.color, bagLevel);
-            lobbyHeroRig.mesh.position.set(-0.35, 0.15, 0);
+            lobbyHeroRig.mesh.position.set(0, 0.15, 0.2);
             lobbyShowcaseGroup.add(lobbyHeroRig.mesh);
 
             lobbyPetRig = createCompanionPetMesh(equippedPetId);
-            lobbyPetRig.mesh.position.set(1.15, 0.15, 0.35);
+            lobbyPetRig.mesh.position.set(1.05, 0.15, 0.65);
             lobbyShowcaseGroup.add(lobbyPetRig.mesh);
 
-            const amb = new THREE.AmbientLight(0xffffff, 1.0);
-            const sun = new THREE.DirectionalLight(0xfffbeb, 1.35);
+            // Render Invited / Joined Friends Standing Right Next to Your Avatar in Lobby!
+            const mateOffsets = [
+                { x: -1.65, z: -0.25, color: 0x10b981 },
+                { x: 1.85, z: -0.35, color: 0x8b5cf6 },
+                { x: -2.75, z: -0.75, color: 0xf43f5e }
+            ];
+            for (let i = 1; i < activeSquad.length && i <= 3; i++) {
+                const mate = activeSquad[i];
+                const slot = mateOffsets[i - 1];
+                const mateRig = createHumanoidMesh(mate.outfitColor || slot.color, mate.gender === 'girl', 0x38bdf8, 2);
+                mateRig.mesh.position.set(slot.x, 0.15, slot.z);
+                mateRig.mesh.rotation.y = slot.x < 0 ? 0.22 : -0.22;
+                lobbyShowcaseGroup.add(mateRig.mesh);
+                lobbyAllyRigs.push(mateRig);
+            }
+
+            const amb = new THREE.AmbientLight(0xffffff, 1.05);
+            const sun = new THREE.DirectionalLight(0xfffbeb, 1.4);
             sun.position.set(6, 12, 8);
             lobbyShowcaseGroup.add(amb, sun);
 
@@ -1813,7 +1734,7 @@
             scene.fog = new THREE.FogExp2(0x0c4a6e, 0.015);
             scene.add(lobbyShowcaseGroup);
 
-            camera.position.set(0, 2.35, 5.8);
+            camera.position.set(0, 2.4, 6.4);
             camera.lookAt(0, 1.45, 0);
             audio.startLobbyBGM();
         }
@@ -2054,21 +1975,20 @@
             scene.add(ground);
             mapElements.push(ground);
 
-            // Paved Road Network
-            const roadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.9 });
-            const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-            [-280, 0, 280].forEach(offset => {
-                const rNS = new THREE.Mesh(new THREE.PlaneGeometry(22, 2000), roadMat);
-                rNS.rotation.x = -Math.PI / 2; rNS.position.set(offset, 0.05, 0);
-                const lNS = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 2000), lineMat);
-                lNS.rotation.x = -Math.PI / 2; lNS.position.set(offset, 0.07, 0);
-                const rEW = new THREE.Mesh(new THREE.PlaneGeometry(2000, 22), roadMat);
-                rEW.rotation.x = -Math.PI / 2; rEW.position.set(0, 0.05, offset);
-                const lEW = new THREE.Mesh(new THREE.PlaneGeometry(2000, 0.5), lineMat);
-                lEW.rotation.x = -Math.PI / 2; lEW.position.set(0, 0.07, offset);
-                scene.add(rNS, lNS, rEW, lEW);
-                mapElements.push(rNS, lNS, rEW, lEW);
+            // Shrinking 3D Cylindrical Battle Royale Safe Zone Wall
+            safeZone.radius = 320;
+            safeZone.damageTimer = 0;
+            const zoneGeo = new THREE.CylinderGeometry(safeZone.radius, safeZone.radius, 180, 48, 1, true);
+            const zoneMat = new THREE.MeshBasicMaterial({
+                color: 0x0ea5e9,
+                transparent: true,
+                opacity: 0.24,
+                side: THREE.DoubleSide
             });
+            safeZone.mesh = new THREE.Mesh(zoneGeo, zoneMat);
+            safeZone.mesh.position.set(0, 90, 0);
+            scene.add(safeZone.mesh);
+            mapElements.push(safeZone.mesh);
 
             // World Landmarks
             createBurjKhalifa(0, -180);
@@ -2089,245 +2009,176 @@
             houseLocations.forEach(h => createMultiStoryHouseWithStairs(h.x, h.z, h.name, h.w, h.r));
 
             // Scenic Pine & Oak Trees across the Map
-            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
-            const leafMat = new THREE.MeshStandardMaterial({ color: 0x15803d });
-            for (let t = 0; t < 65; t++) {
-                const tx = (Math.random() - 0.5) * 750;
-                const tz = (Math.random() - 0.5) * 750;
-                if (Math.abs(tx) < 25 || Math.abs(tz) < 25) continue;
-                const tree = new THREE.Group();
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.9, 6), trunkMat);
-                trunk.position.y = 3;
-                const crown = new THREE.Mesh(new THREE.ConeGeometry(4.2, 11, 8), leafMat);
-                crown.position.y = 9.5;
-                tree.add(trunk, crown);
-                tree.position.set(tx, 0, tz);
-                scene.add(tree);
-                mapElements.push(tree);
-            }
-
-            // Solid Shipping Containers
-            const containerColors = [0xdc2626, 0x0284c7, 0xd97706, 0x15803d];
-            for (let i = 0; i < 18; i++) {
-                const cx = ((i % 6) - 2.5) * 90 + 30;
-                const cz = (Math.floor(i / 6) - 1) * 110 + 25;
-                createSolidContainer(cx, cz, containerColors[i % 4], i % 2 === 0 ? 0 : Math.PI / 2);
-            }
-
-            // Vehicles
-            const vehSpec = VEHICLES_LIST[equippedVehIdx] || VEHICLES_LIST[0];
-            const vehSkin = VEHICLE_SKINS_LIST[equippedVehSkinIdx] || VEHICLE_SKINS_LIST[0];
-            createVehicle(22, 22, vehSpec, vehSkin.color);
-            createVehicle(-24, -22, VEHICLES_LIST[1], vehSkin.color);
-
-            // Ground Loot
-            for (let i = 0; i < 20; i++) {
-                const lx = (Math.random() - 0.5) * 420;
-                const lz = (Math.random() - 0.5) * 420;
-                const kind = i % 3 === 0 ? 'gun' : (i % 3 === 1 ? 'medkit' : 'backpack');
-                const payload = kind === 'gun' ? REAL_GUNS_LIST[i % REAL_GUNS_LIST.length] : (kind === 'backpack' ? 2 : null);
-                spawnRealisticGroundLoot(lx, 0, lz, kind, payload);
-            }
-
-            setupModeRulesAndCombatants();
+            // Enemies
+            enemies.forEach(e => {
+                // ...
+            });
         }
 
-        function setupModeRulesAndCombatants() {
-            document.getElementById('planeDropOverlay').classList.add('hidden');
-            document.getElementById('clashRoundStoreModal').classList.add('hidden');
+        function handleEnemyEliminated(enemyObj, byPlayer = true) {
+            if (!enemyObj || enemyObj._dead) return;
+            enemyObj._dead = true;
+            spawnRealisticGroundLoot(enemyObj.hum.mesh.position.x, enemyObj.hum.mesh.position.y, enemyObj.hum.mesh.position.z, 'deathbox');
+            scene.remove(enemyObj.hum.mesh);
+            enemies = enemies.filter(item => item !== enemyObj);
 
-            // Determine Ally Count from Squad Selector (Solo=0, Duo=1, Squad=3)
-            const allyCount = Math.max(0, Math.min(3, desiredPartySize - 1));
+            if (byPlayer) {
+                matchState.kills++;
+                totalCareerKills++;
+                addPlayerXP(60);
+                // Eliminated enemy may spectate & like your profile!
+                if (Math.random() < 0.65) {
+                    matchState.spectators++;
+                    profileLikes++;
+                    document.getElementById('hudSpectatorCount').textContent = matchState.spectators;
+                    showToast("👍 A Spectating Player Liked Your Gameplay!");
+                }
+            }
 
-            if (selectedGameMode === 'br2km') {
-                matchState.kills = 0;
-                matchState.targetKills = 30;
-                document.getElementById('hudModeHeader').textContent = `2KM RANKED BR • ${selectedWeatherMap.toUpperCase()}`;
-                document.getElementById('hudMissionText').textContent = `Kills: 0 / 30 (Booyah)`;
-                spawnIndependentSquadAllies(allyCount);
-                spawnCombatEnemies(16, false);
-                startTransportPlaneDrop();
-            } else if (selectedGameMode === 'duel5') {
-                matchState.round = 1; matchState.maxRounds = 5; matchState.blueWins = 0; matchState.redWins = 0;
-                player.mesh.position.set(0, 0, -35);
-                document.getElementById('hudModeHeader').textContent = `CUSTOM DUEL • ROUND 1/5`;
-                document.getElementById('hudMissionText').textContent = `Score: YOU 0 - 0 ENEMY`;
-                spawnIndependentSquadAllies(desiredPartySize > 1 ? 1 : 0);
-                spawnCombatEnemies(desiredPartySize > 1 ? 2 : 1, false);
-            } else if (selectedGameMode === 'clash4') {
-                matchState.round = 1; matchState.maxRounds = 4; matchState.blueWins = 0; matchState.redWins = 0; matchState.clashCash = 800;
-                player.mesh.position.set(0, 0, -40);
-                document.getElementById('hudModeHeader').textContent = `4v4 CLASH • ROUND 1/4`;
-                document.getElementById('hudMissionText').textContent = `Squad Score: 0 - 0`;
-                spawnIndependentSquadAllies(3);
-                spawnCombatEnemies(4, false);
-                openClashSquadRoundStore();
-            } else if (selectedGameMode === 'tdm40') {
-                matchState.kills = 0; matchState.targetKills = 40;
-                player.mesh.position.set(0, 0, -65);
-                spawnRealisticGroundLoot(-4, 0, -60, 'gun', REAL_GUNS_LIST[2]);
-                spawnRealisticGroundLoot(0, 0, -60, 'gun', REAL_GUNS_LIST[6]);
-                spawnRealisticGroundLoot(4, 0, -60, 'gun', REAL_GUNS_LIST[7]);
-                document.getElementById('hudModeHeader').textContent = `4v4 TEAM DEATHMATCH`;
-                document.getElementById('hudMissionText').textContent = `Team Kills: 0 / 40`;
-                spawnIndependentSquadAllies(3);
-                spawnCombatEnemies(4, true);
+            if (selectedGameMode === 'br2km' || selectedGameMode === 'tdm40') {
+                document.getElementById('hudMissionText').textContent = `Kills: ${matchState.kills} / ${matchState.targetKills}`;
+                if (enemyObj.autoRespawn) spawnCombatEnemies(1, true);
+                if (matchState.kills >= matchState.targetKills) {
+                    finishMatchBooyah('BOOYAH! VICTORY!', 600, 75, 4);
+                } else if (enemies.length === 0 && !enemyObj.autoRespawn) {
+                    spawnCombatEnemies(8, false);
+                }
+            } else {
+                if (enemies.length === 0) {
+                    matchState.blueWins++;
+                    document.getElementById('hudMissionText').textContent = `Squad Score: ${matchState.blueWins} - ${matchState.redWins}`;
+                    if (matchState.blueWins >= Math.ceil(matchState.maxRounds / 2)) {
+                        finishMatchBooyah('VICTORY! MATCH WON!', 500, 60, 3);
+                    } else {
+                        matchState.round++;
+                        matchState.clashCash += 600;
+                        spawnCombatEnemies(selectedGameMode === 'clash4' ? 4 : 1, false);
+                        if (selectedGameMode === 'clash4') openClashSquadRoundStore();
+                    }
+                }
             }
         }
 
-        // Autonomous Squad Allies (Hunt & Kill Enemies Independently Instead of Following Player!)
-        function spawnIndependentSquadAllies(count) {
-            for (let i = 0; i < count; i++) {
-                const allyHum = createHumanoidMesh(0x10b981, false, 0x38bdf8, 2);
-                const spawnAngle = (i + 1) * 1.1;
-                allyHum.mesh.position.set(Math.sin(spawnAngle) * 18, 0, Math.cos(spawnAngle) * 18);
-                scene.add(allyHum.mesh);
-                allies.push({
-                    hum: allyHum,
-                    hp: 200,
-                    lastFireTime: 0,
-                    wanderTarget: new THREE.Vector3((Math.random() - 0.5) * 140, 0, (Math.random() - 0.5) * 140)
-                });
-            }
-        }
-
-        // Enemies Have 200 HP (1 Headshot = Instant 200 HP Elimination!)
-        function spawnCombatEnemies(count, autoRespawn = false) {
-            for (let i = 0; i < count; i++) {
-                const enemyGunColor = GUN_SKINS_LIST[i % GUN_SKINS_LIST.length].color;
-                const hum = createHumanoidMesh(0xbe123c, false, enemyGunColor, 1);
-                const angle = (i / count) * Math.PI * 2;
-                const dist = selectedGameMode === 'br2km' ? (65 + Math.random() * 140) : 45;
-                hum.mesh.position.set(Math.sin(angle) * dist, 0, Math.cos(angle) * dist + 25);
-                scene.add(hum.mesh);
-                enemies.push({
-                    hum: hum,
-                    hp: 200,
-                    maxHp: 200,
-                    speed: 0.068,
-                    lastAttack: 0,
-                    autoRespawn: autoRespawn,
-                    footstepTimer: 0
-                });
-            }
-        }
-
-        // =========================================================================
-        // 11. TRANSPORT PLANE & PARACHUTE DROP
-        // =========================================================================
         function startTransportPlaneDrop() {
-            const jetSkin = JET_SKINS_LIST[equippedJetSkinIdx] || JET_SKINS_LIST[0];
-            const jetMat = new THREE.MeshStandardMaterial({ color: jetSkin.color, metalness: 0.85, roughness: 0.2 });
-            const jet = new THREE.Group();
-            const fuselage = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.8, 24, 12), jetMat);
-            fuselage.rotation.x = Math.PI / 2;
-            const wings = new THREE.Mesh(new THREE.BoxGeometry(28, 0.4, 5.5), jetMat);
-            jet.add(fuselage, wings);
-            jet.position.set(0, 125, -260);
-            scene.add(jet);
-
-            player.jetMesh = jet;
             player.inTransportPlane = true;
             player.isSkydiving = false;
-            player.mesh.visible = false;
+            const jetSkin = JET_SKINS_LIST[equippedJetSkinIdx] || JET_SKINS_LIST[0];
+            player.jetMesh = new THREE.Mesh(
+                new THREE.BoxGeometry(14, 4, 24),
+                new THREE.MeshStandardMaterial({ color: jetSkin.color, metalness: 0.8 })
+            );
+            player.jetMesh.position.set(0, 140, -260);
+            scene.add(player.jetMesh);
             document.getElementById('planeDropOverlay').classList.remove('hidden');
         }
 
-        window.lockDropZone = function(targetX, targetZ, label) {
-            player.lockedDropTarget = new THREE.Vector3(targetX, 0, targetZ);
-            showToast(`📍 Drop Locked: ${label}!`);
-            ejectFromTransportPlane();
+        window.lockDropLandmark = function(x, z, name) {
+            player.lockedDropTarget = new THREE.Vector3(x, 0, z);
+            showToast(`Drop Location Locked: ${name}`);
         };
 
         function ejectFromTransportPlane() {
             if (!player.inTransportPlane) return;
             player.inTransportPlane = false;
             player.isSkydiving = true;
-            player.mesh.visible = true;
             document.getElementById('planeDropOverlay').classList.add('hidden');
-
-            const startPos = player.jetMesh ? player.jetMesh.position.clone() : new THREE.Vector3(0, 115, 0);
-            player.mesh.position.set(startPos.x, 105, startPos.z);
-
-            const jetSkin = JET_SKINS_LIST[equippedJetSkinIdx] || JET_SKINS_LIST[0];
-            const chute = new THREE.Group();
-            const canopy = new THREE.Mesh(
-                new THREE.SphereGeometry(3.6, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-                new THREE.MeshStandardMaterial({ color: jetSkin.color, side: THREE.DoubleSide })
+            if (player.jetMesh) player.mesh.position.copy(player.jetMesh.position);
+            const chuteSkin = JET_SKINS_LIST[equippedJetSkinIdx] || JET_SKINS_LIST[0];
+            player.parachuteMesh = new THREE.Mesh(
+                new THREE.ConeGeometry(4.5, 2.5, 12),
+                new THREE.MeshStandardMaterial({ color: chuteSkin.color })
             );
-            canopy.position.y = 5.2;
-            chute.add(canopy);
-            player.mesh.add(chute);
-            player.parachuteMesh = chute;
+            player.parachuteMesh.position.y = 4.5;
+            player.mesh.add(player.parachuteMesh);
         }
 
         function openClashSquadRoundStore() {
-            const modal = document.getElementById('clashRoundStoreModal');
-            document.getElementById('clashStoreTitle').textContent = `4v4 CLASH SQUAD — ROUND ${matchState.round} STORE`;
-            document.getElementById('clashCashText').textContent = matchState.clashCash;
-            const grid = document.getElementById('clashStoreGunsGrid');
+            document.getElementById('clashStoreCash').textContent = matchState.clashCash;
+            const grid = document.getElementById('clashStoreWeaponsGrid');
             grid.innerHTML = '';
-            [REAL_GUNS_LIST[0], REAL_GUNS_LIST[4], REAL_GUNS_LIST[6], REAL_GUNS_LIST[2], REAL_GUNS_LIST[7], REAL_GUNS_LIST[14]].forEach(g => {
+            [REAL_GUNS_LIST[1], REAL_GUNS_LIST[2], REAL_GUNS_LIST[4], REAL_GUNS_LIST[6]].forEach((gun, i) => {
+                const cost = (i + 1) * 300;
                 const btn = document.createElement('button');
-                btn.className = 'p-2 rounded-xl bg-slate-900 hover:bg-cyan-800 border border-cyan-500/40 text-left';
-                btn.innerHTML = `<div class="font-bold text-white">${g.name}</div><div class="text-[10px] text-amber-400">SELECT +2 GLOO</div>`;
+                btn.className = 'p-2 bg-slate-900 border border-slate-700 rounded-xl text-left';
+                btn.innerHTML = `<div class="font-bold text-white">${gun.name}</div><div class="text-[10px] text-amber-300">$${cost}</div>`;
                 btn.onclick = () => {
-                    equippedGunIdx = REAL_GUNS_LIST.findIndex(x => x.name === g.name);
-                    document.getElementById('hudWeaponName').textContent = g.name;
-                    player.glooWalls += 2;
-                    updateGoodsHUD();
-                    audio.playPickup();
-                    showToast(`Equipped ${g.name} + 2 Gloo Walls!`);
+                    if (matchState.clashCash >= cost) {
+                        matchState.clashCash -= cost;
+                        document.getElementById('clashStoreCash').textContent = matchState.clashCash;
+                        equippedGunIdx = REAL_GUNS_LIST.findIndex(g => g.id === gun.id);
+                        document.getElementById('hudWeaponName').textContent = gun.name;
+                        showToast(`Purchased ${gun.name}!`);
+                    } else showToast("Not enough round cash!");
                 };
                 grid.appendChild(btn);
             });
-            modal.classList.remove('hidden');
+            document.getElementById('clashRoundStoreModal').classList.remove('hidden');
         }
 
-        // =========================================================================
-        // 12. RAYCAST LINE-OF-SIGHT AIM, HEADSHOTS (200 DMG), RATE OF FIRE & SPECTATORS
-        // =========================================================================
-        function updateTargetLookSystem() {
-            if (!isPlaying || player.isSkydiving || player.inTransportPlane) {
-                document.getElementById('hudTargetInfo').classList.add('hidden');
-                return;
-            }
-            const gun = REAL_GUNS_LIST[equippedGunIdx] || REAL_GUNS_LIST[0];
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+        function renderHudEmoteWheel() {
+            const grid = document.getElementById('hudEmoteButtonsGrid');
+            grid.innerHTML = '';
+            equippedEmoteSlots.forEach(slotIdx => {
+                const em = EMOTES_LIST[slotIdx] || EMOTES_LIST[0];
+                const btn = document.createElement('button');
+                btn.className = 'p-1.5 bg-slate-900 border border-pink-500/40 rounded-lg text-center text-[10px]';
+                btn.innerHTML = `<div class="text-base">${em.icon}</div><div class="truncate">${em.name}</div>`;
+                btn.onclick = () => triggerEmote(em);
+                grid.appendChild(btn);
+            });
+        }
 
-            // Check distance to nearest solid wall/gloo wall blocking center reticle
-            const blockerMeshes = [...wallRayMeshes, ...glooWallBarriers.map(g => g.mesh)];
-            const wallHits = raycaster.intersectObjects(blockerMeshes, false);
-            const nearestWallDist = wallHits.length > 0 ? wallHits[0].distance : Infinity;
+        function renderEventModal() {
+            document.getElementById('eventModalGold').textContent = playerCoins;
+            document.getElementById('eventModalTokens').textContent = rankedTokens;
+            const grid = document.getElementById('eventPrizePoolGrid');
+            grid.innerHTML = '';
+            EVENT_SPIN_POOL.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 p-2 rounded-xl border border-amber-500/40 text-center';
+                card.innerHTML = `<div class="text-[8px] text-amber-400 font-bold">${p.rarity}</div><div class="font-bold text-white mt-0.5">${p.name}</div>`;
+                grid.appendChild(card);
+            });
+        }
 
-            let bestTarget = null;
-            let closestScreenDist = 0.24;
+        window.switchStoreTab = function(tab) {
+            const grid = document.getElementById('storeItemsGrid');
+            grid.innerHTML = '';
+            let list = COMPANION_PETS_LIST;
+            if (tab === 'guns') list = REAL_GUNS_LIST;
+            else if (tab === 'gskins') list = GUN_SKINS_LIST;
+            else if (tab === 'vehicles') list = VEHICLES_LIST;
+            else if (tab === 'skills') list = HERO_SKILLS_LIST;
+            else if (tab === 'emotes') list = EMOTES_LIST;
 
-            enemies.forEach(e => {
-                const headWorldPos = e.hum.mesh.position.clone().add(new THREE.Vector3(0, 2.35, 0));
-                const chestWorldPos = e.hum.mesh.position.clone().add(new THREE.Vector3(0, 1.5, 0));
-                const dist3D = camera.position.distanceTo(chestWorldPos);
-                if (dist3D > gun.maxRange) return;
-
-                const projChest = chestWorldPos.clone().project(camera);
-                const projHead = headWorldPos.clone().project(camera);
-
-                if (projChest.z < 1) {
-                    const screenDistChest = Math.hypot(projChest.x, projChest.y);
-                    const screenDistHead = Math.hypot(projHead.x, projHead.y);
-                    const minScreen = Math.min(screenDistChest, screenDistHead);
-
-                    if (minScreen < closestScreenDist) {
-                        // Verify Enemy is NOT behind a wall (Clear Line of Sight!)
-                        const clearLOS = dist3D < nearestWallDist;
-                        closestScreenDist = minScreen;
-                        bestTarget = {
-                            enemy: e,
-                            isHeadshot: screenDistHead < 0.085,
-                            distance: Math.round(dist3D),
-                            clearLineOfSight: clearLOS
-                        };
+            list.forEach((item, idx) => {
+                const owned = ownedItems.includes(item.id);
+                const card = document.createElement('button');
+                card.className = 'hud-panel p-2.5 rounded-xl text-left text-xs flex flex-col justify-between';
+                card.innerHTML = `<div class="font-bold text-white">${item.name}</div>
+                                  <div class="text-[10px] mt-1 ${owned ? 'text-emerald-400' : 'text-amber-300'} font-bold">
+                                      ${owned ? 'EQUIP ✓' : `🪙 ${item.price}`}
+                                  </div>`;
+                card.onclick = () => {
+                    if (owned || playerCoins >= item.price) {
+                        if (!owned) { playerCoins -= item.price; ownedItems.push(item.id); }
+                        if (tab === 'pets') equippedPetId = item.id;
+                        else if (tab === 'guns') equippedGunIdx = idx;
+                        else if (tab === 'gskins') equippedGunSkinIdx = idx;
+                        else if (tab === 'vehicles') equippedVehIdx = idx;
+                        else if (tab === 'skills') equippedSkillIdx = idx;
+                        else if (tab === 'emotes') equippedEmoteSlots[0] = idx;
+                        saveProgress();
+                        buildLobbyShowcase();
+                        switchStoreTab(tab);
+                        showToast(`Equipped ${item.name}!`);
+                    } else {
+                        showToast("Not enough gold!");
+                    }
+                };
+                grid.appendChild(card);
+            });
+        };
                     }
                 }
             });
@@ -2337,12 +2188,18 @@
             const targetTag = document.getElementById('hudTargetInfo');
 
             if (bestTarget && bestTarget.clearLineOfSight) {
-                reticle.classList.add('crosshair-locked');
+                reticle.classList.toggle('crosshair-locked', bestTarget.isCloseRedRange);
                 reticle.classList.toggle('crosshair-headshot', bestTarget.isHeadshot);
                 targetTag.classList.remove('hidden');
-                targetTag.textContent = bestTarget.isHeadshot
-                    ? `👑 HEADSHOT LOCK • ${bestTarget.distance}m`
-                    : `🎯 AIM LOCKED • ${bestTarget.distance}m • HP ${Math.max(0, bestTarget.enemy.hp)}`;
+                if (bestTarget.enemy.isKnocked) {
+                    targetTag.textContent = `🩸 KNOCKED DOWN • FINISH TARGET (${bestTarget.distance}m)`;
+                } else if (bestTarget.isHeadshot) {
+                    targetTag.textContent = `👑 HEADSHOT LOCK • ${bestTarget.distance}m`;
+                } else if (bestTarget.isCloseRedRange) {
+                    targetTag.textContent = `🔴 CLOSE TARGET LOCK • ${bestTarget.distance}m • HP ${Math.max(0, bestTarget.enemy.hp)}`;
+                } else {
+                    targetTag.textContent = `🎯 IN SIGHT • ${bestTarget.distance}m`;
+                }
             } else if (bestTarget && !bestTarget.clearLineOfSight) {
                 reticle.classList.remove('crosshair-locked', 'crosshair-headshot');
                 targetTag.classList.remove('hidden');
@@ -2355,6 +2212,9 @@
 
         function performFireWeapon() {
             if (player.isSkydiving || player.inTransportPlane) return;
+            // Cancel Medkit healing if firing
+            if (player.isHealingMedkit) cancelMedkitHeal();
+
             const gun = REAL_GUNS_LIST[equippedGunIdx] || REAL_GUNS_LIST[0];
             const now = performance.now();
 
@@ -2380,7 +2240,7 @@
             if (lockedTargetInfo && lockedTargetInfo.clearLineOfSight) {
                 const hitEnemy = lockedTargetInfo.enemy;
                 const isHead = lockedTargetInfo.isHeadshot;
-                const dmgDealt = isHead ? 200 : gun.damage; // 1 Headshot = 200 HP Instant Kill!
+                const dmgDealt = isHead ? 200 : gun.damage;
 
                 hitEnemy.hp -= dmgDealt;
                 const viewport = document.getElementById('gameViewport');
@@ -2394,61 +2254,15 @@
                 audio.playHit(isHead);
 
                 if (hitEnemy.hp <= 0) {
-                    handleEnemyEliminated(hitEnemy, true);
-                }
-            }
-        }
-
-        function handleEnemyEliminated(enemyObj, killedByPlayer = true) {
-            const deathPos = enemyObj.hum.mesh.position.clone();
-            spawnEnemyDeathLootBox(deathPos.x, deathPos.y, deathPos.z);
-
-            matchState.kills++;
-            if (killedByPlayer) {
-                totalCareerKills++;
-                playerCoins += 100;
-                addPlayerXP(85);
-                // Eliminated Player Joins Spectator List & Sends Profile Like!
-                matchState.spectators++;
-                document.getElementById('hudSpectatorCount').textContent = matchState.spectators;
-                if (Math.random() < 0.75) {
-                    profileLikes++;
-                    saveProgress();
-                    showToast(`👍 Eliminated Player Spectating & Liked Your Profile! (Total: ${profileLikes})`);
-                }
-            }
-
-            if (enemyObj.autoRespawn) {
-                enemyObj.hp = 200;
-                enemyObj.hum.mesh.position.set((Math.random() - 0.5) * 90, 0, 65 + Math.random() * 25);
-            } else {
-                scene.remove(enemyObj.hum.mesh);
-                enemies = enemies.filter(e => e !== enemyObj);
-            }
-            lockedTargetInfo = null;
-
-            if (selectedGameMode === 'br2km') {
-                document.getElementById('hudMissionText').textContent = `Kills: ${matchState.kills} / 30 (Booyah)`;
-                if (enemies.length < 10 && matchState.kills < 25) spawnCombatEnemies(4, false);
-                if (matchState.kills >= 30) finishMatchBooyah("BOOYAH! 30 KILLS RANKED VICTORY!", 600, 75, 3);
-            } else if (selectedGameMode === 'tdm40') {
-                document.getElementById('hudMissionText').textContent = `Team Kills: ${matchState.kills} / 40`;
-                if (matchState.kills >= 40) finishMatchBooyah("TDM VICTORY! 40 KILLS REACHED!", 500, 55, 2);
-            } else if (selectedGameMode === 'duel5' || selectedGameMode === 'clash4') {
-                if (enemies.length === 0) {
-                    matchState.blueWins++;
-                    matchState.round++;
-                    matchState.clashCash += 600;
-                    if (matchState.blueWins >= 3) {
-                        finishMatchBooyah(`${selectedGameMode.toUpperCase()} CHAMPION!`, 550, 65, 3);
+                    if (!hitEnemy.isKnocked && !isHead) {
+                        // First Down puts enemy into KNOCKED (Crawling) state!
+                        hitEnemy.isKnocked = true;
+                        hitEnemy.hp = 60;
+                        hitEnemy.hum.mesh.rotation.x = Math.PI / 2.2;
+                        hitEnemy.hum.mesh.position.y = 0.45;
+                        showToast("🩸 ENEMY KNOCKED DOWN! Finish them!");
                     } else {
-                        showToast(`Round Won! Score ${matchState.blueWins} - ${matchState.redWins}`);
-                        document.getElementById('hudModeHeader').textContent = `ROUND ${matchState.round}/${matchState.maxRounds}`;
-                        document.getElementById('hudMissionText').textContent = `Score: ${matchState.blueWins} - ${matchState.redWins}`;
-                        player.hp = 100; updateHUDStats();
-                        player.mesh.position.set(0, 0, -40);
-                        spawnCombatEnemies(selectedGameMode === 'clash4' ? 4 : 2, false);
-                        if (selectedGameMode === 'clash4') openClashSquadRoundStore();
+                        handleEnemyEliminated(hitEnemy, true);
                     }
                 }
             }
@@ -2503,45 +2317,45 @@
         function renderHudEmoteWheel() {
             const grid = document.getElementById('hudEmoteButtonsGrid');
             grid.innerHTML = '';
-            equippedEmoteSlots.forEach(idx => {
-                const em = EMOTES_LIST[idx] || EMOTES_LIST[0];
-                const btn = document.createElement('button');
-                btn.className = 'p-1.5 rounded-xl bg-slate-900 hover:bg-pink-700 border border-pink-500/40 flex flex-col items-center';
-                btn.innerHTML = `<span class="text-lg">${em.icon}</span><span class="text-[8px] font-bold truncate w-full text-center">${em.name}</span>`;
-                btn.onclick = () => triggerEmote(em);
-                grid.appendChild(btn);
-            });
+        function startMedkitHeal() {
+            if (player.hp >= player.maxHp) { showToast("Vitality HP is Full (200/200)!"); return; }
+            if (player.medkits <= 0) { showToast("No Medkits left!"); return; }
+            if (player.isHealingMedkit) return;
+
+            player.isHealingMedkit = true;
+            player.medkitProgress = 0;
+            document.getElementById('medkitProgressSvg').classList.remove('hidden');
+            document.getElementById('medkitProgressCircle').style.strokeDashoffset = '126';
+            showToast("🧪 Applying Medkit (+50% HP)...");
         }
 
-        function interactNearbyObjects() {
-            for (let i = realisticLootItems.length - 1; i >= 0; i--) {
-                const item = realisticLootItems[i];
-                if (player.mesh.position.distanceTo(item.position) < 4.8) {
-                    const data = item.userData;
-                    if (data.kind === 'deathBox') {
-                        player.medkits++; player.reserve += 90; playerCoins += 150; saveProgress();
-                        updateGoodsHUD();
-                        document.getElementById('reserveAmmo').textContent = player.reserve;
-                        showToast("📦 Looted Enemy Death Box (+Med, +Ammo, +150 Gold)!");
-                    } else if (data.kind === 'gun') {
-                        const idx = REAL_GUNS_LIST.findIndex(x => x.name === data.gun.name);
-                        if (idx >= 0) equippedGunIdx = idx;
-                        player.clip = 30; player.reserve += 120;
-                        document.getElementById('hudWeaponName').textContent = data.gun.name;
-                        showToast(`Equipped ${data.gun.name}!`);
-                    } else if (data.kind === 'medkit') {
-                        player.medkits++; updateGoodsHUD();
-                        showToast("Looted Medical Kit (+1)!");
-                    } else if (data.kind === 'backpack') {
-                        bagLevel = Math.max(bagLevel, data.level);
-                        player.reserve += 150;
-                        document.getElementById('hudBackpackText').textContent = `🎒 Bag Lv.${bagLevel}`;
-                        showToast(`Equipped Level ${bagLevel} Backpack!`);
-                    }
-                    audio.playPickup();
-                    scene.remove(item);
-                    realisticLootItems.splice(i, 1);
-                    return;
+        function cancelMedkitHeal() {
+            player.isHealingMedkit = false;
+            player.medkitProgress = 0;
+            document.getElementById('medkitProgressSvg').classList.add('hidden');
+        }
+
+        function setPlayerStance(newStance) {
+            if (player.inVehicle || player.isSkydiving || player.inTransportPlane) return;
+            player.stance = (player.stance === newStance) ? 'stand' : newStance;
+            const crouchBtn = document.getElementById('btnMobileCrouch');
+            const proneBtn = document.getElementById('btnMobileProne');
+            crouchBtn.classList.toggle('bg-sky-600', player.stance === 'crouch');
+            proneBtn.classList.toggle('bg-amber-600', player.stance === 'prone');
+
+            if (player.humParts) {
+                if (player.stance === 'crouch') {
+                    player.mesh.rotation.x = 0;
+                    player.mesh.scale.set(1, 0.68, 1);
+                    showToast("🧎 Crouching (Sit)");
+                } else if (player.stance === 'prone') {
+                    player.mesh.scale.set(1, 1, 1);
+                    player.mesh.rotation.x = Math.PI / 2.1;
+                    showToast("🛌 Prone (Lying Down)");
+                } else {
+                    player.mesh.scale.set(1, 1, 1);
+                    player.mesh.rotation.x = 0;
+                    showToast("🧍 Standing");
                 }
             }
         }
@@ -2577,8 +2391,9 @@
         }
 
         function updateHUDStats() {
-            document.getElementById('hpText').textContent = `${Math.max(0, player.hp)} / 100`;
-            document.getElementById('hpBar').style.width = `${Math.max(0, player.hp)}%`;
+            document.getElementById('hpText').textContent = `${Math.max(0, Math.round(player.hp))} / ${player.maxHp}`;
+            const pct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
+            document.getElementById('hpBar').style.width = `${pct}%`;
         }
 
         function updateGoodsHUD() {
@@ -2593,7 +2408,7 @@
             totalCareerBooyahs++;
             addPlayerXP(250);
             saveProgress();
-            audio.playPickup();
+            audio.playVictoryFanfare();
 
             const rank = getRankInfo(rankPoints);
             document.getElementById('gameOverTitle').textContent = titleText;
@@ -2624,11 +2439,54 @@
             if (player.skillCooldown > 0) player.skillCooldown--;
             if (player.skillBuffTimer > 0) player.skillBuffTimer--;
 
-            for (let i = glooWallBarriers.length - 1; i >= 0; i--) {
-                glooWallBarriers[i].timer--;
-                if (glooWallBarriers[i].timer <= 0) {
-                    scene.remove(glooWallBarriers[i].mesh);
-                    glooWallBarriers.splice(i, 1);
+            // Circular Medkit Progress Ring Timer (~2.3s -> restores 50% = +100 HP)
+            if (player.isHealingMedkit) {
+                player.medkitProgress += 1 / 140;
+                const offset = 126 * (1 - Math.min(1, player.medkitProgress));
+                document.getElementById('medkitProgressCircle').style.strokeDashoffset = `${offset}`;
+                if (player.medkitProgress >= 1) {
+                    player.isHealingMedkit = false;
+                    player.medkitProgress = 0;
+                    document.getElementById('medkitProgressSvg').classList.add('hidden');
+                    if (player.medkits > 0) {
+                        player.medkits--;
+                        player.hp = Math.min(player.maxHp, player.hp + Math.round(player.maxHp * 0.5));
+                        updateHUDStats();
+                        updateGoodsHUD();
+                        audio.playPickup();
+                        showToast("💚 Medkit Complete! +50% Vitality Restored!");
+                    }
+                }
+            }
+
+            // Shrinking Battle Royale Electric Safe Zone Logic
+            if (safeZone.mesh) {
+                if (safeZone.radius > safeZone.minRadius) {
+                    safeZone.radius -= safeZone.shrinkSpeed;
+                    const scaleRatio = safeZone.radius / 320;
+                    safeZone.mesh.scale.set(scaleRatio, 1, scaleRatio);
+                }
+                const distFromCenter = Math.hypot(player.mesh.position.x, player.mesh.position.z);
+                const zoneHud = document.getElementById('hudSafeZoneTimer');
+                if (distFromCenter > safeZone.radius) {
+                    zoneHud.textContent = `⚠️ OUTSIDE ZONE! (${Math.round(safeZone.radius)}m)`;
+                    zoneHud.className = 'text-rose-400 animate-pulse';
+                    safeZone.damageTimer++;
+                    if (safeZone.damageTimer >= 60) {
+                        safeZone.damageTimer = 0;
+                        player.hp -= 6;
+                        updateHUDStats();
+                        if (player.hp <= 0) {
+                            isPlaying = false;
+                            if (document.pointerLockElement) document.exitPointerLock();
+                            showToast("ELIMINATED BY SAFE ZONE!");
+                            returnToLobby();
+                            return;
+                        }
+                    }
+                } else {
+                    zoneHud.textContent = `🔵 ZONE: ${Math.round(safeZone.radius)}m`;
+                    zoneHud.className = 'text-sky-300';
                 }
             }
 
@@ -2699,9 +2557,12 @@
                 }
 
                 const isMoving = Math.hypot(moveX, moveZ) > 0.05;
+                if (isMoving && player.isHealingMedkit) cancelMedkitHeal();
+
                 const moveVec = new THREE.Vector3(moveX, 0, moveZ).normalize().applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY);
-                const activeSprint = isSprinting || keys.shift || player.skillBuffTimer > 0;
-                const speed = activeSprint ? player.sprintSpeed : player.walkSpeed;
+                const activeSprint = (isSprinting || keys.shift || player.skillBuffTimer > 0) && player.stance === 'stand';
+                const stanceMult = player.stance === 'prone' ? 0.35 : (player.stance === 'crouch' ? 0.6 : 1.0);
+                const speed = (activeSprint ? player.sprintSpeed : player.walkSpeed) * stanceMult;
 
                 player.mesh.position.addScaledVector(moveVec, speed);
                 resolveSolidCollisions(player.mesh.position, 0.85);
@@ -2740,22 +2601,24 @@
 
                 // Gravity & Climbable Staircase / Rooftop Floor Height!
                 const floorHeight = getSurfaceFloorHeight(player.mesh.position.x, player.mesh.position.z, player.mesh.position.y);
+                const proneLift = player.stance === 'prone' ? 0.45 : 0;
                 player.velocity.y -= 0.016;
                 player.mesh.position.y += player.velocity.y;
-                if (player.mesh.position.y <= floorHeight) {
-                    player.mesh.position.y = floorHeight;
+                if (player.mesh.position.y <= floorHeight + proneLift) {
+                    player.mesh.position.y = floorHeight + proneLift;
                     player.velocity.y = 0;
                     player.isGrounded = true;
                 }
 
+                const stanceCamDrop = player.stance === 'prone' ? -1.8 : (player.stance === 'crouch' ? -0.9 : 0);
                 const camDist = isScoping ? -2.4 : -9.2;
-                const camHeight = isScoping ? 2.5 : (4.2 + cameraPitch * 6.5);
+                const camHeight = isScoping ? (2.5 + stanceCamDrop) : (4.2 + stanceCamDrop + cameraPitch * 6.5);
                 const sideOffset = isScoping ? -0.9 : 0;
-                const camOffset = new THREE.Vector3(sideOffset, Math.max(0.8, camHeight), camDist)
+                const camOffset = new THREE.Vector3(sideOffset, Math.max(0.7, camHeight), camDist)
                     .applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY);
                 camera.position.copy(player.mesh.position).add(camOffset);
 
-                const lookY = isScoping ? (2.2 - cameraPitch * 12) : (2.1 - cameraPitch * 14);
+                const lookY = isScoping ? (2.2 + stanceCamDrop - cameraPitch * 12) : (2.1 + stanceCamDrop - cameraPitch * 14);
                 const lookAhead = new THREE.Vector3(0, lookY, isScoping ? 20 : 12)
                     .applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotationY);
                 camera.lookAt(player.mesh.position.clone().add(lookAhead));
@@ -2821,41 +2684,41 @@
             } else {
                 promptEl.classList.add('hidden');
             }
-
-            updateTargetLookSystem();
-
-            // Armed Enemy AI with Footsteps & Cover Check
+            // Aggressive Dangerous Enemy AI (Flanks, Chases & Respects Solid Gloo Walls)
             enemies.forEach(e => {
+                if (e.isKnocked) return; // Knocked enemies crawl in place
                 const dist = e.hum.mesh.position.distanceTo(player.mesh.position);
-                if (dist < 85) {
+                if (dist < 115) {
                     e.hum.mesh.lookAt(player.mesh.position);
                     let blockedByGloo = false;
                     for (let gw of glooWallBarriers) {
                         if (e.hum.mesh.position.distanceTo(gw.mesh.position) < 4.5 ||
-                            player.mesh.position.distanceTo(gw.mesh.position) < 3.5) {
+                            player.mesh.position.distanceTo(gw.mesh.position) < 3.6) {
                             blockedByGloo = true;
                             break;
                         }
                     }
 
-                    if (dist > 15 && !blockedByGloo) {
-                        e.hum.mesh.translateZ(e.speed);
+                    if (dist > 14) {
+                        // Strafe/flank laterally if blocked by a Gloo Wall!
+                        if (blockedByGloo) e.hum.mesh.translateX(e.speed * 1.15);
+                        else e.hum.mesh.translateZ(e.speed * 1.28);
                         resolveSolidCollisions(e.hum.mesh.position, 0.85);
                         e.footstepTimer++;
-                        if (e.footstepTimer >= 28 && dist < 35) {
+                        if (e.footstepTimer >= 24 && dist < 38) {
                             e.footstepTimer = 0;
-                            audio.playFootstep(false);
+                            audio.playFootstep(true);
                         }
                     } else if (!blockedByGloo) {
                         const now = performance.now();
-                        if (now - e.lastAttack > 1550) {
+                        if (now - e.lastAttack > 1150) {
                             e.lastAttack = now;
-                            player.hp -= 8;
-                            audio.playGunshot('smg', 40);
+                            player.hp -= 12;
+                            audio.playGunshot('rifle', 25);
                             updateHUDStats();
                             if (player.hp <= 0) {
                                 if (selectedGameMode === 'tdm40') {
-                                    player.hp = 100; updateHUDStats();
+                                    player.hp = player.maxHp; updateHUDStats();
                                     player.mesh.position.set(0, 0, -65);
                                     showToast("⚡ Instant Revive!");
                                 } else {
@@ -2872,24 +2735,129 @@
         }
 
         // =========================================================================
-        // 14. LUCKY EVENT SPIN LOGIC, PROFILE MODAL, VOICE MIC & FRIENDS SYSTEM
+        // 14. PROFILE 3D VIEWPORT RENDERER, LOBBY CHAT & FRIEND INSPECTION
         // =========================================================================
-        function renderEventModal() {
-            document.getElementById('eventTokensDisplay').textContent = rankedTokens;
-            document.getElementById('eventGoldDisplay').textContent = playerCoins;
-            const grid = document.getElementById('eventPrizePoolGrid');
-            grid.innerHTML = '';
-            EVENT_SPIN_POOL.forEach(prize => {
-                const owned = ownedItems.includes(prize.id);
-                const borderCol = prize.rarity === 'MYTHIC' ? 'border-rose-500' : (prize.rarity === 'LEGENDARY' ? 'border-amber-400' : 'border-cyan-500/40');
-                const card = document.createElement('div');
-                card.className = `p-2.5 rounded-xl bg-slate-900 border ${borderCol} flex flex-col justify-between`;
-                card.innerHTML = `<div class="text-[8px] font-cyber font-bold text-amber-400">${prize.rarity}</div>
-                                  <div class="font-bold text-white text-xs my-1">${prize.name}</div>
-                                  <div class="text-[9px] font-bold ${owned ? 'text-emerald-400' : 'text-slate-400'}">${owned ? 'UNLOCKED ✓' : 'IN PRIZE POOL'}</div>`;
-                grid.appendChild(card);
-            });
+        function renderProfile3DShowcase(outfitColor, isGirl, petId) {
+            const container = document.getElementById('profileAvatar3DContainer');
+            if (!profileRenderer) {
+                profileScene = new THREE.Scene();
+                profileScene.background = new THREE.Color(0x091326);
+                profileCamera = new THREE.PerspectiveCamera(45, container.clientWidth / 192, 0.1, 100);
+                profileCamera.position.set(0, 2.0, 4.8);
+                profileCamera.lookAt(0, 1.35, 0);
+                profileRenderer = new THREE.WebGLRenderer({ antialias: true });
+                profileRenderer.setSize(container.clientWidth || 240, 192);
+                container.innerHTML = '';
+                container.appendChild(profileRenderer.domElement);
+            }
+            while (profileScene.children.length > 0) profileScene.remove(profileScene.children[0]);
+
+            const amb = new THREE.AmbientLight(0xffffff, 1.15);
+            const dir = new THREE.DirectionalLight(0xfffbeb, 1.3);
+            dir.position.set(4, 8, 6);
+            profileScene.add(amb, dir);
+
+            const rig = createHumanoidMesh(outfitColor, isGirl, 0xf59e0b, 2);
+            rig.mesh.position.set(-0.35, 0, 0);
+            profileScene.add(rig.mesh);
+            profileAvatarRig = rig.mesh;
+
+            const pet = createCompanionPetMesh(petId);
+            pet.mesh.position.set(0.95, 0, 0.25);
+            profileScene.add(pet.mesh);
+
+            const petSpec = COMPANION_PETS_LIST.find(p => p.id === petId) || COMPANION_PETS_LIST[0];
+            document.getElementById('profile3DPetBadge').textContent = petSpec.name;
+            profileRenderer.render(profileScene, profileCamera);
         }
+
+        function openProfileModal(inspectedPlayer = null) {
+            const isSelf = !inspectedPlayer;
+            const target = inspectedPlayer || {
+                uid: myPlayerUID,
+                name: playerName,
+                level: playerLevel,
+                xp: playerXP,
+                rp: rankPoints,
+                likes: profileLikes,
+                kills: totalCareerKills,
+                booyahs: totalCareerBooyahs,
+                outfitColor: selectedOutfitColor,
+                gender: selectedGender,
+                petId: equippedPetId
+            };
+
+            const rank = getRankInfo(target.rp || 0);
+            const lvl = target.level || 1;
+            const xpNeeded = lvl * 500;
+            const xpPct = Math.min(100, Math.round(((target.xp || 250) / xpNeeded) * 100));
+
+            document.getElementById('profileModalHeaderTitle').textContent = isSelf
+                ? 'MY PLAYER PROFILE & 3D SHOWCASE'
+                : `INSPECTING PLAYER: ${target.name}`;
+
+            document.getElementById('profileSelfNameEditRow').classList.toggle('hidden', !isSelf);
+            document.getElementById('profileInspectedNameDisplay').classList.toggle('hidden', isSelf);
+            document.getElementById('profileInspectedNameDisplay').textContent = target.name;
+            document.getElementById('profileNameInput').value = target.name;
+
+            document.getElementById('profileModalUID').textContent = target.uid;
+            document.getElementById('profileModalLikesCount').textContent = target.likes || 0;
+            document.getElementById('profileModalLevelNum').textContent = lvl;
+            document.getElementById('profileModalXpText').textContent = `${target.xp || 250} / ${xpNeeded} XP`;
+            document.getElementById('profileModalLevelBar').style.width = `${xpPct}%`;
+            document.getElementById('profileModalRank').textContent = rank.title;
+            document.getElementById('profileModalRP').textContent = `${target.rp || 0} RP`;
+            document.getElementById('profileModalKills').textContent = target.kills || 0;
+            document.getElementById('profileModalBooyahs').textContent = target.booyahs || 0;
+
+            window._currentlyInspectedTarget = inspectedPlayer;
+            document.getElementById('profileModal').classList.remove('hidden');
+            setTimeout(() => {
+                renderProfile3DShowcase(
+                    target.outfitColor || 0x0284c7,
+                    target.gender === 'girl',
+                    target.petId || 'pet_dog'
+                );
+            }, 40);
+        }
+
+        document.getElementById('btnGiveProfileLike').addEventListener('click', () => {
+            if (window._currentlyInspectedTarget) {
+                window._currentlyInspectedTarget.likes = (window._currentlyInspectedTarget.likes || 0) + 1;
+                document.getElementById('profileModalLikesCount').textContent = window._currentlyInspectedTarget.likes;
+                showToast(`👍 Liked ${window._currentlyInspectedTarget.name}'s Profile!`);
+            } else {
+                profileLikes++;
+                saveProgress();
+                document.getElementById('profileModalLikesCount').textContent = profileLikes;
+                showToast(`👍 Profile Liked! Total Likes: ${profileLikes}`);
+            }
+            audio.playPickup();
+        });
+
+        // Lobby Text Chat System
+        function appendLobbyChatMessage(sender, text, isSelf = false) {
+            const box = document.getElementById('lobbyChatMessages');
+            const line = document.createElement('div');
+            line.innerHTML = `<span class="${isSelf ? 'text-emerald-400' : 'text-amber-300'} font-bold">[${sender}]:</span> ${text}`;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        document.getElementById('btnSendLobbyChat').addEventListener('click', () => {
+            const input = document.getElementById('lobbyChatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            appendLobbyChatMessage(playerName, msg, true);
+            input.value = '';
+            if (activeSquad.length > 1) {
+                const mate = activeSquad[1];
+                setTimeout(() => {
+                    appendLobbyChatMessage(mate.name, "Ready! Let's get Booyah!", false);
+                }, 700);
+            }
+        });
 
         window.executeEventSpin = function(spinCount, currencyType) {
             audio.init();
@@ -2989,14 +2957,6 @@
             }
         };
 
-        document.getElementById('btnGiveProfileLike').addEventListener('click', () => {
-            profileLikes++;
-            saveProgress();
-            document.getElementById('profileModalLikesCount').textContent = profileLikes;
-            audio.playPickup();
-            showToast(`👍 Profile Liked! Total Likes: ${profileLikes}`);
-        });
-
         window.setPartySizeMode = function(size) {
             desiredPartySize = size;
             saveProgress();
@@ -3053,17 +3013,29 @@
             onlineLobbyPlayers.forEach(p => {
                 const inSquad = activeSquad.some(s => s.uid === p.uid);
                 const row = document.createElement('div');
-                row.className = 'bg-slate-900/80 px-2.5 py-1.5 rounded-lg flex justify-between items-center';
+                row.className = 'bg-slate-900/80 px-2.5 py-1.5 rounded-lg flex justify-between items-center gap-1';
                 row.innerHTML = `<div><span class="font-bold text-slate-200">${p.name}</span> <span class="text-[9px] text-slate-400 font-mono">${p.uid}</span></div>
-                                 <button class="px-2 py-0.5 rounded text-[9px] font-bold ${inSquad ? 'bg-slate-700 text-emerald-400' : 'bg-cyan-600 text-white'}">
-                                    ${inSquad ? 'IN SQUAD' : 'INVITE ➕'}
-                                 </button>`;
-                row.querySelector('button').onclick = () => {
+                                 <div class="flex space-x-1">
+                                    <button class="btn-inspect-p px-2 py-0.5 rounded text-[9px] font-bold bg-amber-600 text-white">👁️ ID</button>
+                                    <button class="btn-inv-p px-2 py-0.5 rounded text-[9px] font-bold ${inSquad ? 'bg-slate-700 text-emerald-400' : 'bg-cyan-600 text-white'}">
+                                        ${inSquad ? 'IN LOBBY' : 'INVITE ➕'}
+                                    </button>
+                                 </div>`;
+                row.querySelector('.btn-inspect-p').onclick = () => {
+                    document.getElementById('friendsModal').classList.add('hidden');
+                    openProfileModal({
+                        uid: p.uid, name: p.name, level: 18, xp: 340, rp: 980, likes: 142,
+                        kills: 310, booyahs: 44, outfitColor: 0xdc2626, gender: 'boy', petId: 'pet_tiger'
+                    });
+                };
+                row.querySelector('.btn-inv-p').onclick = () => {
                     if (!inSquad && activeSquad.length < 4) {
-                        activeSquad.push(p);
+                        activeSquad.push({ ...p, outfitColor: 0x10b981, gender: 'boy' });
                         saveProgress();
+                        buildLobbyShowcase();
                         audio.playPickup();
-                        showToast(`Invited ${p.name} to Squad!`);
+                        appendLobbyChatMessage(p.name, "Joined your lobby! Ready to fight!", false);
+                        showToast(`${p.name} Joined Your Lobby!`);
                         renderFriendsAndSquadModal();
                     }
                 };
@@ -3074,13 +3046,16 @@
         document.getElementById('btnSendUIDInvite').addEventListener('click', () => {
             const val = document.getElementById('inputFriendUID').value.trim().toUpperCase();
             if (!val) { showToast("Enter a Friend's UID!"); return; }
-            if (activeSquad.length >= 4) { showToast("Squad is full (4/4)!"); return; }
+            if (activeSquad.length >= 4) { showToast("Lobby Squad is full (4/4)!"); return; }
             const fuid = val.startsWith('FF-') ? val : `FF-${val}`;
-            activeSquad.push({ uid: fuid, name: `FRIEND_${fuid.slice(-4)}`, rank: 'GOLD' });
+            const newFriend = { uid: fuid, name: `FRIEND_${fuid.slice(-4)}`, rank: 'GOLD', outfitColor: 0x8b5cf6, gender: 'boy' };
+            activeSquad.push(newFriend);
             document.getElementById('inputFriendUID').value = '';
             saveProgress();
+            buildLobbyShowcase();
             audio.playPickup();
-            showToast(`Friend ${fuid} Joined Squad!`);
+            appendLobbyChatMessage(newFriend.name, "Joined your lobby via UID invite!", false);
+            showToast(`${newFriend.name} Joined & Appeared in Lobby!`);
             renderFriendsAndSquadModal();
         });
 
@@ -3132,79 +3107,24 @@
             });
             document.getElementById('lobbyActiveSquadSummary').textContent = `Squad: ${activeSquad.length}/${desiredPartySize}`;
 
-            const pet = COMPANION_PETS_LIST.find(p => p.id === equippedPetId) || COMPANION_PETS_LIST[0];
-            document.getElementById('lobbyActivePetName').textContent = pet.name;
-            const g = REAL_GUNS_LIST[equippedGunIdx] || REAL_GUNS_LIST[0];
-            document.getElementById('lobbyWpnName').textContent = g.name;
+            const miniSquadBox = document.getElementById('lobbySquadMembersMini');
+            if (miniSquadBox) {
+                miniSquadBox.innerHTML = '';
+                activeSquad.forEach((m, idx) => {
+                    const tag = document.createElement('div');
+                    tag.className = 'text-[8px] px-1.5 py-0.5 rounded bg-slate-900/90 text-slate-200 flex justify-between items-center';
+                    tag.innerHTML = `<span class="truncate font-bold">${m.name}</span><span class="text-emerald-400">●</span>`;
+                    miniSquadBox.appendChild(tag);
+                });
+            }
 
-            const modeLabels = {
-                br2km: '🪂 2KM RANKED BR',
-                duel5: '⚔️ CUSTOM ROOM (5 RDS)',
-                clash4: '🛡️ 4v4 CLASH SQUAD',
-                tdm40: '🔥 4v4 TDM (40 KILLS)'
-            };
-            document.getElementById('lobbySelectedModeText').textContent =
-                `${modeLabels[selectedGameMode]} • ${selectedWeatherMap.toUpperCase()}`;
-        }
+            const activePet = COMPANION_PETS_LIST.find(p => p.id === equippedPetId) || COMPANION_PETS_LIST[0];
+            document.getElementById('lobbyActivePetName').textContent = activePet.name;
+            const activeGun = REAL_GUNS_LIST[equippedGunIdx] || REAL_GUNS_LIST[0];
+            document.getElementById('lobbyWpnName').textContent = activeGun.name;
 
-        // Vault Store Renderer
-        let activeStoreCategory = 'pets';
-        window.switchStoreTab = function(cat) {
-            activeStoreCategory = cat;
-            document.querySelectorAll('.store-tab').forEach(b => {
-                b.className = 'store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-slate-800 text-slate-300';
-            });
-            document.getElementById(`stab-${cat}`).className = 'store-tab px-2.5 py-1 rounded-lg text-[10px] font-cyber font-bold bg-cyan-600 text-white';
-            renderStoreItems();
-        };
-
-        function renderStoreItems() {
-            const grid = document.getElementById('storeItemsGrid');
-            grid.innerHTML = '';
-            const listMap = {
-                pets: COMPANION_PETS_LIST,
-                weapons: REAL_GUNS_LIST,
-                gunSkins: GUN_SKINS_LIST,
-                vehicles: VEHICLES_LIST,
-                vehSkins: VEHICLE_SKINS_LIST,
-                jetSkins: JET_SKINS_LIST,
-                skills: HERO_SKILLS_LIST,
-                emotes: EMOTES_LIST
-            };
-            const list = listMap[activeStoreCategory] || COMPANION_PETS_LIST;
-            list.forEach((item, idx) => {
-                const owned = ownedItems.includes(item.id);
-                const card = document.createElement('div');
-                card.className = 'p-2 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between space-y-1 cursor-pointer hover:border-cyan-400';
-                const info = item.type ? `${item.type} (${item.maxRange}m)` : (item.desc || 'Companion / Skin');
-                card.innerHTML = `<div class="font-bold text-slate-100 text-[11px] truncate">${item.icon ? item.icon + ' ' : ''}${item.name}</div>
-                                  <div class="text-[9px] text-slate-400 truncate">${info}</div>
-                                  <div class="text-center py-1 rounded font-bold text-[9px] ${owned ? 'bg-emerald-900/60 text-emerald-300' : 'bg-amber-500/20 text-amber-300'}">
-                                    ${owned ? 'EQUIP ✓' : `BUY 🪙 ${item.price}`}
-                                  </div>`;
-                card.onclick = () => {
-                    if (owned || playerCoins >= item.price) {
-                        if (!owned) { playerCoins -= item.price; ownedItems.push(item.id); audio.playPickup(); }
-                        if (activeStoreCategory === 'pets') equippedPetId = item.id;
-                        if (activeStoreCategory === 'weapons') equippedGunIdx = idx;
-                        if (activeStoreCategory === 'gunSkins') equippedGunSkinIdx = idx;
-                        if (activeStoreCategory === 'vehicles') equippedVehIdx = idx;
-                        if (activeStoreCategory === 'vehSkins') equippedVehSkinIdx = idx;
-                        if (activeStoreCategory === 'jetSkins') equippedJetSkinIdx = idx;
-                        if (activeStoreCategory === 'skills') equippedSkillIdx = idx;
-                        if (activeStoreCategory === 'emotes' && !equippedEmoteSlots.includes(idx)) {
-                            equippedEmoteSlots.shift(); equippedEmoteSlots.push(idx);
-                        }
-                        saveProgress();
-                        buildLobbyShowcase();
-                        renderStoreItems();
-                        showToast(`Equipped ${item.name}!`);
-                    } else {
-                        showToast("Not enough gold!");
-                    }
-                };
-                grid.appendChild(card);
-            });
+            const modeLabels = { br2km: '🪂 2KM RANKED BR', duel5: '⚔️ 1v1/2v2 ROOM', clash4: '🛡️ 4v4 CLASH', tdm40: '🔥 4v4 TDM' };
+            document.getElementById('lobbySelectedModeText').textContent = `${modeLabels[selectedGameMode] || '🪂 2KM RANKED BR'} • ${selectedWeatherMap.toUpperCase()}`;
         }
 
         window.setGender = function(g) {
@@ -3274,14 +3194,17 @@
                 if (k === 'd') keys.d = true;
                 if (e.code === 'Space') {
                     keys.space = true;
-                    if (player.isGrounded && !player.inVehicle && !player.isSkydiving) { player.velocity.y = 0.34; player.isGrounded = false; }
+                    if (player.stance !== 'stand') setPlayerStance('stand');
+                    else if (player.isGrounded && !player.inVehicle && !player.isSkydiving) { player.velocity.y = 0.34; player.isGrounded = false; }
                 }
                 if (e.key === 'Shift') keys.shift = true;
+                if (k === 'c') setPlayerStance('crouch');
+                if (k === 'z') setPlayerStance('prone');
                 if (k === 'e') interactNearbyObjects();
                 if (k === 'f') toggleVehicle();
                 if (k === 'g') deployGlooWall();
                 if (k === 'q') activateHeroSkill();
-                if (k === 'h') useMedkitHeal();
+                if (k === 'h') startMedkitHeal();
             });
             window.addEventListener('keyup', (e) => {
                 const k = e.key.toLowerCase();
@@ -3412,11 +3335,68 @@
             bindActionBtn('btnMobileGloo', deployGlooWall);
             bindActionBtn('btnMobileEmote', () => { renderHudEmoteWheel(); document.getElementById('emoteWheelOverlay').classList.toggle('hidden'); });
             bindActionBtn('btnMobileSkill', activateHeroSkill);
-            bindActionBtn('btnMobileHeal', useMedkitHeal);
+            bindActionBtn('btnMobileHeal', startMedkitHeal);
             bindActionBtn('btnMobileInteract', interactNearbyObjects);
             bindActionBtn('btnMobileDrive', toggleVehicle);
+            bindActionBtn('btnMobileCrouch', () => setPlayerStance('crouch'));
+            bindActionBtn('btnMobileProne', () => setPlayerStance('prone'));
             bindActionBtn('btnJump', () => {
-                if (player.isGrounded && !player.inVehicle && !player.isSkydiving) { player.velocity.y = 0.34; player.isGrounded = false; }
+                if (player.stance !== 'stand') setPlayerStance('stand');
+                else if (player.isGrounded && !player.inVehicle && !player.isSkydiving) { player.velocity.y = 0.34; player.isGrounded = false; }
+            });
+            bindActionBtn('btnScope', toggleAimScope);
+
+            // Fire Button Drag-to-Headshot Gesture (Dragging upward on Fire tilts aim up to Enemy Head!)
+            const fireBtn = document.getElementById('btnShoot');
+            fireBtn.addEventListener('touchstart', (e) => {
+                if (isEditHudMode) return;
+                e.stopPropagation();
+                e.preventDefault();
+                audio.init();
+                if (e.changedTouches.length > 0) {
+                    activeFireTouchId = e.changedTouches[0].identifier;
+                    fireDragStartY = getNormalizedCoords(e.changedTouches[0].clientX, e.changedTouches[0].clientY).y;
+                }
+                performFireWeapon();
+            });
+            fireBtn.addEventListener('touchmove', (e) => {
+                if (isEditHudMode) return;
+                e.stopPropagation();
+                e.preventDefault();
+                for (let t of e.changedTouches) {
+                    if (t.identifier === activeFireTouchId) {
+                        const curY = getNormalizedCoords(t.clientX, t.clientY).y;
+                        const deltaUp = fireDragStartY - curY;
+                        if (deltaUp > 6) {
+                            cameraPitch = Math.max(-0.65, cameraPitch - deltaUp * 0.0022);
+                            fireDragStartY = curY;
+                        }
+                        performFireWeapon();
+                    }
+                }
+            });
+            fireBtn.addEventListener('touchend', (e) => {
+                for (let t of e.changedTouches) {
+                    if (t.identifier === activeFireTouchId) activeFireTouchId = null;
+                }
+            });
+            fireBtn.addEventListener('click', (e) => {
+                if (isEditHudMode) return;
+                e.stopPropagation();
+                audio.init();
+                performFireWeapon();
+            });
+
+            // Global Crisp Tactile Sound on Every UI Button Touch/Click!
+            document.addEventListener('pointerdown', (e) => {
+                if (e.target.closest('button')) {
+                    audio.init();
+                    audio.playButtonClick();
+                }
+            });
+
+            document.getElementById('btnInGameQuickChat').addEventListener('click', () => {
+                showToast(`💬 [${playerName}]: Enemies ahead! Cover me!`);
             });
             bindActionBtn('btnScope', toggleAimScope);
 
@@ -3438,7 +3418,7 @@
         document.getElementById('btnLobbyVoiceMic').addEventListener('click', toggleVoiceChatMic);
         document.getElementById('btnInGameMic').addEventListener('click', toggleVoiceChatMic);
 
-        document.getElementById('btnOpenProfileModal').addEventListener('click', openProfileModal);
+        document.getElementById('btnOpenProfileModal').addEventListener('click', () => openProfileModal(null));
         document.getElementById('btnCloseProfileModal').addEventListener('click', () => document.getElementById('profileModal').classList.add('hidden'));
 
         document.getElementById('btnOpenEventModal').addEventListener('click', () => { renderEventModal(); document.getElementById('eventSpinModal').classList.remove('hidden'); });
@@ -3578,7 +3558,11 @@
             scene.add(player.petRig.mesh);
 
             player.inVehicle = null;
-            player.hp = 100;
+            player.stance = 'stand';
+            player.hp = 200;
+            player.maxHp = 200;
+            player.isHealingMedkit = false;
+            document.getElementById('medkitProgressSvg').classList.add('hidden');
             player.clip = 30;
             player.reserve = 300 + (bagLevel - 1) * 150;
             player.medkits = 2;
@@ -3596,6 +3580,9 @@
 
             buildArenaWorld();
 
+            document.getElementById('hud').classList.remove('hidden');
+            setTimeout(() => document.getElementById('hud').classList.remove('opacity-0'), 20);
+
             if (document.body.requestPointerLock && window.innerWidth > 900) {
                 document.body.requestPointerLock();
             }
@@ -3606,7 +3593,11 @@
             isPlaying = false;
             isInLobbyPreview = true;
             if (document.pointerLockElement) document.exitPointerLock();
-            document.getElementById('hud').classList.add('opacity-0');
+            // Strictly hide all in-match & map HUD controls so zero map buttons appear in Lobby!
+            document.getElementById('hud').classList.add('opacity-0', 'hidden');
+            document.getElementById('emoteWheelOverlay').classList.add('hidden');
+            document.getElementById('hudEditorBar').classList.add('hidden');
+            document.getElementById('scopeOverlay').classList.add('hidden');
             document.getElementById('planeDropOverlay').classList.add('hidden');
             document.getElementById('clashRoundStoreModal').classList.add('hidden');
             document.getElementById('gameOverModal').classList.add('hidden');
@@ -3673,6 +3664,10 @@
         function animate() {
             requestAnimationFrame(animate);
             updateGameLoop();
+            if (profileRenderer && profileScene && profileCamera && !document.getElementById('profileModal').classList.contains('hidden')) {
+                if (profileAvatarRig) profileAvatarRig.rotation.y += 0.012;
+                profileRenderer.render(profileScene, profileCamera);
+            }
             if (renderer && scene && camera) renderer.render(scene, camera);
         }
 
